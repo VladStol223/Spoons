@@ -15,7 +15,7 @@ Total pages:
 
 To do:
  -Make the app look better:
-    - Make the hub buttons sleeker: make the buttons rectangles that take up the enture hub button area, and make the rectangles come out to the right when hovered over.
+    - Make all of the buttons slide in more than once. also add sliding back out.
 
  -Fix Daily Schedule:
     - Make atleast 5 days fit on the screen by making the time font smaller and the boxes smaller as well.
