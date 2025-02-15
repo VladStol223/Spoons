@@ -1,7 +1,7 @@
 #Vladislav Stolbennikov
 #8/7/2024
 #Spoons App
-#VS1.12
+#VS1.13
 
 '''
 Total pages:
@@ -62,23 +62,35 @@ pygame.init()
 
 screen_height = 600
 screen_width = 800
+button_widths = {}
+hub_closing = False
+clock = pygame.time.Clock()
 screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
 pygame.display.set_caption("Spoons")
 
 ####################################################################################################################################
+def hub_buttons_show(delta_time):
+    global hub_buttons_showing, hub_closing
 
-# Drawing and Hub Functions
-def hub_buttons_show():
-    global hub_buttons_showing
-    # Display hub buttons if toggle is on
+    mouse_pos = pygame.mouse.get_pos()
+
     if hub_toggle.collidepoint(mouse_pos):
         hub_buttons_showing = True
-        draw_hub_buttons(screen, page, tool_tips, hub_background_color, add_spoons_color, add_tasks_color, complete_tasks_color, remove_tasks_color, daily_schedule_color, calendar_color, settings_color)
-    if hub_buttons_showing:
-        draw_hub_buttons(screen, page, tool_tips, hub_background_color, add_spoons_color, add_tasks_color, complete_tasks_color, remove_tasks_color, daily_schedule_color, calendar_color, settings_color)
-    if not hub_toggle.collidepoint(mouse_pos) and not hub_cover.collidepoint(mouse_pos):
-        hub_buttons_showing = False
-def hub_buttons(event): 
+        hub_closing = False
+    elif not hub_toggle.collidepoint(mouse_pos) and not (hub_cover.collidepoint(mouse_pos) and hub_closing == False):
+        if all(width >= 1 for width in button_widths.values()):
+            hub_closing = True
+        else:
+            hub_closing = False
+        if all(width <= 10 for width in button_widths.values()) or button_widths == {}:
+            hub_buttons_showing = False  
+
+    # Keep drawing buttons while showing or if any button is still animating
+    if hub_buttons_showing or (hub_closing and all(width >= 20 for width in button_widths.values())):
+        draw_hub_buttons(screen, page, tool_tips, hub_background_color, add_spoons_color, add_tasks_color, 
+                         complete_tasks_color, remove_tasks_color, daily_schedule_color, calendar_color, settings_color, 
+                         button_widths, hub_closing, delta_time)  # Pass button_widths
+def hub_buttons(event):
     global scroll_offset
     if not hub_buttons_showing:
         return None
@@ -121,7 +133,7 @@ def hub_buttons(event):
               folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
             return "settings"
     return None 
-from drawing_functions.draw_hub_buttons import draw_hub_buttons
+from drawing_functions.draw_hub_buttons import draw_hub_buttons, reset_button_widths
 from drawing_functions.draw_logic_input_spoons import draw_input_spoons, logic_input_spoons
 from drawing_functions.draw_logic_input_tasks import draw_input_tasks, logic_input_tasks
 from drawing_functions.draw_complete_tasks_hub import draw_complete_tasks_hub
@@ -145,6 +157,7 @@ current_theme = switch_theme(loaded_theme, globals())
 # ----------------------------------------------------------------------------------------------------
 
 while running:
+    delta_time = clock.tick(60) / 1000.0
     max_days = calendar.monthrange(datetime.now().year, task_month)[1]
     mouse_pos = pygame.mouse.get_pos()
     current_month = datetime.now().month
@@ -181,72 +194,72 @@ while running:
 
     if page == "input_spoons":
         draw_input_spoons(screen, daily_spoons, spoons, done_button_color, input_active)
-        hub_buttons_show()
+        hub_buttons_show(delta_time)
     elif page == "input_tasks":
         draw_input_tasks(screen, spoons, current_task, current_spoons, input_active, 
                          folder, task_month, task_day, time_toggle_on, recurring_toggle_on,  start_time, end_time,
                          done_button_color, add_tasks_choose_folder_color, add_tasks_chosen_folder_color, icon_image, spoon_name_input,
                          task_how_often, task_how_long, task_repetitions_amount,
                          folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        hub_buttons_show()
+        hub_buttons_show(delta_time)
     elif page == "complete_tasks":
         draw_complete_tasks_hub(screen, spoons,
                             homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
                             complete_tasks_hub_folder_color, icon_image, spoon_name_input,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        hub_buttons_show()
+        hub_buttons_show(delta_time)
     elif page == "complete_homework_tasks":
         draw_complete_tasks(screen, "Homework", homework_tasks_list, task_buttons_homework, spoons,  scroll_offset,
                             complete_tasks_task_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        hub_buttons_show()
+        hub_buttons_show(delta_time)
     elif page == "complete_chores_tasks":
         draw_complete_tasks(screen,"Chores", chores_tasks_list, task_buttons_chores, spoons, scroll_offset,
                         complete_tasks_task_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        hub_buttons_show()
+        hub_buttons_show(delta_time)
     elif page == "complete_work_tasks":
         draw_complete_tasks(screen,"Work", work_tasks_list, task_buttons_work, spoons, scroll_offset,
                         complete_tasks_task_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        hub_buttons_show()
+        hub_buttons_show(delta_time)
     elif page == "complete_misc_tasks":
         draw_complete_tasks(screen,"Misc", misc_tasks_list, task_buttons_misc, spoons, scroll_offset,
                         complete_tasks_task_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        hub_buttons_show()
+        hub_buttons_show(delta_time)
     elif page == "remove_tasks":
         draw_remove_tasks_hub(screen, spoons,
                             homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
                             remove_tasks_hub_folder_color, icon_image, spoon_name_input,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        hub_buttons_show()
+        hub_buttons_show(delta_time)
     elif page == "remove_homework_tasks":
         draw_remove_tasks(screen, "Homework", homework_tasks_list, task_buttons_homework, spoons, scroll_offset,
                         remove_tasks_task_color, icon_image, spoon_name,
                         folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        hub_buttons_show()
+        hub_buttons_show(delta_time)
     elif page == "remove_chores_tasks":
         draw_remove_tasks(screen, "Chores", chores_tasks_list, task_buttons_chores, spoons, scroll_offset,
                         remove_tasks_task_color, icon_image, spoon_name,
                         folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        hub_buttons_show()
+        hub_buttons_show(delta_time)
     elif page == "remove_work_tasks":
         draw_remove_tasks(screen, "Work", work_tasks_list, task_buttons_work, spoons, scroll_offset,
                         remove_tasks_task_color, icon_image, spoon_name,
                         folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        hub_buttons_show()
+        hub_buttons_show(delta_time)
     elif page == "remove_misc_tasks":
         draw_remove_tasks(screen, "Misc", misc_tasks_list, task_buttons_misc, spoons, scroll_offset,
                         remove_tasks_task_color, icon_image, spoon_name,
                         folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        hub_buttons_show()
+        hub_buttons_show(delta_time)
     elif page == "daily_schedule":
         available_blocks_by_date, task_schedule = get_available_time_blocks(class_schedule, homework_tasks_list, work_tasks_list, chores_tasks_list, misc_tasks_list)
         draw_daily_schedule(screen, allocate_tasks_to_time_blocks(available_blocks_by_date, sort_tasks_by_priority_and_due_date(homework_tasks_list, work_tasks_list, chores_tasks_list, misc_tasks_list)),
                         homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, day_offset,
                         homework_fol_color, chores_fol_color, work_fol_color, misc_fol_color, background_color, calendar_previous_day_header_color, calendar_next_day_header_color)
-        hub_buttons_show()
+        hub_buttons_show(delta_time)
     elif page == "calendar":
         draw_calendar(screen, spoon_name_input,
                   homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
@@ -255,11 +268,11 @@ while running:
                   calendar_previous_day_header_color, calendar_next_day_header_color, calendar_current_day_header_color,
                   calendar_previous_day_color, calendar_current_day_color, calendar_next_day_color,
                   folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        hub_buttons_show()
+        hub_buttons_show(delta_time)
     elif page == "settings":
         draw_settings(screen, tool_tips, spoon_name_input, icon_image, input_active, hub_background_color,
                   folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        hub_buttons_show()
+        hub_buttons_show(delta_time)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
@@ -281,8 +294,9 @@ while running:
             smaller_font = pygame.font.Font(None, int(screen_height * 0.033)) # ~3.3% of screen height
 
         if page == "input_spoons":
-           spoons, daily_spoons, input_active, page = logic_input_spoons(event, short_rest_amount, half_rest_amount, full_rest_amount, 
+            spoons, daily_spoons, input_active, page = logic_input_spoons(event, short_rest_amount, half_rest_amount, full_rest_amount, 
                                                            daily_spoons, spoons, draw_input_spoons(screen, daily_spoons, spoons, done_button_color, input_active), input_active)
+            hub_buttons_show(delta_time)
         elif page == "input_tasks":
             input_active, page, folder, time_toggle_on, recurring_toggle_on, current_task, current_spoons, task_month, task_day, start_time, end_time, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, task_how_often, task_how_long, task_repetitions_amount = logic_input_tasks(event, current_task, current_spoons, folder, task_month, task_day, task_how_often, task_how_long, task_repetitions_amount,
                       time_toggle_on, recurring_toggle_on, start_time, end_time, max_days, input_active, 

@@ -20,7 +20,6 @@ smaller_font = pygame.font.Font(None, int(screen_height * 0.033)) # ~3.3% of scr
 
 #input buttons
 input_active = False
-hub_buttons_showing = False
 
 # Date Variables
 current_month = datetime.now().month
@@ -298,7 +297,7 @@ spoon_name_input = ""
 short_rest_amount = 2
 half_rest_amount = 5
 full_rest_amount = 10
-tool_tips = True
+tool_tips = False
 icon_image = spoon_image
 spoon_name = "Spoons"
 page = "input_spoons"
