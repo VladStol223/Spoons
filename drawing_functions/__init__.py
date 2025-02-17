@@ -12,3 +12,4 @@ from .draw_remove_tasks_hub import draw_remove_tasks_hub
 from .draw_daily_schedule import draw_daily_schedule
 from .draw_logic_calendar import draw_calendar, logic_calendar
 from .draw_logic_settings import draw_settings
+from .draw_intro_sequence import draw_intro_sequence

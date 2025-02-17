@@ -1,7 +1,7 @@
 #Vladislav Stolbennikov
 #8/7/2024
 #Spoons App
-#VS1.13
+#VS1.14
 
 '''
 Total pages:
@@ -14,9 +14,10 @@ Total pages:
 7.) Settings
 
 To do:
- -Make the app look better:
-    - Make all of the buttons slide in more than once. also add sliding back out.
-
+ - Fix the intro sequence
+    - add exclamation mark!!!
+    - if any key gets clicked, skip the sequence
+ 
  -Fix Daily Schedule:
     - Make atleast 5 days fit on the screen by making the time font smaller and the boxes smaller as well.
     - Change the colors.
@@ -143,11 +144,14 @@ from drawing_functions.draw_remove_tasks_hub import draw_remove_tasks_hub
 from drawing_functions.draw_daily_schedule import draw_daily_schedule, logic_daily_schedule, get_available_time_blocks, allocate_tasks_to_time_blocks, sort_tasks_by_priority_and_due_date
 from drawing_functions.draw_logic_calendar import draw_calendar, logic_calendar
 from drawing_functions.draw_logic_settings import draw_settings, logic_settings
+from drawing_functions.draw_intro_sequence import draw_intro_sequence
 
 # Miscellanous Functions
 from load_save import save_data, load_data
 from switch_themes import switch_theme
 from handle_scroll import handle_task_scroll
+
+draw_intro_sequence(screen, clock)
 
 spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, daily_spoons, loaded_theme, icon_image, spoon_name_input, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = load_data()
 current_theme = switch_theme(loaded_theme, globals())

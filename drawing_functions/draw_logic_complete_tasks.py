@@ -180,15 +180,15 @@ class ConfettiParticle:
     def __init__(self, x, y, direction):
         self.x = x
         self.y = y
-        self.vx = random.uniform(.5, 1.5) * (-1 if direction == "right" else 1)
-        self.vy = random.uniform(-1.5, -.7)
+        self.vx = random.uniform(.5, 1.5) * (-1 if direction == "right" else 1) * 7.5
+        self.vy = random.uniform(-1.5, -.7) * 7.55
         self.color = random.choice([(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255)])
-        self.lifetime = random.randint(40, 80)  # Controls how long it stays on screen
+        self.lifetime = 100  # Controls how long it stays on screen
 
     def update(self):
         self.x += self.vx
         self.y += self.vy
-        self.vy += 0.003  # Slower gravity effect
+        self.vy += 0.15  # gravity effect
         self.lifetime -= 1  # Reduce lifetime
 
     def is_alive(self):

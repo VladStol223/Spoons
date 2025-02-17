@@ -35,6 +35,7 @@ base_dir = os.path.dirname(os.path.abspath(__file__))
 images_dir = os.path.join(base_dir, "images")
 
 image_files = {
+    "spoons_logo": ["Spoons Logo 128p.png", (500, 80)],
     "spoon_image": ["spoon.png", (33, 33)],
     "battery_image": ["green battery.png", (33, 33)],
     "star_image": ["star.png", (33, 33)],
@@ -58,6 +59,7 @@ for var_name, file_data in image_files.items():
         loaded_images[var_name] = None
 
 # Expose individual images for import
+spoons_logo = loaded_images.get("spoons_logo")
 spoon_image = loaded_images.get("spoon_image")
 battery_image = loaded_images.get("battery_image")
 star_image = loaded_images.get("star_image")
