@@ -226,7 +226,7 @@ def draw_intro_sequence(screen, clock):
             intro_running = False
             
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.KEYDOWN or event.type == pygame.QUIT or event.type == pygame.MOUSEBUTTONDOWN:
                 intro_running = False
 
         pygame.display.flip()

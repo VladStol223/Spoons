@@ -1,7 +1,7 @@
 #Vladislav Stolbennikov
 #8/7/2024
 #Spoons App
-#VS1.14
+#VS1.15
 
 '''
 Total pages:
@@ -14,10 +14,6 @@ Total pages:
 7.) Settings
 
 To do:
- - Fix the intro sequence
-    - add exclamation mark!!!
-    - if any key gets clicked, skip the sequence
- 
  -Fix Daily Schedule:
     - Make atleast 5 days fit on the screen by making the time font smaller and the boxes smaller as well.
     - Change the colors.

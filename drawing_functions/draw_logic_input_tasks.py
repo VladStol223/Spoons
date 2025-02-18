@@ -92,9 +92,9 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
         # Arrow between start and end time
         screen.blit(font.render("->", True, BLACK), (start_time_input_box.x + 85, start_time_input_box.y + 8))# type: ignore
         time_toggle_label = small_font.render("Remove Time of Day", True, BLACK)# type: ignore
-        screen.blit(time_toggle_label, (hub_toggle.x + hub_toggle.width + 10, hub_toggle.y + hub_toggle.height + 20))
+        screen.blit(time_toggle_label, (time_toggle_button.width + 10, time_toggle_button.height + 20))
         time_toggle_label = small_font.render("Add Recurring Task", True, BLACK)# type: ignore
-        screen.blit(time_toggle_label, (hub_toggle.x + hub_toggle.width + 520, hub_toggle.y + hub_toggle.height + 20))
+        screen.blit(time_toggle_label, (time_toggle_button.width + 520, time_toggle_button.height + 20))
                     
     elif recurring_toggle_on:
         # Draw the recurring task input fields
@@ -137,9 +137,9 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
 
 
         time_toggle_label = small_font.render("Remove Recurring Task", True, BLACK)# type: ignore
-        screen.blit(time_toggle_label, (hub_toggle.x + hub_toggle.width + 480, hub_toggle.y + hub_toggle.height + 20))
+        screen.blit(time_toggle_label, (time_toggle_button.width + 480, time_toggle_button.height + 20))
         time_toggle_label = small_font.render("Add Time of Day", True, BLACK)# type: ignore
-        screen.blit(time_toggle_label, (hub_toggle.x + hub_toggle.width + 10, hub_toggle.y + hub_toggle.height + 20))
+        screen.blit(time_toggle_label, (time_toggle_button.width + 10, time_toggle_button.height + 20))
 
     else:
         # Draw the normal due date prompt and input boxes
@@ -155,9 +155,9 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
         screen.blit(up_arrow, (515, 303))
         screen.blit(down_arrow, (515, 328))
         time_toggle_label = small_font.render("Add Time of Day", True, BLACK)# type: ignore
-        screen.blit(time_toggle_label, (hub_toggle.x + hub_toggle.width + 10, hub_toggle.y + hub_toggle.height + 20))
+        screen.blit(time_toggle_label, (time_toggle_button.width + 10, time_toggle_button.height + 20))
         time_toggle_label = small_font.render("Add Recurring Task", True, BLACK)# type: ignore
-        screen.blit(time_toggle_label, (hub_toggle.x + hub_toggle.width + 520, hub_toggle.y + hub_toggle.height + 20))
+        screen.blit(time_toggle_label, (time_toggle_button.width + 520, time_toggle_button.height + 20))
 
     # Display other task input prompts
     screen.blit(font.render("Enter task name:", True, BLACK), (300, 155))# type: ignore
