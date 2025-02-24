@@ -5,7 +5,7 @@ from drawing_functions.draw_spoons import draw_spoons
 
 import pygame
 
-def draw_complete_tasks_hub(screen, spoons,
+def draw_manage_tasks_hub(screen, spoons,
                             homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
                             complete_tasks_hub_folder_color, icon_image, spoon_name_input,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six):
@@ -53,7 +53,7 @@ def draw_complete_tasks_hub(screen, spoons,
             misc_tasks += 1
 
     #Draw the Folder Buttons and Text
-    draw_rounded_button(screen,complete_homework_tasks,complete_tasks_hub_folder_color if homework_tasks_list else LIGHT_GRAY, BLACK, 15)# type: ignore
+    draw_rounded_button(screen,manage_homework_tasks,complete_tasks_hub_folder_color if homework_tasks_list else LIGHT_GRAY, BLACK, 15)# type: ignore
     homework = font.render(f"{folder_one}:", True, BLACK)# type: ignore
     text_width, text_height = homework.get_size()
     screen.blit(homework, (25 + ((400-text_width)/2),110))
@@ -69,7 +69,7 @@ def draw_complete_tasks_hub(screen, spoons,
         screen.blit(hover_text, (440, 110))
         screen.blit(hover_text_2, (440, 135))
 
-    draw_rounded_button(screen,complete_chores_tasks,complete_tasks_hub_folder_color if chores_tasks_list else LIGHT_GRAY, BLACK, 15)# type: ignore
+    draw_rounded_button(screen,manage_chores_tasks,complete_tasks_hub_folder_color if chores_tasks_list else LIGHT_GRAY, BLACK, 15)# type: ignore
     chores = font.render(f"{folder_two}:", True, BLACK)# type: ignore
     text_width, text_height = chores.get_size()
     screen.blit(chores, (25 + ((400-text_width)/2),210))
@@ -85,7 +85,7 @@ def draw_complete_tasks_hub(screen, spoons,
         screen.blit(hover_text, (440, 210))
         screen.blit(hover_text_2, (440, 235))
 
-    draw_rounded_button(screen,complete_work_tasks,complete_tasks_hub_folder_color if work_tasks_list else LIGHT_GRAY, BLACK, 15)# type: ignore
+    draw_rounded_button(screen,manage_work_tasks,complete_tasks_hub_folder_color if work_tasks_list else LIGHT_GRAY, BLACK, 15)# type: ignore
     work = font.render(f"{folder_three}:", True, BLACK)# type: ignore
     text_width, text_height = work.get_size()
     screen.blit(work, (25 + ((400-text_width)/2),310))
@@ -101,7 +101,7 @@ def draw_complete_tasks_hub(screen, spoons,
         screen.blit(hover_text, (440, 310))
         screen.blit(hover_text_2, (440, 335))
 
-    draw_rounded_button(screen,complete_misc_tasks,complete_tasks_hub_folder_color if misc_tasks_list else LIGHT_GRAY, BLACK, 15)# type: ignore
+    draw_rounded_button(screen,manage_misc_tasks,complete_tasks_hub_folder_color if misc_tasks_list else LIGHT_GRAY, BLACK, 15)# type: ignore
     misc = font.render(f"{folder_four}:", True, BLACK)# type: ignore
     text_width, text_height = misc.get_size()
     screen.blit(misc, (25 + ((400-text_width)/2),410))

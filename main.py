@@ -1,19 +1,38 @@
 #Vladislav Stolbennikov
 #8/7/2024
 #Spoons App
-#VS1.15
+#VS1.16
 
 '''
 Total pages:
 1.) Add Spoons
 2.) Add Tasks
-3.) Complete Task
-4.) Remove Tasks
-5.) Calendar
-6.) daily schedule
-7.) Settings
+3.) Manage Task Hub
+4.) Complete Folder 1 Tasks
+5.) Complete Folder 2 Tasks
+6.) Complete Folder 3 Tasks
+7.) Complete Folder 4 Tasks
+8.) Edit Folder 1 Tasks
+9.) Edit Folder 2 Tasks
+10.) Edit Folder 3 Tasks
+11.) Edit Folder 4 Tasks
+12.) Remove Folder 1 Tasks
+13.) Remove Folder 2 Tasks
+14.) Remove Folder 3 Tasks
+15.) Remove Folder 4 Tasks
+16.) Calendar
+17.) daily schedule
+18.) Settings
 
 To do:
+ -Create "Manage Tasks" page:
+    - Update the hub to only have 6 buttons, consolidating complete and remove
+       1.) remove Remove Tasks in hub buttons DONE
+       2.) remove complete task hub and remove task hub. DONE   
+       3.) add edit tasks individual pages.
+       4.) add manage tasks hub. DONE
+    - Add Manage tasks page, where you first choose the folder you would like to do things with, then in the folder you have a toggle between compelte/ edit/ remove modes.
+
  -Fix Daily Schedule:
     - Make atleast 5 days fit on the screen by making the time font smaller and the boxes smaller as well.
     - Change the colors.
@@ -102,18 +121,12 @@ def hub_buttons(event):
               daily_spoons, current_theme, icon_image, spoon_name_input,
               folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
             return "input_tasks"
-        elif hub_complete_task.collidepoint(event.pos):
+        elif hub_manage_task.collidepoint(event.pos):
             save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
               daily_spoons, current_theme, icon_image, spoon_name_input,
               folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
             scroll_offset = 0
-            return "complete_tasks"
-        elif hub_remove_task.collidepoint(event.pos):
-            save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
-              daily_spoons, current_theme, icon_image, spoon_name_input,
-              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-            scroll_offset = 0
-            return "remove_tasks"
+            return "manage_tasks"
         elif hub_daily_schedule.collidepoint(event.pos):
             save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
               daily_spoons, current_theme, icon_image, spoon_name_input,
@@ -130,17 +143,18 @@ def hub_buttons(event):
               folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
             return "settings"
     return None 
-from drawing_functions.draw_hub_buttons import draw_hub_buttons, reset_button_widths
+from drawing_functions.draw_hub_buttons import draw_hub_buttons
 from drawing_functions.draw_logic_input_spoons import draw_input_spoons, logic_input_spoons
 from drawing_functions.draw_logic_input_tasks import draw_input_tasks, logic_input_tasks
-from drawing_functions.draw_complete_tasks_hub import draw_complete_tasks_hub
+from drawing_functions.draw_manage_tasks import draw_manage_tasks_hub
 from drawing_functions.draw_logic_complete_tasks import draw_complete_tasks, logic_complete_tasks, update_and_draw_confetti
 from drawing_functions.draw_logic_remove_tasks import draw_remove_tasks, logic_remove_tasks
-from drawing_functions.draw_remove_tasks_hub import draw_remove_tasks_hub
 from drawing_functions.draw_daily_schedule import draw_daily_schedule, logic_daily_schedule, get_available_time_blocks, allocate_tasks_to_time_blocks, sort_tasks_by_priority_and_due_date
 from drawing_functions.draw_logic_calendar import draw_calendar, logic_calendar
 from drawing_functions.draw_logic_settings import draw_settings, logic_settings
 from drawing_functions.draw_intro_sequence import draw_intro_sequence
+from drawing_functions.draw_logic_task_toggle import draw_task_toggle, logic_task_toggle
+from drawing_functions.draw_logic_edit_tasks import draw_edit_tasks, logic_edit_tasks
 
 # Miscellanous Functions
 from load_save import save_data, load_data
@@ -155,7 +169,6 @@ current_theme = switch_theme(loaded_theme, globals())
 # ----------------------------------------------------------------------------------------------------
 # Main loop
 # ----------------------------------------------------------------------------------------------------
-
 while running:
     delta_time = clock.tick(60) / 1000.0
     max_days = calendar.monthrange(datetime.now().year, task_month)[1]
@@ -202,8 +215,8 @@ while running:
                          task_how_often, task_how_long, task_repetitions_amount,
                          folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         hub_buttons_show(delta_time)
-    elif page == "complete_tasks":
-        draw_complete_tasks_hub(screen, spoons,
+    elif page == "manage_tasks":
+        draw_manage_tasks_hub(screen, spoons,
                             homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
                             complete_tasks_hub_folder_color, icon_image, spoon_name_input,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
@@ -212,47 +225,73 @@ while running:
         draw_complete_tasks(screen, "Homework", homework_tasks_list, task_buttons_homework, spoons,  scroll_offset,
                             complete_tasks_task_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        draw_task_toggle(screen, page)
         hub_buttons_show(delta_time)
     elif page == "complete_chores_tasks":
         draw_complete_tasks(screen,"Chores", chores_tasks_list, task_buttons_chores, spoons, scroll_offset,
                         complete_tasks_task_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        draw_task_toggle(screen, page)
         hub_buttons_show(delta_time)
     elif page == "complete_work_tasks":
         draw_complete_tasks(screen,"Work", work_tasks_list, task_buttons_work, spoons, scroll_offset,
                         complete_tasks_task_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        draw_task_toggle(screen, page)
         hub_buttons_show(delta_time)
     elif page == "complete_misc_tasks":
         draw_complete_tasks(screen,"Misc", misc_tasks_list, task_buttons_misc, spoons, scroll_offset,
                         complete_tasks_task_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        draw_task_toggle(screen, page)
         hub_buttons_show(delta_time)
-    elif page == "remove_tasks":
-        draw_remove_tasks_hub(screen, spoons,
-                            homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
-                            remove_tasks_hub_folder_color, icon_image, spoon_name_input,
-                            folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+    elif page == "edit_homework_tasks":
+        draw_edit_tasks(screen, spoons, "Homework", homework_tasks_list, task_buttons_homework, input_active,
+                                                 scroll_offset, complete_tasks_task_color, icon_image, spoon_name,
+                                                 folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        draw_task_toggle(screen, page)
+        hub_buttons_show(delta_time)
+    elif page == "edit_chores_tasks":
+        draw_edit_tasks(screen, spoons, "Chores", chores_tasks_list, task_buttons_chores, input_active,
+                                                 scroll_offset, complete_tasks_task_color, icon_image, spoon_name,
+                                                 folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        draw_task_toggle(screen, page)
+        hub_buttons_show(delta_time)
+    elif page == "edit_work_tasks":
+        draw_edit_tasks(screen, spoons, "Work", work_tasks_list, task_buttons_work, input_active,
+                                                 scroll_offset, complete_tasks_task_color, icon_image, spoon_name,
+                                                 folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        draw_task_toggle(screen, page)
+        hub_buttons_show(delta_time)
+    elif page == "edit_misc_tasks":
+        draw_edit_tasks(screen, spoons, "Misc", misc_tasks_list, task_buttons_misc, input_active,
+                                                 scroll_offset, complete_tasks_task_color, icon_image, spoon_name,
+                                                 folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        draw_task_toggle(screen, page)
         hub_buttons_show(delta_time)
     elif page == "remove_homework_tasks":
         draw_remove_tasks(screen, "Homework", homework_tasks_list, task_buttons_homework, spoons, scroll_offset,
                         remove_tasks_task_color, icon_image, spoon_name,
                         folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        draw_task_toggle(screen, page)
         hub_buttons_show(delta_time)
     elif page == "remove_chores_tasks":
         draw_remove_tasks(screen, "Chores", chores_tasks_list, task_buttons_chores, spoons, scroll_offset,
                         remove_tasks_task_color, icon_image, spoon_name,
                         folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        draw_task_toggle(screen, page)
         hub_buttons_show(delta_time)
     elif page == "remove_work_tasks":
         draw_remove_tasks(screen, "Work", work_tasks_list, task_buttons_work, spoons, scroll_offset,
                         remove_tasks_task_color, icon_image, spoon_name,
                         folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        draw_task_toggle(screen, page)
         hub_buttons_show(delta_time)
     elif page == "remove_misc_tasks":
         draw_remove_tasks(screen, "Misc", misc_tasks_list, task_buttons_misc, spoons, scroll_offset,
                         remove_tasks_task_color, icon_image, spoon_name,
                         folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        draw_task_toggle(screen, page)
         hub_buttons_show(delta_time)
     elif page == "daily_schedule":
         available_blocks_by_date, task_schedule = get_available_time_blocks(class_schedule, homework_tasks_list, work_tasks_list, chores_tasks_list, misc_tasks_list)
@@ -293,6 +332,8 @@ while running:
             small_font = pygame.font.Font(None, int(screen_height * 0.047)) # ~4.7% of screen height
             smaller_font = pygame.font.Font(None, int(screen_height * 0.033)) # ~3.3% of screen height
 
+        page = logic_task_toggle(event, page) #handle clicks with task toggles
+
         if page == "input_spoons":
             spoons, daily_spoons, input_active, page = logic_input_spoons(event, short_rest_amount, half_rest_amount, full_rest_amount, 
                                                            daily_spoons, spoons, draw_input_spoons(screen, daily_spoons, spoons, done_button_color, input_active), input_active)
@@ -301,57 +342,58 @@ while running:
             input_active, page, folder, time_toggle_on, recurring_toggle_on, current_task, current_spoons, task_month, task_day, start_time, end_time, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, task_how_often, task_how_long, task_repetitions_amount = logic_input_tasks(event, current_task, current_spoons, folder, task_month, task_day, task_how_often, task_how_long, task_repetitions_amount,
                       time_toggle_on, recurring_toggle_on, start_time, end_time, max_days, input_active, 
                       homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list)
-        elif page == "complete_tasks":
+        elif page == "manage_tasks":
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if complete_homework_tasks.collidepoint(event.pos):
+                if manage_homework_tasks.collidepoint(event.pos):
                     page = "complete_homework_tasks"
-                elif complete_chores_tasks.collidepoint(event.pos):
+                elif manage_chores_tasks.collidepoint(event.pos):
                     page = "complete_chores_tasks"
-                elif complete_work_tasks.collidepoint(event.pos):
+                elif manage_work_tasks.collidepoint(event.pos):
                     page = "complete_work_tasks"
-                elif complete_misc_tasks.collidepoint(event.pos):
+                elif manage_misc_tasks.collidepoint(event.pos):
                     page = "complete_misc_tasks"
         elif page == "complete_homework_tasks":
-            scroll_limit = max(0, len(misc_tasks_list) - 8)
+            scroll_limit = max(0, len(homework_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             task_completed, spoons, confetti_particles = logic_complete_tasks(homework_tasks_list, task_buttons_homework, event, spoons)
         elif page == "complete_chores_tasks":
-            scroll_limit = max(0, len(misc_tasks_list) - 8)
+            scroll_limit = max(0, len(chores_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             task_completed, spoons, confetti_particles = logic_complete_tasks(chores_tasks_list, task_buttons_chores, event, spoons)
         elif page == "complete_work_tasks":
-            scroll_limit = max(0, len(misc_tasks_list) - 8)
+            scroll_limit = max(0, len(work_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             task_completed, spoons, confetti_particles = logic_complete_tasks(work_tasks_list, task_buttons_work, event, spoons)
         elif page == "complete_misc_tasks":
             scroll_limit = max(0, len(misc_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             task_completed, spoons, confetti_particles = logic_complete_tasks(misc_tasks_list, task_buttons_misc, event, spoons)
-        elif page == "remove_tasks":
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if remove_homework_tasks.collidepoint(event.pos):
-                    page = "remove_homework_tasks"
-                elif remove_chores_tasks.collidepoint(event.pos):
-                    page = "remove_chores_tasks"
-                elif remove_work_tasks.collidepoint(event.pos):
-                    page = "remove_work_tasks"
-                elif remove_misc_tasks.collidepoint(event.pos):
-                    page = "remove_misc_tasks"
-                elif remove_all_tasks_button.collidepoint(event.pos):
-                    homework_tasks_list = []
-                    chores_tasks_list = []
-                    work_tasks_list = []
-                    misc_tasks_list = []
-        elif page == "remove_homework_tasks":
+        elif page == "edit_homework_tasks":
+            scroll_limit = max(0, len(homework_tasks_list) - 8)
+            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
+            input_active, homework_tasks_list = logic_edit_tasks(event, input_active, mouse_pos, homework_tasks_list, task_buttons_homework, max_days)
+        elif page == "edit_chores_tasks":
+            scroll_limit = max(0, len(chores_tasks_list) - 8)
+            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
+            input_active, chores_tasks_list = logic_edit_tasks(event, input_active, mouse_pos, chores_tasks_list, task_buttons_chores, max_days)
+        elif page == "edit_work_tasks":
+            scroll_limit = max(0, len(work_tasks_list) - 8)
+            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
+            input_active, work_tasks_list = logic_edit_tasks(event, input_active, mouse_pos, work_tasks_list, task_buttons_work, max_days)
+        elif page == "edit_misc_tasks":
             scroll_limit = max(0, len(misc_tasks_list) - 8)
+            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
+            input_active, misc_tasks_list = logic_edit_tasks(event, input_active, mouse_pos, misc_tasks_list, task_buttons_misc, max_days)
+        elif page == "remove_homework_tasks":
+            scroll_limit = max(0, len(homework_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             logic_remove_tasks(homework_tasks_list, task_buttons_homework, event)
         elif page == "remove_chores_tasks":
-            scroll_limit = max(0, len(misc_tasks_list) - 8)
+            scroll_limit = max(0, len(chores_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             logic_remove_tasks(chores_tasks_list, task_buttons_chores, event)
         elif page == "remove_work_tasks":
-            scroll_limit = max(0, len(misc_tasks_list) - 8)
+            scroll_limit = max(0, len(work_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             logic_remove_tasks(work_tasks_list, task_buttons_work, event)
         elif page == "remove_misc_tasks":
@@ -361,6 +403,8 @@ while running:
         elif page == "calendar": 
             displayed_month, displayed_year = logic_calendar(event, displayed_month, displayed_year)
         elif page == "daily_schedule":
+            scroll_limit = 30
+            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=10)
             logic_daily_schedule(event, class_schedule, day_offset, homework_tasks_list, work_tasks_list, chores_tasks_list, misc_tasks_list)
         elif page == "settings":
             tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_settings(event, tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)

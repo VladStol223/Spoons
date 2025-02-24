@@ -42,7 +42,7 @@ THEMES = {
         "remove_tasks_task_color": COLORS["LAWN_GREEN"],
         "add_spoons_color": COLORS["OLIVE_DRAB"],
         "add_tasks_color": COLORS["DARK_SEA_GREEN"],
-        "complete_tasks_color": COLORS["PALE_GREEN"],
+        "complete_tasks_color": COLORS["FOREST_GREEN"],
         "remove_tasks_color": COLORS["FOREST_GREEN"],
         "daily_schedule_color": COLORS["MEDIUM_SEA_GREEN"],
         "calendar_color": COLORS["LAWN_GREEN"],

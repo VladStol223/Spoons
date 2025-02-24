@@ -1,11 +1,13 @@
 import pygame
 import random
+import math
 from config import *
 from drawing_functions.draw_rounded_button import draw_rounded_button
 
 # Define widths
 letter_width = 80  # Approximate width of each normal letter
 exclamation_width = 20  # Exclamation is 1/4 the width of a letter
+degrees = 55 # Amount that the spoons change angle at when they come in.
 
 # Extract letters
 letters = [spoons_logo.subsurface((i * letter_width, 0, letter_width, 80)) for i in range(6)]
@@ -48,8 +50,10 @@ def draw_intro_sequence(screen, clock):
     task_progress = 0
     tasks_shown = 0
     confetti_playing = False
-    moving_spoon = None  # Track the spoon being moved
-    target_pos = None    # Track target position for the moving spoon
+    moving_spoon = None
+    target_pos = None
+    next_spoon_time = pygame.time.get_ticks()  # Timer for adding spoons
+    step1_complete = False  # Track if all spoons are in place
 
     # Confetti generator
     def generate_confetti():
@@ -65,25 +69,74 @@ def draw_intro_sequence(screen, clock):
 
     pygame.time.delay(200)
 
-    # Main loop
     while intro_running:
         screen.fill(background_color)
+        current_time = pygame.time.get_ticks()
 
-        # --- STEP 1: Build the spoon bar ---
+        # --- STEP 1: Build the spoon bar with animation ---
         if spoon_count < 10:
-            spoon_bar.append({"x": 100 + spoon_count * 60, "y": screen_height - 400, "glow_radius": 25})
-            spoon_count += 1
-            #pygame.time.delay(int(7.5 * (10 - (0.1 * spoon_count * spoon_count)) + 100))
-            pygame.time.delay(int(4 * (10 + (0.5 * spoon_count * spoon_count))))
+            if current_time >= next_spoon_time:
+                # Calculate delay for next spoon
+                delay = 4 * (10 + 0.5 * (spoon_count ** 2))
+                next_spoon_time = current_time + delay
 
-        # Draw spoon bar with radial gradient glow
+                # Target position for the spoon
+                target_x = 100 + spoon_count * 60
+                target_y = screen_height - 400
+
+                # Calculate angle for the current spoon
+                if spoon_count == 0:
+                    # First spoon: random angle
+                    base_angle = random.uniform(0, 2 * math.pi)
+                else:
+                    # Subsequent spoons: 30 degrees clockwise from the previous spoon
+                    base_angle = spoon_bar[-1]["angle"] + (math.pi / 180) * degrees
+
+                # Ensure the angle stays within 0 to 2*pi
+                base_angle = base_angle % (2 * math.pi)
+
+                # Calculate start position using trigonometry
+                distance = max(screen_width, screen_height)  # Start far enough to ensure off-screen
+                start_x = target_x + distance * math.cos(base_angle)
+                start_y = target_y + distance * math.sin(base_angle)
+
+                # Add spoon with animation properties
+                spoon_bar.append({
+                    "start_x": start_x,
+                    "start_y": start_y,
+                    "target_x": target_x,
+                    "target_y": target_y,
+                    "start_time": current_time,
+                    "duration": 500,  # Animation duration in ms
+                    "glow_radius": 25,
+                    "x": start_x,
+                    "y": start_y,
+                    "angle": base_angle  # Store the angle for the next spoon
+                })
+                spoon_count += 1
+
+        # Update spoon positions
+        for spoon in spoon_bar:
+            elapsed = current_time - spoon["start_time"]
+            progress = min(elapsed / spoon["duration"], 1.0)
+            spoon["x"] = spoon["start_x"] + (spoon["target_x"] - spoon["start_x"]) * progress
+            spoon["y"] = spoon["start_y"] + (spoon["target_y"] - spoon["start_y"]) * progress
+
+        # Check if all spoons have arrived
+        if spoon_count == 10 and not step1_complete:
+            step1_complete = all(
+                (current_time - spoon["start_time"]) >= spoon["duration"] 
+                for spoon in spoon_bar
+            )
+
+        # Draw spoon bar
         for spoon in spoon_bar:
             glow_surface = create_glow_surface(spoon["glow_radius"], (255, 255, 150))
             screen.blit(glow_surface, (spoon["x"] - spoon["glow_radius"], spoon["y"] - spoon["glow_radius"]))
             screen.blit(icon_image, (spoon["x"] - 15, spoon["y"] - 15))
 
         # --- STEP 2: Animate tasks appearing ---
-        if spoon_count == 10 and tasks_shown < 3:
+        if spoon_count == 10 and tasks_shown < 3 and step1_complete:
             task_dict = task_rows_full[tasks_shown]  # Get the current task
             key, value = next(iter(task_dict.items()))  # Extract task details
 
@@ -114,7 +167,7 @@ def draw_intro_sequence(screen, clock):
                     task_r = v[2]
                     if k == key:
                         task_r.width = animated_width  # Expand the task dynamically
-                    draw_rounded_button(screen, task_r, (127, 255, 212), (0, 0, 0), 15)
+                    draw_rounded_button(screen, task_r, (0, 149, 182), (0, 0, 0), 15)
                     task_text = font.render(v[0], True, (0, 0, 0))
                     screen.blit(task_text, (task_r.x + 10, task_r.y + 15))
                     for j in range(v[1]):  # Draw brackets
@@ -130,14 +183,14 @@ def draw_intro_sequence(screen, clock):
             pygame.time.delay(300)  # Small delay before next task starts animating
 
         # --- STEP 3: Move spoons into tasks ---
-        if (spoon_count == 10 and task_progress < 10 and tasks_shown == 3) or task_progress == 10:
+        if ((spoon_count == 10 and task_progress < 10 and tasks_shown == 3) or task_progress == 10) and step1_complete:
 
             # Redraw tasks
             for k, v in tasks_rows.items():
                 task_r = v[2]
                 if k == key:
                     task_r.width = animated_width  # Expand the task dynamically
-                draw_rounded_button(screen, task_r, (127, 255, 212), (0, 0, 0), 15)
+                draw_rounded_button(screen, task_r, (0, 149, 182), (0, 0, 0), 15)
                 task_text = font.render(v[0], True, (0, 0, 0))
                 screen.blit(task_text, (task_r.x + 10, task_r.y + 15))
                 for j in range(v[1]):  # Draw brackets

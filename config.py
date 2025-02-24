@@ -42,7 +42,10 @@ image_files = {
     "potion_image": ["potion.png", (33, 33)],
     "spoon_bracket_image": ["spoon_bracket.png", (33, 33)],
     "color_wheel": ["color_wheel.png", (200, 200)],
-    "light_academia_background": ["light_academia_background.png", (800, 600)]
+    "light_academia_background": ["light_academia_background.png", (800, 600)],
+    "edit_toggle_icon": ["pencil.png", (25, 25)],
+    "complete_toggle_icon": ["checkmark.png", (25, 25)],
+    "remove_toggle_icon": ["cross.png", (25, 25)]
 }
 
 # Load and transform images
@@ -66,29 +69,21 @@ star_image = loaded_images.get("star_image")
 potion_image = loaded_images.get("potion_image")
 spoon_bracket_image = loaded_images.get("spoon_bracket_image")
 color_wheel = loaded_images.get("color_wheel")
+edit_toggle_icon = loaded_images.get("edit_toggle_icon")
+complete_toggle_icon = loaded_images.get("complete_toggle_icon")
+remove_toggle_icon = loaded_images.get("remove_toggle_icon")
 
 #background images
 light_academia_background = loaded_images.get("light_academia_background")
 
 class_schedule = {
     "Monday": [
-        {"name": "Creative Decisions", "start_time": [0, 8, 2, 5], "end_time": [0, 9, 1, 5]},
-        {"name": "Dynamics", "start_time": [1, 1, 0, 0], "end_time": [1, 2, 1, 5]},
-        {"name": "Computing Tech", "start_time": [1, 2, 3, 0], "end_time": [1, 3, 4, 5]}
     ],
     "Tuesday": [
-        {"name": "Creative Decisions Lab", "start_time": [1, 2, 3, 0], "end_time": [1, 5, 1, 5]},
-        {"name": "Materials", "start_time": [1, 5, 3, 0], "end_time": [1, 6, 4, 5]},
-        {"name": "Circuits", "start_time": [1, 7, 0, 0], "end_time": [1, 7, 5, 0]}
     ],
     "Wednesday": [
-        {"name": "Creative Decisions", "start_time": [0, 8, 2, 5], "end_time": [0, 9, 1, 5]},
-        {"name": "Dynamics", "start_time": [1, 1, 0, 0], "end_time": [1, 2, 1, 5]},
-        {"name": "Computing Tech", "start_time": [1, 2, 3, 0], "end_time": [1, 3, 4, 5]}
     ],
     "Thursday": [
-        {"name": "Materials", "start_time": [1, 5, 3, 0], "end_time": [1, 6, 4, 5]},
-        {"name": "Circuits", "start_time": [1, 7, 0, 0], "end_time": [1, 7, 5, 0]}
     ],
     "Friday": [
     ]
@@ -145,13 +140,12 @@ day_input_box_recurring_shifted = pygame.Rect(325, 305, 70, 50)
 day_up_button_recurring_shifted = pygame.Rect(375, 310, 15, 15)
 day_down_button_recurring_shifted = pygame.Rect(375, 335, 15, 15)
 # hub buttons
-hub_add_spoons = pygame.Rect(0, 0, 250, 86)
-hub_add_task = pygame.Rect(0, 86, 250, 86)
-hub_complete_task = pygame.Rect(0, 172, 250, 86)
-hub_remove_task = pygame.Rect(0, 258, 250, 86)
-hub_daily_schedule = pygame.Rect(0, 344, 250, 86)
-hub_calendar = pygame.Rect(0, 430, 250, 86)
-hub_settings = pygame.Rect(0, 516, 250, 84)  # Slightly reduced to fit within 600px
+hub_add_spoons = pygame.Rect(0, 0, 250, 100)
+hub_add_task = pygame.Rect(0, 100, 250, 100)
+hub_manage_task = pygame.Rect(0, 200, 250, 100)
+hub_daily_schedule = pygame.Rect(0, 300, 250, 100)
+hub_calendar = pygame.Rect(0, 400, 250, 100)
+hub_settings = pygame.Rect(0, 500, 250, 100)
 
 hub_toggle = pygame.Rect(0,0,5,600)
 hub_menu1 = pygame.Rect(0,0,0,0) # Needs to be removed in all files
@@ -177,17 +171,31 @@ work_tasks = pygame.Rect(407,85,100,38)
 work_tasks_big = pygame.Rect(397,82,120,44)
 misc_tasks = pygame.Rect(527,85,100,38)
 misc_tasks_big = pygame.Rect(517,82,120,44)
-# complete task hub buttons
-complete_homework_tasks = pygame.Rect(25,100,400,75)
-complete_chores_tasks = pygame.Rect(25,200,400,75)
-complete_work_tasks = pygame.Rect(25,300,400,75)
-complete_misc_tasks = pygame.Rect(25,400,400,75)
-# remove task hub buttons
-remove_homework_tasks = pygame.Rect(195,100,400,75)
-remove_chores_tasks = pygame.Rect(195,200,400,75)
-remove_work_tasks = pygame.Rect(195,300,400,75)
-remove_misc_tasks = pygame.Rect(195,400,400,75)
-remove_all_tasks_button = pygame.Rect(195,535,400,35)
+# manage task buttons
+manage_homework_tasks = pygame.Rect(25,100,400,75)
+manage_chores_tasks = pygame.Rect(25,200,400,75)
+manage_work_tasks = pygame.Rect(25,300,400,75)
+manage_misc_tasks = pygame.Rect(25,400,400,75)
+
+# Complete/Edit/Remove toggle buttons
+complete_tasks_toggle = pygame.Rect(650, 55,35,35)
+edit_tasks_toggle = pygame.Rect(690,55,35,35)
+remove_tasks_toggle = pygame.Rect(730,55,35,35)
+task_toggle_cover = pygame.Rect(645,50,125,45)
+
+#Edit task buttons
+save_button = pygame.Rect(190, 400, 200, 45)
+cancel_button = pygame.Rect(410, 400, 200, 45)
+edit_task_spoon_input_box = pygame.Rect(100, 300, 300, 50)
+edit_task_taskname_input_box = pygame.Rect(100, 205, 300, 50)
+month_input_box_edit_task = pygame.Rect(480, 205, 160, 50)
+month_up_button_edit_task = pygame.Rect(620, 210, 15, 15)
+month_down_button_edit_task = pygame.Rect(620, 235, 15, 15)
+day_input_box_edit_task = pygame.Rect(665, 205, 70, 50)
+day_up_button_edit_task = pygame.Rect(715, 210, 15, 15)
+day_down_button_edit_task = pygame.Rect(715, 235, 15, 15)
+done_toggle_edit_task = pygame.Rect(480, 300, 250, 50)
+
 #Scroll bar
 scroll_bar_body = pygame.Rect(10,100,30,450)
 scroll_bar_up_button = pygame.Rect(12,102,26,32)

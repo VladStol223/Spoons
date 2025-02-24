@@ -16,8 +16,7 @@ def draw_hub_buttons(screen, page, tool_tips, background_color, add_spoons_color
     # Pass button_widths to keep it persistent
     draw_animated_button(screen, hub_add_spoons, add_spoons_color, add_spoons_color, BLACK, font, "Add Spoons", BLACK, button_widths, hub_closing, delta_time)  # type: ignore
     draw_animated_button(screen, hub_add_task, add_tasks_color, add_tasks_color, BLACK, font, "Add Tasks", BLACK, button_widths, hub_closing, delta_time)  # type: ignore
-    draw_animated_button(screen, hub_complete_task, complete_tasks_color, complete_tasks_color, BLACK, font, "Complete Tasks", BLACK, button_widths, hub_closing, delta_time)  # type: ignore
-    draw_animated_button(screen, hub_remove_task, remove_tasks_color, remove_tasks_color, BLACK, font, "Remove Tasks", BLACK, button_widths, hub_closing, delta_time)  # type: ignore
+    draw_animated_button(screen, hub_manage_task, complete_tasks_color, complete_tasks_color, BLACK, font, "Manage Tasks", BLACK, button_widths, hub_closing, delta_time)  # type: ignore
     draw_animated_button(screen, hub_daily_schedule, daily_schedule_color, daily_schedule_color, BLACK, font, "Daily Schedule", BLACK, button_widths, hub_closing, delta_time)  # type: ignore
     draw_animated_button(screen, hub_calendar, calendar_color, calendar_color, BLACK, font, "Calendar", BLACK, button_widths, hub_closing, delta_time)  # type: ignore
     draw_animated_button(screen, hub_settings, settings_color, settings_color, BLACK, font, "Settings", BLACK, button_widths, hub_closing, delta_time)  # type: ignore
@@ -41,7 +40,7 @@ def draw_hub_buttons(screen, page, tool_tips, background_color, add_spoons_color
                 rendered_text = small_font.render(line, True, BLACK)# type: ignore
                 screen.blit(rendered_text, (262 + tool_tips_x_offset, 112 + y_offset))
                 y_offset += 22
-        elif hub_complete_task.collidepoint(mouse_pos):
+        elif hub_manage_task.collidepoint(mouse_pos):
             draw_rounded_button(screen, complete_task_tool_tip_rect, LIGHT_GRAY, BLACK, 5, 3)# type: ignore
             hover_text = f"Allows users to view a list \nof tasks that are due or \ncurrently in progress and \nmark them as completed \nonce they have been finished. \nThe interface allows users to \ntrack progress across \ndifferent areas of their life."
             text_lines = hover_text.split('\n')
@@ -49,15 +48,6 @@ def draw_hub_buttons(screen, page, tool_tips, background_color, add_spoons_color
             for line in text_lines:
                 rendered_text = small_font.render(line, True, BLACK)# type: ignore
                 screen.blit(rendered_text, (262 + tool_tips_x_offset, 182 + y_offset))
-                y_offset += 22
-        elif hub_remove_task.collidepoint(mouse_pos):
-            draw_rounded_button(screen, remove_task_tool_tip_rect, LIGHT_GRAY, BLACK, 5, 3)# type: ignore
-            hover_text = f"Allows users to delete tasks \nthat are either completed or \nhave become obsolete. \nThis helps in keeping the \ntask lists clean and focused \non actionable items, making \na streamlined approach to \ntask management."
-            text_lines = hover_text.split('\n')
-            y_offset = 0
-            for line in text_lines:
-                rendered_text = small_font.render(line, True, BLACK)# type: ignore
-                screen.blit(rendered_text, (262 + tool_tips_x_offset, 252 + y_offset))
                 y_offset += 22
         elif hub_daily_schedule.collidepoint(mouse_pos):
             draw_rounded_button(screen, daily_schedule_tool_tip_rect, LIGHT_GRAY, BLACK, 5, 3)# type: ignore

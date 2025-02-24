@@ -21,13 +21,13 @@ def draw_remove_tasks(screen, type, task_list, buttons, spoons, scroll_offset,
     draw_spoons(screen, spoons, icon_image, spoon_name)
 
     if type == "Homework":
-        title = font.render(f"What {folder_one} tasks have you completed?", True, BLACK)# type: ignore
+        title = font.render(f"What {folder_one} tasks do you want to remove?", True, BLACK)# type: ignore
     elif type == "Chores":
-        title = font.render(f"What {folder_two} tasks have you completed?", True, BLACK)# type: ignore
+        title = font.render(f"What {folder_two} tasks do you want to remove?", True, BLACK)# type: ignore
     elif type == "Work":
-        title = font.render(f"What {folder_three} tasks have you completed?", True, BLACK)# type: ignore
+        title = font.render(f"What {folder_three} tasks do you want to remove?", True, BLACK)# type: ignore
     elif type == "Misc":
-        title = font.render(f"What {folder_four} tasks have you completed?", True, BLACK)# type: ignore
+        title = font.render(f"What {folder_four} tasks do you want to remove?", True, BLACK)# type: ignore
     screen.blit(title, (50, 65))
     buttons.clear()  # Clear the list before adding new buttons
 
