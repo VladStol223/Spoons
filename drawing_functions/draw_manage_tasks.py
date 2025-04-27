@@ -2,6 +2,7 @@ from config import *
 
 from drawing_functions.draw_rounded_button import draw_rounded_button
 from drawing_functions.draw_spoons import draw_spoons
+from datetime import datetime
 
 import pygame
 
@@ -14,6 +15,23 @@ def draw_manage_tasks_hub(screen, spoons,
     pygame.draw.rect(screen, BLACK, hub_menu1)# type: ignore
     pygame.draw.rect(screen, BLACK, hub_menu2)# type: ignore
     pygame.draw.rect(screen, BLACK, hub_menu3)# type: ignore
+
+    for task in homework_tasks_list:
+        task_date = task[4]  # This is where you stored the original due date
+        days_left = (task_date - datetime.now()).days
+        task[3] = days_left+1  # Update the 'days' field
+    for task in chores_tasks_list:
+        task_date = task[4]  # This is where you stored the original due date
+        days_left = (task_date - datetime.now()).days
+        task[3] = days_left+1  # Update the 'days' field
+    for task in work_tasks_list:
+        task_date = task[4]  # This is where you stored the original due date
+        days_left = (task_date - datetime.now()).days
+        task[3] = days_left+1  # Update the 'days' field
+    for task in misc_tasks_list:
+        task_date = task[4]  # This is where you stored the original due date
+        days_left = (task_date - datetime.now()).days
+        task[3] = days_left+1  # Update the 'days' field
 
     homework_tasks_list.sort(key=lambda task: (task[3]))
     homework_tasks_list.sort(key=lambda task: (task[2]), reverse = True)

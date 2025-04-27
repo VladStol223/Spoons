@@ -399,8 +399,6 @@ def logic_input_tasks(event, current_task, current_spoons, folder, task_month, t
                 current_task = ""
                 current_spoons = 0
                 input_active = False
-            else:
-                page = "complete_tasks"
 
         # Folder selection
         if homework_tasks.collidepoint(event.pos):

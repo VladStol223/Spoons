@@ -25,14 +25,6 @@ Total pages:
 18.) Settings
 
 To do:
- -Create "Manage Tasks" page:
-    - Update the hub to only have 6 buttons, consolidating complete and remove
-       1.) remove Remove Tasks in hub buttons DONE
-       2.) remove complete task hub and remove task hub. DONE   
-       3.) add edit tasks individual pages.
-       4.) add manage tasks hub. DONE
-    - Add Manage tasks page, where you first choose the folder you would like to do things with, then in the folder you have a toggle between compelte/ edit/ remove modes.
-
  -Fix Daily Schedule:
     - Make atleast 5 days fit on the screen by making the time font smaller and the boxes smaller as well.
     - Change the colors.
