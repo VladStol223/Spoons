@@ -25,33 +25,65 @@ Total pages:
 18.) Settings
 
 To do:
- -Fix Daily Schedule:
-    - Make atleast 5 days fit on the screen by making the time font smaller and the boxes smaller as well.
-    - Change the colors.
-    - Add a line under the Dates, and make sure the user knows when 'today' is. 
-    - Fix scrolling
-    - allow user to input their weekly schedule
-    - Allow user to move tasks between time blocks
-    - Allow user to remove tasks from time blocks
-    - Allow user to add tasks to time blocks
-    - Allow user to view all tasks in a week
-    - Once they have set up their schedule how they like it, allow the user to save the schedule. This is going to suck ass.
+1.) -Add the following pages: 
+-Store 
+-Study (Timer-based productivity tools like Pomodoro) 
+-Statistics (Personal stats and global leaderboard sections)
 
- -Allow user to edit created tasks in their respective folders. In the Complete Folders section, add an "edit" mode where you can:
-    - Allow user to change the names of the tasks
-    - Allow user to change the number of spoons
-    - Allow user to "uncomplete" the task
-    - Allow user to partially complete the task
+2.) -Remove the following pages: 
+-Daily Schedule (non-functional)
 
- -Allow user to change the number of task folders available to them (up to six) using folders one-six
+3.) -Add the following to the Calendar: 
+-Visual streak tracking (e.g., fire symbol next to date) 
+-Hover or click shows current streak length 
+-Streak data stored and updated daily
 
- -Fix how it looks.......
-    - Add Themes:
-    - Frutiger Aero
-    - Castelevania
-    - Horror Jumpscares
+4.) -Add the following core systems: 
+-Streak System 
+-Track daily completions by folder 
+-Store current and longest streaks 
+-Reset streak if no task is completed that day 
+-Integrate "streak saver" item that prevents reset once 
+-Goal System with Random Rewards 
+-Allow users to define personal goals (e.g., 5 tasks/week) 
+-Track goal progress 
+-Upon completion, randomly award: 
+-Themes 
+-Icons 
+-Icon names 
+-Spoon bucks 
+-Show progress and rewards in Manage Tasks Hub 
+-Badge System 
+-Unlock badges based on user actions (first task, streaks, spoons, etc.) 
+-Track and store badges earned 
+-Display badges in the Statistics page 
+-Optional tiering system (bronze, silver, gold) 
+-Spoon Bucks System 
+-Track spoon buck balance 
+-Award spoon bucks for task completions and goal rewards 
+-Deduct spoon bucks in Store upon purchase 
+-Display current balance consistently on UI
 
- -Port to better language such as c++
+5.) -Add the following to the Store page: 
+-Display available items (themes, icons, icon names, streak savers) 
+-Show item previews and costs 
+-Confirm purchase before deducting spoon bucks 
+-Disable purchase if insufficient funds
+
+6.) -Add the following to the Study page: 
+-Pomodoro timer (25/5) 
+-Buttons for start, pause, reset 
+-Dropdown for other modes (50/10, 90/20, custom) 
+-Optional: spoon reward after each completed session
+
+7.) -Add the following to the Statistics page: 
+-Personal stats section 
+-Total tasks completed 
+-Spoons earned and spent 
+-Streak history 
+-Folder/task breakdown 
+-Global leaderboard section (placeholder for now) 
+-Show top users by tasks, spoons, badges (offline or later online sync)
 '''
 
 from os import name
@@ -96,7 +128,7 @@ def hub_buttons_show(delta_time):
     # Keep drawing buttons while showing or if any button is still animating
     if hub_buttons_showing or (hub_closing and all(width >= 20 for width in button_widths.values())):
         draw_hub_buttons(screen, page, tool_tips, hub_background_color, add_spoons_color, add_tasks_color, 
-                         complete_tasks_color, remove_tasks_color, daily_schedule_color, calendar_color, settings_color, 
+                         manage_tasks_color, study_color, calendar_color, store_color, stats_color, 
                          button_widths, hub_closing, delta_time)  # Pass button_widths
 def hub_buttons(event):
     global scroll_offset
@@ -119,21 +151,26 @@ def hub_buttons(event):
               folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
             scroll_offset = 0
             return "manage_tasks"
-        elif hub_daily_schedule.collidepoint(event.pos):
+        elif hub_study.collidepoint(event.pos):
             save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
               daily_spoons, current_theme, icon_image, spoon_name_input,
               folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-            return "daily_schedule"
+            return "study"
         elif hub_calendar.collidepoint(event.pos):
             save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
               daily_spoons, current_theme, icon_image, spoon_name_input,
               folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
             return "calendar"
-        elif hub_settings.collidepoint(event.pos):
+        elif hub_store.collidepoint(event.pos):
             save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
               daily_spoons, current_theme, icon_image, spoon_name_input,
               folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-            return "settings"
+            return "store"
+        elif hub_stats.collidepoint(event.pos):
+            save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
+              daily_spoons, current_theme, icon_image, spoon_name_input,
+              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+            return "stats"
     return None 
 from drawing_functions.draw_hub_buttons import draw_hub_buttons
 from drawing_functions.draw_logic_input_spoons import draw_input_spoons, logic_input_spoons
@@ -285,12 +322,8 @@ while running:
                         folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         draw_task_toggle(screen, page)
         hub_buttons_show(delta_time)
-    elif page == "daily_schedule":
-        available_blocks_by_date, task_schedule = get_available_time_blocks(class_schedule, homework_tasks_list, work_tasks_list, chores_tasks_list, misc_tasks_list)
-        draw_daily_schedule(screen, allocate_tasks_to_time_blocks(available_blocks_by_date, sort_tasks_by_priority_and_due_date(homework_tasks_list, work_tasks_list, chores_tasks_list, misc_tasks_list)),
-                        homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, day_offset,
-                        homework_fol_color, chores_fol_color, work_fol_color, misc_fol_color, background_color, calendar_previous_day_header_color, calendar_next_day_header_color)
-        hub_buttons_show(delta_time)
+    elif page == "study":
+        pass
     elif page == "calendar":
         draw_calendar(screen, spoon_name_input,
                   homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
@@ -300,10 +333,13 @@ while running:
                   calendar_previous_day_color, calendar_current_day_color, calendar_next_day_color,
                   folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         hub_buttons_show(delta_time)
-    elif page == "settings":
+    elif page == "store":
         draw_settings(screen, tool_tips, spoon_name_input, icon_image, input_active, hub_background_color,
                   folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         hub_buttons_show(delta_time)
+    elif page == "stats":
+        pass
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
@@ -394,11 +430,7 @@ while running:
             logic_remove_tasks(misc_tasks_list, task_buttons_misc, event)
         elif page == "calendar": 
             displayed_month, displayed_year = logic_calendar(event, displayed_month, displayed_year)
-        elif page == "daily_schedule":
-            scroll_limit = 30
-            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=10)
-            logic_daily_schedule(event, class_schedule, day_offset, homework_tasks_list, work_tasks_list, chores_tasks_list, misc_tasks_list)
-        elif page == "settings":
+        elif page == "store":
             tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_settings(event, tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
             switch_theme(current_theme, globals())
     update_and_draw_confetti(screen, confetti_particles)

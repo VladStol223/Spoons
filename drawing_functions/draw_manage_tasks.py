@@ -17,21 +17,37 @@ def draw_manage_tasks_hub(screen, spoons,
     pygame.draw.rect(screen, BLACK, hub_menu3)# type: ignore
 
     for task in homework_tasks_list:
-        task_date = task[4]  # This is where you stored the original due date
-        days_left = (task_date - datetime.now()).days
-        task[3] = days_left+1  # Update the 'days' field
+        try:
+            task_date = task[4]  # Original due date
+            days_left = (task_date - datetime.now()).days
+            task[3] = days_left + 1  # Update the 'days' field
+        except Exception:
+            pass
+
     for task in chores_tasks_list:
-        task_date = task[4]  # This is where you stored the original due date
-        days_left = (task_date - datetime.now()).days
-        task[3] = days_left+1  # Update the 'days' field
+        try:
+            task_date = task[4]
+            days_left = (task_date - datetime.now()).days
+            task[3] = days_left + 1
+        except Exception:
+            pass
+
     for task in work_tasks_list:
-        task_date = task[4]  # This is where you stored the original due date
-        days_left = (task_date - datetime.now()).days
-        task[3] = days_left+1  # Update the 'days' field
+        try:
+            task_date = task[4]
+            days_left = (task_date - datetime.now()).days
+            task[3] = days_left + 1
+        except Exception:
+            pass
+
     for task in misc_tasks_list:
-        task_date = task[4]  # This is where you stored the original due date
-        days_left = (task_date - datetime.now()).days
-        task[3] = days_left+1  # Update the 'days' field
+        try:
+            task_date = task[4]
+            days_left = (task_date - datetime.now()).days
+            task[3] = days_left + 1
+        except Exception:
+            pass
+
 
     homework_tasks_list.sort(key=lambda task: (task[3]))
     homework_tasks_list.sort(key=lambda task: (task[2]), reverse = True)

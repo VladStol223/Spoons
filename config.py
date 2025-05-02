@@ -140,12 +140,13 @@ day_input_box_recurring_shifted = pygame.Rect(325, 305, 70, 50)
 day_up_button_recurring_shifted = pygame.Rect(375, 310, 15, 15)
 day_down_button_recurring_shifted = pygame.Rect(375, 335, 15, 15)
 # hub buttons
-hub_add_spoons = pygame.Rect(0, 0, 250, 100)
-hub_add_task = pygame.Rect(0, 100, 250, 100)
-hub_manage_task = pygame.Rect(0, 200, 250, 100)
-hub_daily_schedule = pygame.Rect(0, 300, 250, 100)
-hub_calendar = pygame.Rect(0, 400, 250, 100)
-hub_settings = pygame.Rect(0, 500, 250, 100)
+hub_add_spoons    = pygame.Rect(0,   0, 250, 86)
+hub_add_task      = pygame.Rect(0,  86, 250, 86)
+hub_manage_task   = pygame.Rect(0, 172, 250, 86)
+hub_study         = pygame.Rect(0, 258, 250, 86)
+hub_calendar      = pygame.Rect(0, 344, 250, 85)
+hub_store         = pygame.Rect(0, 429, 250, 85)
+hub_stats         = pygame.Rect(0, 514, 250, 86)
 
 hub_toggle = pygame.Rect(0,0,5,600)
 hub_menu1 = pygame.Rect(0,0,0,0) # Needs to be removed in all files
@@ -260,11 +261,11 @@ remove_tasks_task_color = LIME_GREEN# type: ignore
 
 add_spoons_color = GOLD# type: ignore
 add_tasks_color = LIME_GREEN# type: ignore
-complete_tasks_color = GREEN# type: ignore
-remove_tasks_color = RED# type: ignore
-daily_schedule_color = LIGHT_BLUE# type: ignore
+manage_tasks_color = GREEN# type: ignore
+study_color = RED# type: ignore
+store_color = LIGHT_BLUE# type: ignore
 calendar_color = BLUE# type: ignore
-settings_color = DARK_GRAY# type: ignore
+stats_color = DARK_GRAY# type: ignore
 
 calendar_current_day_color = CAMEL# type: ignore
 calendar_current_day_header_color = GOLD# type: ignore
