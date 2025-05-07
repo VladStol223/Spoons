@@ -55,7 +55,8 @@ Returns:
 
 def save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
               daily_spoons, theme, icon_image, spoon_name_input,
-              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six):
+              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
+              streak_dates):
 
     icon_image_name = None
     if icon_image == spoon_image:
@@ -88,7 +89,9 @@ def save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, m
             # Line 9: spoon_name_input
             f.write(f'  "spoon_name_input": {json.dumps(spoon_name_input)},\n')
             # Line 10: folder names
-            f.write(f'  "folder_one": {json.dumps(folder_one)}, "folder_two": {json.dumps(folder_two)},  "folder_three": {json.dumps(folder_three)},  "folder_four": {json.dumps(folder_four)},  "folder_five": {json.dumps(folder_five)},  "folder_six": {json.dumps(folder_six)}\n')
+            f.write(f'  "folder_one": {json.dumps(folder_one)}, "folder_two": {json.dumps(folder_two)},  "folder_three": {json.dumps(folder_three)},  "folder_four": {json.dumps(folder_four)},  "folder_five": {json.dumps(folder_five)},  "folder_six": {json.dumps(folder_six)},\n')
+            # Line 11: streak_dates
+            f.write(f'  "streak_dates": {json.dumps(streak_dates)}\n')
             f.write("}\n")
     except Exception as e:
         print(f"Error saving data: {e}")
@@ -134,7 +137,7 @@ Returns:
 """
 
 def load_data():
-    global spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, current_theme, daily_spoons, icon_image
+    global spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, current_theme, daily_spoons, icon_image, streak_dates
 
     try:
         with open("data.json", "r") as f:
@@ -159,7 +162,7 @@ def load_data():
             if icon_image_name == "spoon.png":
                 icon_image = spoon_image
             elif icon_image_name == "battery.png":
-                icon_image = battery_image
+                icon_image = battery_image 
             elif icon_image_name == "star.png":
                 icon_image = star_image
             elif icon_image_name == "potion.png":
@@ -178,7 +181,11 @@ def load_data():
             folder_five = data.get("folder_five", "")
             folder_six = data.get("folder_six", "")
 
+            #load streak data
+            streak_dates = data.get("streak_dates", [])
+
+
     except Exception as e:
         print(f"Error loading data: {e}")
 
-    return spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, daily_spoons, loaded_theme, icon_image, spoon_name_input, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six
+    return spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, daily_spoons, loaded_theme, icon_image, spoon_name_input, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, streak_dates

@@ -340,3 +340,38 @@ confetti_particles = []
 task_how_often = 1
 task_how_long = 1
 task_repetitions_amount = 1
+
+#study stuff
+TIMER_MODES = {
+    "Pomodoro (25/5)": (25, 5),
+    "Extended (50/10)": (50, 10),
+    "Deep Work (90/20)": (90, 20),
+    "Custom": (0, 0)
+}
+study_timer = None
+dropdown_open = False
+
+#stats stuff
+personal_stats = {
+    "tasks_completed": 123,
+    "spoons_earned": 320,
+    "spoons_spent": 250,
+    "current_streak": 7,
+    "longest_streak": 14,
+    "folder_breakdown": {
+        "homework": 40,
+        "chores": 30,
+        "work": 25,
+        "misc": 28
+    }
+}
+
+global_leaderboard = [
+    {"username": "Alice", "tasks": 150, "spoons": 400, "badges": 10},
+    {"username": "Bob", "tasks": 120, "spoons": 320, "badges": 7},
+    {"username": "You", "tasks": 123, "spoons": 320, "badges": 5},
+]
+
+#streaks stuff
+streak_dates = []
+streak_task_completed = False

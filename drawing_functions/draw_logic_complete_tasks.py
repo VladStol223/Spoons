@@ -6,6 +6,7 @@ from drawing_functions.draw_spoons import draw_spoons
 import pygame
 import time
 import random
+from datetime import datetime, timedelta
 """
 Summary:
     Draws the completed tasks interface on the given screen, including task details and scroll functionality.
@@ -17,7 +18,7 @@ Parameters:
     buttons (list): List to store button objects for task interaction.
     spoons (int): The current number of spoons.
     scroll_offset (int): The current scroll offset for the task list.
-    complete_tasks_task_color (tuple): Color for the task buttons.
+    complete_tasks_task_color (tuple): Color for the task buttons. 
 
 Returns:
     No returns.
@@ -136,30 +137,47 @@ Returns:
     tuple: Updated task_list and spoons.
 """
 
-def logic_complete_tasks(task_list, buttons, event, spoons):
+from datetime import datetime, timedelta
+
+...
+
+def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, streak_task_completed):
     global scroll_offset, scroll_last_update_time, confetti_particles
     current_time = pygame.time.get_ticks() / 1000  # Current time in seconds
     task_completed = False
 
+    today = datetime.now()
+    today_str = today.strftime("%Y-%m-%d")
+    yesterday_str = (today - timedelta(days=1)).strftime("%Y-%m-%d")
+
     if event.type == pygame.MOUSEBUTTONDOWN:
-        # Handle clicking on tasks to mark as complete
         if event.button == 1:
             for button, index in buttons:
                 if button.collidepoint(event.pos) and task_list[index][2] == "❌":
                     if spoons >= task_list[index][1]:
-                        task_data = list(task_list[index])  # Convert tuple to list
-                        task_data[2] = '✅'  # Mark task as complete
-                        task_list[index] = tuple(task_data)  # Update back as tuple
+                        task_data = list(task_list[index])
+                        task_data[2] = '✅'
+                        task_list[index] = tuple(task_data)
                         spoons -= task_list[index][1]
                         task_completed = True
 
+                        # Streak logic
+                        if not streak_task_completed:
+                            streak_task_completed = True
+                            if not streak_dates:
+                                streak_dates.append([today_str, today_str])
+                            else:
+                                start_date, end_date = streak_dates[-1]
+                                if today_str > end_date:
+                                    if end_date == yesterday_str:
+                                        streak_dates[-1][1] = today_str
+                                    else:
+                                        streak_dates.append([today_str, today_str])
 
-                        for _ in range(30):  # Adjust number for more/less confetti
+                        for _ in range(30):
                             confetti_particles.append(ConfettiParticle(-50, 400, "left"))
                             confetti_particles.append(ConfettiParticle(850, 400, "right"))
                         break
-                    else:
-                        print("Not enough spoons to complete this task.")
 
     # Handle scrolling logic
     if scroll_bar_up_button.collidepoint(pygame.mouse.get_pos()) and pygame.mouse.get_pressed()[0]:
@@ -173,7 +191,7 @@ def logic_complete_tasks(task_list, buttons, event, spoons):
             scroll_offset += 1
             scroll_last_update_time = current_time  # Update the last update time
 
-    return task_completed, spoons, confetti_particles
+    return task_completed, spoons, confetti_particles, streak_dates
 
 
 class ConfettiParticle:

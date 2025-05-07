@@ -12,9 +12,6 @@ def draw_manage_tasks_hub(screen, spoons,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six):
     global hub_buttons_showing
     draw_rounded_button(screen,hub_toggle,LIGHT_GRAY,BLACK,0,2)# type: ignore
-    pygame.draw.rect(screen, BLACK, hub_menu1)# type: ignore
-    pygame.draw.rect(screen, BLACK, hub_menu2)# type: ignore
-    pygame.draw.rect(screen, BLACK, hub_menu3)# type: ignore
 
     for task in homework_tasks_list:
         try:

@@ -40,7 +40,8 @@ def draw_calendar(screen, spoon_name_input,
                   homework_fol_color, chores_fol_color, work_fol_color, misc_fol_color,calendar_month_color, 
                   calendar_previous_day_header_color, calendar_next_day_header_color, calendar_current_day_header_color,
                   calendar_previous_day_color, calendar_current_day_color, calendar_next_day_color,
-                  folder_one, folder_two, folder_three, folder_four, folder_five, folder_six):
+                  folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
+                  streak_dates):
     global hub_buttons_showing
 
     draw_rounded_button(screen, hub_toggle, LIGHT_GRAY, BLACK, 0, 2)# type: ignore
@@ -56,6 +57,13 @@ def draw_calendar(screen, spoon_name_input,
     top_padding = 30  # Padding from the top for day names
     days_of_week = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     today_date = datetime.now()
+
+    def is_streak_day(date_to_check_str):
+        for start_str, end_str in streak_dates:
+            if start_str <= date_to_check_str <= end_str:
+                return True
+        return False
+
 
     task_colors = {
         "homework": homework_fol_color,
@@ -143,6 +151,11 @@ def draw_calendar(screen, spoon_name_input,
 
             # Draw the day number in the top right of the box
             day_text = smaller_font.render(str(day_number), True, BLACK)# type: ignore
+            checked_date_str = checked_date.strftime("%Y-%m-%d")
+            if is_streak_day(checked_date_str):
+                s_text = smaller_font.render("S", True, BLACK)# type: ignore
+                screen.blit(s_text, (x + day_box_width - 33, y + 2))  # S appears left of the day number
+
             if day_number > 9:
                 screen.blit(day_text, (x + day_box_width - 19, y + 2))
             else:

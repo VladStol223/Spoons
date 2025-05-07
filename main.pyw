@@ -20,19 +20,12 @@ Total pages:
 13.) Remove Folder 2 Tasks
 14.) Remove Folder 3 Tasks
 15.) Remove Folder 4 Tasks
-16.) Calendar
-17.) daily schedule
-18.) Settings
+16.) Study
+17.) Calendar
+18.) Store
+19.) Statistics
 
 To do:
-1.) -Add the following pages: 
--Store 
--Study (Timer-based productivity tools like Pomodoro) 
--Statistics (Personal stats and global leaderboard sections)
-
-2.) -Remove the following pages: 
--Daily Schedule (non-functional)
-
 3.) -Add the following to the Calendar: 
 -Visual streak tracking (e.g., fire symbol next to date) 
 -Hover or click shows current streak length 
@@ -69,21 +62,6 @@ To do:
 -Show item previews and costs 
 -Confirm purchase before deducting spoon bucks 
 -Disable purchase if insufficient funds
-
-6.) -Add the following to the Study page: 
--Pomodoro timer (25/5) 
--Buttons for start, pause, reset 
--Dropdown for other modes (50/10, 90/20, custom) 
--Optional: spoon reward after each completed session
-
-7.) -Add the following to the Statistics page: 
--Personal stats section 
--Total tasks completed 
--Spoons earned and spent 
--Streak history 
--Folder/task breakdown 
--Global leaderboard section (placeholder for now) 
--Show top users by tasks, spoons, badges (offline or later online sync)
 '''
 
 from os import name
@@ -138,38 +116,45 @@ def hub_buttons(event):
         if hub_add_spoons.collidepoint(event.pos):
             save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
               daily_spoons, current_theme, icon_image, spoon_name_input,
-              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
+              streak_dates)
             return "input_spoons"
         elif hub_add_task.collidepoint(event.pos):
             save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
               daily_spoons, current_theme, icon_image, spoon_name_input,
-              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
+              streak_dates)
             return "input_tasks"
         elif hub_manage_task.collidepoint(event.pos):
             save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
               daily_spoons, current_theme, icon_image, spoon_name_input,
-              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
+              streak_dates)
             scroll_offset = 0
             return "manage_tasks"
         elif hub_study.collidepoint(event.pos):
             save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
               daily_spoons, current_theme, icon_image, spoon_name_input,
-              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
+              streak_dates)
             return "study"
         elif hub_calendar.collidepoint(event.pos):
             save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
               daily_spoons, current_theme, icon_image, spoon_name_input,
-              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
+              streak_dates)
             return "calendar"
         elif hub_store.collidepoint(event.pos):
             save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
               daily_spoons, current_theme, icon_image, spoon_name_input,
-              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
+              streak_dates)
             return "store"
         elif hub_stats.collidepoint(event.pos):
             save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
               daily_spoons, current_theme, icon_image, spoon_name_input,
-              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
+              streak_dates)
             return "stats"
     return None 
 from drawing_functions.draw_hub_buttons import draw_hub_buttons
@@ -184,6 +169,8 @@ from drawing_functions.draw_logic_settings import draw_settings, logic_settings
 from drawing_functions.draw_intro_sequence import draw_intro_sequence
 from drawing_functions.draw_logic_task_toggle import draw_task_toggle, logic_task_toggle
 from drawing_functions.draw_logic_edit_tasks import draw_edit_tasks, logic_edit_tasks
+from drawing_functions.draw_logic_study import draw_study, logic_study, Timer
+from drawing_functions.draw_logic_stats import draw_stats, logic_stats
 
 # Miscellanous Functions
 from load_save import save_data, load_data
@@ -191,9 +178,12 @@ from switch_themes import switch_theme
 from handle_scroll import handle_task_scroll
 
 draw_intro_sequence(screen, clock)
-
-spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, daily_spoons, loaded_theme, icon_image, spoon_name_input, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = load_data()
+#loading save data
+spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, daily_spoons, loaded_theme, icon_image, spoon_name_input, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, streak_dates = load_data()
 current_theme = switch_theme(loaded_theme, globals())
+
+#timer init
+study_timer = Timer()
 
 # ----------------------------------------------------------------------------------------------------
 # Main loop
@@ -207,6 +197,7 @@ while running:
     if int(current_day) > int(previous_day) or int(current_month) > int(previous_month):
         current_weekday = datetime.now().strftime("%a")
         spoons = daily_spoons.get(current_weekday, spoons)
+        streak_task_completed = False #reset streak task completion for new day
         if homework_tasks_list:
             for task in homework_tasks_list:
                 if task[3] > 0:
@@ -323,7 +314,8 @@ while running:
         draw_task_toggle(screen, page)
         hub_buttons_show(delta_time)
     elif page == "study":
-        pass
+        draw_study(screen, study_timer, font, dropdown_open, list(TIMER_MODES.keys()))
+        hub_buttons_show(delta_time)
     elif page == "calendar":
         draw_calendar(screen, spoon_name_input,
                   homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
@@ -331,20 +323,22 @@ while running:
                   homework_fol_color, chores_fol_color, work_fol_color, misc_fol_color,calendar_month_color, 
                   calendar_previous_day_header_color, calendar_next_day_header_color, calendar_current_day_header_color,
                   calendar_previous_day_color, calendar_current_day_color, calendar_next_day_color,
-                  folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+                  folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
+                  streak_dates)
         hub_buttons_show(delta_time)
     elif page == "store":
         draw_settings(screen, tool_tips, spoon_name_input, icon_image, input_active, hub_background_color,
                   folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         hub_buttons_show(delta_time)
     elif page == "stats":
-        pass
-
+        draw_stats(screen, font, big_font, personal_stats, global_leaderboard)
+        hub_buttons_show(delta_time)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
               daily_spoons, current_theme, icon_image, spoon_name_input,
-              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
+              streak_dates)
             running = False
         if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION):
             if hub_buttons_showing and hub_cover.collidepoint(event.pos):
@@ -383,19 +377,19 @@ while running:
         elif page == "complete_homework_tasks":
             scroll_limit = max(0, len(homework_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            task_completed, spoons, confetti_particles = logic_complete_tasks(homework_tasks_list, task_buttons_homework, event, spoons)
+            task_completed, spoons, confetti_particles, streak_dates = logic_complete_tasks(homework_tasks_list, task_buttons_homework, event, spoons, streak_dates, streak_task_completed)
         elif page == "complete_chores_tasks":
             scroll_limit = max(0, len(chores_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            task_completed, spoons, confetti_particles = logic_complete_tasks(chores_tasks_list, task_buttons_chores, event, spoons)
+            task_completed, spoons, confetti_particles, streak_dates = logic_complete_tasks(chores_tasks_list, task_buttons_chores, event, spoons, streak_dates, streak_task_completed)
         elif page == "complete_work_tasks":
             scroll_limit = max(0, len(work_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            task_completed, spoons, confetti_particles = logic_complete_tasks(work_tasks_list, task_buttons_work, event, spoons)
+            task_completed, spoons, confetti_particles, streak_dates = logic_complete_tasks(work_tasks_list, task_buttons_work, event, spoons, streak_dates, streak_task_completed)
         elif page == "complete_misc_tasks":
             scroll_limit = max(0, len(misc_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            task_completed, spoons, confetti_particles = logic_complete_tasks(misc_tasks_list, task_buttons_misc, event, spoons)
+            task_completed, spoons, confetti_particles, streak_dates = logic_complete_tasks(misc_tasks_list, task_buttons_misc, event, spoons, streak_dates, streak_task_completed)
         elif page == "edit_homework_tasks":
             scroll_limit = max(0, len(homework_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
@@ -428,11 +422,15 @@ while running:
             scroll_limit = max(0, len(misc_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             logic_remove_tasks(misc_tasks_list, task_buttons_misc, event)
+        elif page == "study":
+            dropdown_open = logic_study(event, study_timer, dropdown_open, list(TIMER_MODES.keys()))
         elif page == "calendar": 
             displayed_month, displayed_year = logic_calendar(event, displayed_month, displayed_year)
         elif page == "store":
             tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_settings(event, tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
             switch_theme(current_theme, globals())
+        elif page == "stats":
+            logic_stats(event)
     update_and_draw_confetti(screen, confetti_particles)
     pygame.display.flip()
 pygame.quit()
