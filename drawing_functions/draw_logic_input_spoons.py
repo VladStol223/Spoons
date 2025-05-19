@@ -1,132 +1,196 @@
-from config import *
-
-from drawing_functions.draw_rounded_button import draw_rounded_button
-from drawing_functions.draw_input_box import draw_input_box
-
 import pygame
+import pygame_gui
+import math
+from pygame_gui.elements import UITextEntryLine, UIButton, UILabel
 
-"""
-Summary:
-    Draws the input interface for entering the number of spoons and rest options on the given screen.
+# Global UI elements
+rest_buttons = {}
+daily_inputs = {}
+labels = []
+spoon_rects = []  # Stores clickable spoon icon rects
 
-Parameters:
-    screen (pygame.Surface): The surface on which the input interface will be drawn.
-    daily_spoons (dict): Dictionary containing the number of spoons for each day of the week.
-    spoons (int): The current number of spoons.
-    done_button_color (tuple): Color for the 'Done' button.
+layout_heights = {
+    "spoon_label": 0.1,
+    "spoon_input_line": 0.2,
+    "rest_buttons": 0.4,
+    "daily_prompt": 0.6,
+    "day_label": 0.7,
+    "day_input": 0.8
+}
 
-Returns:
-    daily_spoon_inputs (dict): Dictionary containing the values of the spoon input boxes for each day of the week.
-"""
 
-def draw_input_spoons(screen, daily_spoons, spoons, done_button_color, input_active):
-    global hub_buttons_showing
+def set_opacity(image, alpha):
+    temp = image.copy()
+    temp.set_alpha(alpha)
+    return temp
 
-    # Draw current UI elements
-    draw_rounded_button(screen, hub_toggle, LIGHT_GRAY, BLACK, 0, 2)# type: ignore
-    pygame.draw.rect(screen, BLACK, hub_menu1)# type: ignore
-    pygame.draw.rect(screen, BLACK, hub_menu2)# type: ignore
-    pygame.draw.rect(screen, BLACK, hub_menu3)# type: ignore
 
-    # Main spoon input box
-    draw_input_box(screen, spoon_amount_input_box, input_active == "spoons", str(spoons), GREEN, LIGHT_GRAY)# type: ignore
-    prompt = font.render("Enter Number of Spoons:", True, BLACK)# type: ignore
-    screen.blit(prompt, (255, 50))
+def tint_image(image, tint_color):
+    tinted = image.copy()
+    tint_surface = pygame.Surface(image.get_size(), pygame.SRCALPHA)
+    tint_surface.fill(tint_color)
+    tinted.blit(tint_surface, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+    return tinted
 
-    # Rest buttons and labels
-    draw_rounded_button(screen, spoon_done_button, done_button_color, BLACK, 15)# type: ignore
-    done_text = font.render("Done", True, WHITE)# type: ignore
-    screen.blit(done_text, (done_button.x + 69, done_button.y - 313))
 
-    draw_rounded_button(screen, short_rest_button, done_button_color, BLACK, 15, 3)# type: ignore
-    screen.blit(font.render("Short Rest", True, BLACK), (short_rest_button.x + 45, short_rest_button.y + 12))# type: ignore
-    draw_rounded_button(screen, half_rest_button, done_button_color, BLACK, 15, 3)# type: ignore
-    screen.blit(font.render("Half Rest", True, BLACK), (half_rest_button.x + 55, half_rest_button.y + 12))# type: ignore
-    draw_rounded_button(screen, full_rest_button, done_button_color, BLACK, 15, 3)# type: ignore
-    screen.blit(font.render("Full Rest", True, BLACK), (full_rest_button.x + 55, full_rest_button.y + 12))# type: ignore
+def get_pulse_alpha(time_sec, min_alpha=128, max_alpha=255, speed=4.0):
+    return int(min_alpha + (max_alpha - min_alpha) * 0.3 * (1 + math.sin(time_sec * speed)))
 
-    # Weekly spoon settings section
-    days_of_week = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-    daily_spoon_inputs = {}  # Store each input box for the days of the week
 
-    automatic_spoon_add_label = font.render("Enter number of Spoons you start off with in the morning:", True, BLACK)# type: ignore
-    screen.blit(automatic_spoon_add_label, (80, 330))
+def draw_input_spoons(screen, manager, UI_elements_initialized, daily_spoons, spoons, delta_time, icon_image):
+    global rest_buttons, daily_inputs, labels, spoon_rects
+    screen_width, screen_height = screen.get_size()
 
-    for i, day in enumerate(days_of_week):
-        # Define the position of each day's input box
-        day_input_box = pygame.Rect(40 + i * 110, 400, 50, 50)
-        daily_spoon_inputs[day] = day_input_box
+    if not UI_elements_initialized:
+        manager.clear_and_reset()
+        input_width = int(screen_width * 0.06)
+        button_width = screen_width * 0.15
+        button_height = screen_height * 0.1
+        spacing = screen_width * 0.02
+        font = pygame.font.Font(None, int(screen_height * 0.06))
+        big_font = pygame.font.Font(None, int(screen_height * 0.067))
 
-        # Draw the input box and label for each day
-        draw_input_box(screen, day_input_box, input_active == day, str(daily_spoons.get(day, 0)), GREEN, LIGHT_GRAY)# type: ignore
-        day_label = small_font.render(f"{day}:", True, BLACK)# type: ignore
-        screen.blit(day_label, (35 + i * 112, 370))
+        # Label: "Current Spoon Status"
+        label_text = "Current Spoon Status"
+        text_width, text_height = font.size(label_text)
+        labels.append(UILabel(
+            relative_rect=pygame.Rect(
+                ((screen_width - text_width) // 2, screen_height * layout_heights["spoon_label"]),
+                (text_width, text_height + 10)
+            ),
+            text=label_text,
+            manager=manager
+        ))
 
-    return daily_spoon_inputs  # Return the dictionary to use for input handling
+        # Rest Buttons (Short, Half, Full)
+        y_rest = int(screen_height * layout_heights["rest_buttons"])
+        total_button_area = 3 * button_width + 2 * spacing
+        start_x = (screen_width - total_button_area) // 2
 
-"""
-Summary:
-    Handles the logic for interacting with the input interface for entering the number of spoons and rest options.
+        rest_buttons['short'] = UIButton(
+            relative_rect=pygame.Rect((start_x, y_rest), (button_width, button_height)),
+            text='Short Rest (+2)', manager=manager
+        )
+        rest_buttons['half'] = UIButton(
+            relative_rect=pygame.Rect((start_x + button_width + spacing, y_rest), (button_width, button_height)),
+            text='Half Rest (+5)', manager=manager
+        )
+        rest_buttons['full'] = UIButton(
+            relative_rect=pygame.Rect((start_x + 2 * (button_width + spacing), y_rest), (button_width, button_height)),
+            text='Full Rest (+10)', manager=manager
+        )
 
-Parameters:
-    event (pygame.event.Event): The event object containing information about the user input.
-    short_rest_amount (int): The number of spoons added for a short rest.
-    half_rest_amount (int): The number of spoons added for a half rest.
-    full_rest_amount (int): The number of spoons added for a full rest.
-    daily_spoons (dict): Dictionary containing the number of spoons for each day of the week.
-    spoons (int): The current number of spoons.
-    daily_spoon_inputs (dict): Dictionary containing the input boxes for each day of the week.
-    input_active (str or bool): The currently active input box or False if none is active.
+        # Daily Spoon Prompt
+        label_text = "Enter the number of spoons you start with each day:"
+        text_width, text_height = font.size(label_text)
+        labels.append(UILabel(
+            pygame.Rect(
+                ((screen_width - text_width) // 2, screen_height * layout_heights["daily_prompt"]),
+                (text_width, text_height + 10)
+            ),
+            text=label_text,
+            manager=manager
+        ))
 
-Returns:
-    (tuple) Updated values for: spoons, daily_spoons, input_active, and page.
-"""
+        # Daily Inputs (Mon–Sun)
+        days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        box_width = input_width
+        box_height = 30
+        total_width = len(days) * box_width + (len(days) - 1) * spacing
+        start_x = (screen_width - total_width) // 2
+        y_day_label = screen_height * layout_heights["day_label"]
+        y_day_input = screen_height * layout_heights["day_input"]
 
-def logic_input_spoons(event, short_rest_amount, half_rest_amount, full_rest_amount, 
-                       daily_spoons, spoons, daily_spoon_inputs, input_active):
+        for i, day in enumerate(days):
+            x_pos = start_x + i * (box_width + spacing)
+            labels.append(UILabel(
+                pygame.Rect((x_pos, y_day_label), (box_width, 20)),
+                text=f"{day}:", manager=manager
+            ))
+            daily_inputs[day] = UITextEntryLine(
+                pygame.Rect((x_pos, y_day_input), (box_width, box_height)),
+                manager=manager
+            )
+            daily_inputs[day].set_text(str(daily_spoons.get(day, 0)))
+
+        UI_elements_initialized = True
+
+    # Update & draw UI manager
+    manager.update(delta_time)
+    manager.draw_ui(screen)
+
+    # Spoon Icon Drawing
+    icon_w, icon_h = icon_image.get_size()
+    spacing = 10
+    start_x = (screen_width - (10 * icon_w + 9 * spacing)) // 2
+    start_y = int(screen_height * layout_heights["spoon_input_line"])
+
+    mouse_x, mouse_y = pygame.mouse.get_pos()
+    hovered_index = None
+    spoon_rects = []
+
+    # Detect hovered spoon
+    for i in range(20):
+        row = i // 10
+        col = i % 10
+        x = start_x + col * (icon_w + spacing)
+        y = start_y + row * (icon_h + spacing)
+        rect = pygame.Rect(x, y, icon_w, icon_h)
+        spoon_rects.append((i, rect))
+        if rect.collidepoint(mouse_x, mouse_y):
+            hovered_index = i
+
+    # Pulse for hover feedback
+    time_sec = pygame.time.get_ticks() / 1000.0
+    pulse_alpha = get_pulse_alpha(time_sec)
+
+    for i, rect in spoon_rects:
+        if i < spoons:
+            icon = icon_image.copy()
+            if hovered_index is not None and i >= hovered_index and hovered_index < spoons:
+                icon = tint_image(icon, (255, 0, 0, 100))
+                icon.set_alpha(pulse_alpha)
+        else:
+            icon = set_opacity(icon_image, 128)
+            if hovered_index is not None and i <= hovered_index and hovered_index >= spoons:
+                icon = tint_image(icon, (0, 255, 0, 100))
+                icon.set_alpha(pulse_alpha)
+
+        screen.blit(icon, rect.topleft)
+
+
+def logic_input_spoons(event, manager, short_rest_amount, half_rest_amount, full_rest_amount, daily_spoons, spoons):
+    global rest_buttons, daily_inputs, spoon_rects
+
     page = "input_spoons"
-    if event.type == pygame.MOUSEBUTTONDOWN:
-        # Check for general input box and rest buttons
-        if spoon_amount_input_box.collidepoint(event.pos):
-            input_active = "spoons"  # Activate general spoons input
-        elif spoon_done_button.collidepoint(event.pos):
-            page = "input_tasks"
-            input_active = False  # Deactivate after done
-        elif short_rest_button.collidepoint(event.pos):
-            spoons += short_rest_amount
-        elif half_rest_button.collidepoint(event.pos):
-            spoons += half_rest_amount
-        elif full_rest_button.collidepoint(event.pos):
-            spoons += full_rest_amount
-        else:
-            # Check each day’s input box
-            for day, box in daily_spoon_inputs.items():
-                if box.collidepoint(event.pos):
-                    input_active = day  # Activate input for the specific day
-                    break
-            else:
-                input_active = False  # Deactivate if clicked outside all boxes
 
-    # Handle text input for spoons or daily spoon counts
-    if event.type == pygame.KEYDOWN and input_active:
-        if event.key == pygame.K_RETURN:
-            # Deactivate on Enter
-            page = "input_tasks"
-            input_active = False
-        elif event.key == pygame.K_BACKSPACE:
-            # Backspace handling
-            if input_active == "spoons":
-                spoons = spoons // 10
-            else:
-                daily_spoons[input_active] = daily_spoons.get(input_active, 0) // 10
-        else:
-            try:
-                # Update either general spoons or specific day's spoon count
-                if input_active == "spoons":
-                    spoons = spoons * 10 + int(event.unicode)
-                else:
-                    # Update the daily spoon count for the specific day
-                    daily_spoons[input_active] = daily_spoons.get(input_active, 0) * 10 + int(event.unicode)
-            except ValueError:
-                pass
-    return spoons, daily_spoons, input_active, page
+    if event.type == pygame.USEREVENT and event.user_type == pygame_gui.UI_BUTTON_PRESSED:
+        if event.ui_element == rest_buttons['short']:
+            spoons += short_rest_amount
+        elif event.ui_element == rest_buttons['half']:
+            spoons += half_rest_amount
+        elif event.ui_element == rest_buttons['full']:
+            spoons += full_rest_amount
+
+    elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:  # Left click
+        mouse_pos = event.pos
+        for index, rect in spoon_rects:
+            if rect.collidepoint(mouse_pos):
+                spoons = index + 1
+                break
+
+    # Sanitize and apply daily inputs
+    for day, input_box in daily_inputs.items():
+        raw_day_text = input_box.get_text()
+        numeric_day_text = ''.join(c for c in raw_day_text if c.isdigit())
+        if raw_day_text != numeric_day_text:
+            input_box.set_text(numeric_day_text)
+        try:
+            daily_spoons[day] = int(numeric_day_text)
+        except ValueError:
+            daily_spoons[day] = 0
+
+    if spoons > 20:
+        spoons = 20
+
+    return spoons, daily_spoons, page

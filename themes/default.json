@@ -1,0 +1,30 @@
+{
+    "global": {
+        "font_path": "fonts/OpenSans-Regular.ttf",
+        "font_size": 18,
+        "font_colour": "#FFFFFF",
+        "selected_font_colour": "#00FF00",
+        "bg_colour": "#1E1E1E",
+        "disabled_font_colour": "#888888"
+    },
+
+    "button": {
+        "normal_bg": "#333333",
+        "hovered_bg": "#444444",
+        "disabled_bg": "#222222",
+        "font_size": 20,
+        "font_colour": "#FFFFFF"
+    },
+
+    "text_entry": {
+        "bg_colour": "#222222",
+        "font_colour": "#DDDDDD",
+        "selected_bg_colour": "#005577",
+        "selected_font_colour": "#FFFFFF"
+    },
+
+    "label": {
+        "font_size": 20,
+        "font_colour": "#CCCCCC"
+    }
+}

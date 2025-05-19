@@ -8,15 +8,13 @@ for name, value in COLORS.items():
 # Initialize pygame font
 pygame.font.init()
 
-screen_height = 600
-screen_width = 800
+screen_height = 520
+screen_width = 960
 
-# Scale font sizes based on screen height
-big_font = pygame.font.Font(None, int(screen_height * 0.067))   # ~6.7% of screen height
-font = pygame.font.Font(None, int(screen_height * 0.06))        # ~6% of screen height
-small_font = pygame.font.Font(None, int(screen_height * 0.047)) # ~4.7% of screen height
-small_one_font = pygame.font.Font(None, int(screen_height * 0.040))
-smaller_font = pygame.font.Font(None, int(screen_height * 0.033)) # ~3.3% of screen height
+font = pygame.font.Font(None, int(screen_height * 0.06))
+big_font = pygame.font.Font(None, int(screen_height * 0.067))
+small_font = pygame.font.Font(None, int(screen_height * 0.047))
+smaller_font = pygame.font.Font(None, int(screen_height * 0.033))
 
 #input buttons
 input_active = False
@@ -45,7 +43,14 @@ image_files = {
     "light_academia_background": ["light_academia_background.png", (800, 600)],
     "edit_toggle_icon": ["pencil.png", (25, 25)],
     "complete_toggle_icon": ["checkmark.png", (25, 25)],
-    "remove_toggle_icon": ["cross.png", (25, 25)]
+    "remove_toggle_icon": ["cross.png", (25, 25)],
+    "add_spoons_icon": ["addSpoonsIcon.png", (1024, 1024)],
+    "add_task_icon": ["addTasksIcon.png", (1024, 1024)],
+    "manage_task_icon": ["manageTasksIcon.png", (1024, 1024)],
+    "study_icon": ["studyIcon.png", (1024, 1024)],
+    "calendar_icon": ["calendarIcon.png", (1024, 1024)],
+    "store_icon": ["storeIcon.png", (1024, 1024)],
+    "settings_icon": ["settingsIcon.png", (1024, 1024)],
 }
 
 # Load and transform images
@@ -72,6 +77,13 @@ color_wheel = loaded_images.get("color_wheel")
 edit_toggle_icon = loaded_images.get("edit_toggle_icon")
 complete_toggle_icon = loaded_images.get("complete_toggle_icon")
 remove_toggle_icon = loaded_images.get("remove_toggle_icon")
+add_spoons_icon = loaded_images.get("add_spoons_icon") # hub icons
+add_task_icon = loaded_images.get("add_task_icon")
+manage_task_icon = loaded_images.get("manage_task_icon")
+study_icon = loaded_images.get("study_icon")
+calendar_icon = loaded_images.get("calendar_icon")
+store_icon = loaded_images.get("store_icon")
+settings_icon = loaded_images.get("settings_icon")
 
 #background images
 light_academia_background = loaded_images.get("light_academia_background")
