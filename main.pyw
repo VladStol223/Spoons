@@ -124,7 +124,7 @@ def hub_buttons(event):
 from drawing_functions.draw_hub_buttons import draw_hub_buttons
 from drawing_functions.draw_logic_input_spoons import draw_input_spoons, logic_input_spoons
 from drawing_functions.draw_logic_input_tasks import draw_input_tasks, logic_input_tasks
-from drawing_functions.draw_manage_tasks import draw_manage_tasks_hub
+from drawing_functions.draw_logic_manage_tasks import draw_manage_tasks_hub, logic_manage_tasks_hub
 from drawing_functions.draw_logic_complete_tasks import draw_complete_tasks, logic_complete_tasks, update_and_draw_confetti
 from drawing_functions.draw_logic_remove_tasks import draw_remove_tasks, logic_remove_tasks
 from drawing_functions.draw_daily_schedule import draw_daily_schedule, logic_daily_schedule, get_available_time_blocks, allocate_tasks_to_time_blocks, sort_tasks_by_priority_and_due_date
@@ -210,7 +210,7 @@ while running:
                          folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         
     elif page == "manage_tasks":
-        draw_manage_tasks_hub(screen, spoons,
+        folder_rects = draw_manage_tasks_hub(screen, spoons,
                             homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
                             complete_tasks_hub_folder_color, icon_image, spoon_name_input,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
@@ -350,19 +350,11 @@ while running:
                                                            daily_spoons, spoons)
             
         elif page == "input_tasks":
-            input_active, page, folder, time_toggle_on, recurring_toggle_on, current_task, current_spoons, task_month, task_day, start_time, end_time, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, task_how_often, task_how_long, task_repetitions_amount = logic_input_tasks(event, current_task, current_spoons, folder, task_month, task_day, task_how_often, task_how_long, task_repetitions_amount,
-                      time_toggle_on, recurring_toggle_on, start_time, end_time, max_days, input_active, 
+            input_active, page, folder, recurring_toggle_on, current_task, current_spoons, task_month, task_day, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, task_how_often, task_how_long, task_repetitions_amount = logic_input_tasks(event, screen, current_task, current_spoons, folder, task_month, task_day, task_how_often, task_how_long, task_repetitions_amount,
+                      recurring_toggle_on, max_days, input_active, 
                       homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list)
         elif page == "manage_tasks":
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if manage_homework_tasks.collidepoint(event.pos):
-                    page = "complete_homework_tasks"
-                elif manage_chores_tasks.collidepoint(event.pos):
-                    page = "complete_chores_tasks"
-                elif manage_work_tasks.collidepoint(event.pos):
-                    page = "complete_work_tasks"
-                elif manage_misc_tasks.collidepoint(event.pos):
-                    page = "complete_misc_tasks"
+            page = logic_manage_tasks_hub(event, page, folder_rects)
         elif page == "complete_homework_tasks":
             scroll_limit = max(0, len(homework_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
