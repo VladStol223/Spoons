@@ -1,7 +1,6 @@
 from config import *
 
 from drawing_functions.draw_rounded_button import draw_rounded_button
-from drawing_functions.draw_spoons import draw_spoons
 
 import pygame
 
@@ -12,13 +11,6 @@ def draw_remove_tasks(screen, type, task_list, buttons, spoons, scroll_offset,
     current_time = pygame.time.get_ticks() / 1000  # Current time in seconds
     scroll_multiplier = 1
     scroll_limit = len(task_list) - 8
-
-    draw_rounded_button(screen, hub_toggle, LIGHT_GRAY, BLACK, 0, 2)# type: ignore
-    pygame.draw.rect(screen, BLACK, hub_menu1)# type: ignore
-    pygame.draw.rect(screen, BLACK, hub_menu2)# type: ignore
-    pygame.draw.rect(screen, BLACK, hub_menu3)# type: ignore
-
-    draw_spoons(screen, spoons, icon_image, spoon_name)
 
     if type == "Homework":
         title = font.render(f"What {folder_one} tasks do you want to remove?", True, BLACK)# type: ignore

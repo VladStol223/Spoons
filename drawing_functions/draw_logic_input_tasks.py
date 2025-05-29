@@ -2,7 +2,6 @@ from config import *
 
 from drawing_functions.draw_rounded_button import draw_rounded_button
 from drawing_functions.draw_input_box import draw_input_box
-from drawing_functions.draw_spoons import draw_spoons
 import importlib
 draw_complete_tasks_folders = importlib.import_module("drawing_functions.draw_complete_tasks_folders").draw_complete_tasks_folders
 ctf_mod = importlib.import_module("drawing_functions.draw_complete_tasks_folders")
@@ -38,18 +37,18 @@ Returns:
 
 # somewhere at module top:
 layout_heights = {
-    "task_label":                  0.18,    # “Enter task name:”
-    "task_input_line":             0.25,   # y=195/600
-    "due_date_label":              0.38,   # “Enter due date:” & “Enter Start date:”
-    "due_date_input_line":         0.45,   # y=305/600
-    "how_often_label":             0.450,   # “How Often:”
-    "how_often_input_line":        0.45,   # y=305/600
-    "how_long_label":              0.438,   # “How Long:”
-    "how_long_input_line":         0.483,   # y=290/600
-    "repetitions_amount_label":    0.542,   # “Repetitions:”
-    "repetitions_input_line":      0.583,   # y=350/600
-    "spoons_label":                0.633,   # “Enter spoons needed:”
-    "spoons_input_line":           0.700,   # y=420/600
+    "task_label":                  0.28,    # “Enter task name:”
+    "task_input_line":             0.35,   # y=195/600
+    "due_date_label":              0.48,   # “Enter due date:” & “Enter Start date:”
+    "due_date_input_line":         0.55,   # y=305/600
+    "how_often_label":             0.550,   # “How Often:”
+    "how_often_input_line":        0.55,   # y=305/600
+    "how_long_label":              0.538,   # “How Long:”
+    "how_long_input_line":         0.583,   # y=290/600
+    "repetitions_amount_label":    0.642,   # “Repetitions:”
+    "repetitions_input_line":      0.683,   # y=350/600
+    "spoons_label":                0.68,   # “Enter spoons needed:”
+    "spoons_input_line":           0.75,   # y=420/600
     "time_toggle_label":           0.100,   # y=60/600
     "done_button":                 0.833,   # y=500/600
     "top_arrow":                   0.447,   # y=303/600
@@ -62,7 +61,8 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
                      add_tasks_choose_folder_color, add_tasks_chosen_folder_color,
                      icon_image, spoon_name_input, task_how_often, task_how_long,
                      task_repetitions_amount, folder_one, folder_two,
-                     folder_three, folder_four, folder_five, folder_six):
+                     folder_three, folder_four, folder_five, folder_six
+                     , homework_tasks_list,chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list):
 
     screen_h = screen.get_height()
     y_pos = {k: int(v * screen_h) for k, v in layout_heights.items()}
@@ -104,14 +104,8 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
     day_down_button_recurring_shifted = pygame.Rect(375, int(y_pos["bottom_arrow"] + 7), 15, 15)
 
     # Draw folder selector & spoons
-    draw_complete_tasks_folders(
-        screen, folder,
-        add_tasks_chosen_folder_color,
-        add_tasks_choose_folder_color,
-        folder_one, folder_two, folder_three,
-        folder_four, folder_five, folder_six)
-
-    draw_spoons(screen, spoons, icon_image, spoon_name_input)
+    draw_complete_tasks_folders(screen,folder,folder_one,folder_two,folder_three,folder_four,folder_five,folder_six, homework_tasks_list,chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list)
+    
 
     # Text‐inputs
     draw_input_box(screen, task_input_box,input_active == "task", current_task,GREEN, LIGHT_GRAY)#type: ignore
@@ -226,25 +220,8 @@ Returns:
 
 import math
 
-def logic_input_tasks(
-    event,
-    screen,
-    current_task,
-    current_spoons,
-    folder,
-    task_month,
-    task_day,
-    task_how_often,
-    task_how_long,
-    task_repetitions_amount,
-    recurring_toggle_on,
-    max_days,
-    input_active,
-    homework_tasks_list,
-    chores_tasks_list,
-    work_tasks_list,
-    misc_tasks_list
-):
+def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month,task_day,task_how_often,task_how_long,task_repetitions_amount,recurring_toggle_on,max_days,input_active,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list): 
+
     page = "input_tasks"
 
     screen_h = screen.get_height()
@@ -386,6 +363,10 @@ def logic_input_tasks(
                             work_tasks_list.append(entry)
                         elif folder == "misc":
                             misc_tasks_list.append(entry)
+                        elif folder == "exams":
+                            exams_tasks_list.append(entry)
+                        elif folder == "projects":
+                            projects_tasks_list.append(entry)
                 else:
                     entry = [
                         current_task,
@@ -404,6 +385,11 @@ def logic_input_tasks(
                         work_tasks_list.append(entry)
                     elif folder == "misc":
                         misc_tasks_list.append(entry)
+                    elif folder == "exams":
+                        exams_tasks_list.append(entry)
+                    elif folder == "projects":
+                        projects_tasks_list.append(entry)
+                        
 
                 # reset inputs
                 current_task = ""
@@ -432,20 +418,4 @@ def logic_input_tasks(
             elif event.unicode.isdigit():
                 current_spoons = current_spoons * 10 + int(event.unicode)
 
-    return (
-        input_active,
-        page,
-        folder,
-        recurring_toggle_on,
-        current_task,
-        current_spoons,
-        task_month,
-        task_day,
-        homework_tasks_list,
-        chores_tasks_list,
-        work_tasks_list,
-        misc_tasks_list,
-        task_how_often,
-        task_how_long,
-        task_repetitions_amount)
-
+    return (input_active,page,folder,recurring_toggle_on,current_task,current_spoons,task_month,task_day,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list,task_how_often,task_how_long,task_repetitions_amount)

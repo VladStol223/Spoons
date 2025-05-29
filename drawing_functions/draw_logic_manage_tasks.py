@@ -1,5 +1,4 @@
 from config import *
-from drawing_functions.draw_spoons import draw_spoons
 from datetime import datetime
 
 import pygame
@@ -27,9 +26,6 @@ def draw_manage_tasks_hub(screen, spoons,
                 work_tasks_list,   misc_tasks_list):
         lst.sort(key=lambda t: t[3])            # soonest first
         lst.sort(key=lambda t: t[2], reverse=True)  # undone ("❌") first
-
-    # 2) Draw top spoons UI (unchanged)
-    draw_spoons(screen, spoons, icon_image, spoon_name_input)
 
     # 3) Compute summary numbers
     def summarize(lst):

@@ -38,7 +38,7 @@ To do:
 -Reset streak if no task is completed that day 
 -Integrate "streak saver" item that prevents reset once 
 -Goal System with Random Rewards 
--Allow users to define personal goals (e.g., 5 tasks/week) 
+-Allow users to define personal goals (e.g., 5 tasks/week) k
 -Track goal progress 
 -Upon completion, randomly award: 
 -Themes 
@@ -62,6 +62,9 @@ To do:
 -Show item previews and costs 
 -Confirm purchase before deducting spoon bucks 
 -Disable purchase if insufficient funds
+
+make the UI look like the stardew valley interface. 
+The top of the interface is going to be the inventory where the user will be able to see the their current spoons, spoonbucks, streak, and your little guy.
 '''
 
 from os import name
@@ -109,7 +112,7 @@ def hub_buttons(event):
     for page, rect in button_actions.items():
         if rect.collidepoint(event.pos):
             save_data(
-                spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
+                spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,
                 daily_spoons, current_theme, icon_image, spoon_name_input,
                 folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
                 streak_dates
@@ -120,7 +123,7 @@ def hub_buttons(event):
 
     return None
 
-
+#drawing / logic functions
 from drawing_functions.draw_hub_buttons import draw_hub_buttons
 from drawing_functions.draw_logic_input_spoons import draw_input_spoons, logic_input_spoons
 from drawing_functions.draw_logic_input_tasks import draw_input_tasks, logic_input_tasks
@@ -135,6 +138,8 @@ from drawing_functions.draw_logic_task_toggle import draw_task_toggle, logic_tas
 from drawing_functions.draw_logic_edit_tasks import draw_edit_tasks, logic_edit_tasks
 from drawing_functions.draw_logic_study import draw_study, logic_study, Timer
 from drawing_functions.draw_logic_stats import draw_stats, logic_stats
+from drawing_functions.draw_border import draw_border
+from drawing_functions.draw_inventory import draw_inventory
 
 # Miscellanous Functions
 from load_save import save_data, load_data
@@ -143,7 +148,7 @@ from handle_scroll import handle_task_scroll
 
 draw_intro_sequence(screen, clock)
 #loading save data
-spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, daily_spoons, loaded_theme, icon_image, spoon_name_input, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, streak_dates = load_data()
+spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image, spoon_name_input, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, streak_dates = load_data()
 current_theme = switch_theme(loaded_theme, globals())
 
 #timer init
@@ -207,7 +212,9 @@ while running:
                          folder, task_month, task_day, time_toggle_on, recurring_toggle_on,  start_time, end_time,
                          done_button_color, add_tasks_choose_folder_color, add_tasks_chosen_folder_color, icon_image, spoon_name_input,
                          task_how_often, task_how_long, task_repetitions_amount,
-                         folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+                         folder_one, folder_two, folder_three, folder_four, folder_five, folder_six
+                         , homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list)
+        draw_inventory(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level)
         
     elif page == "manage_tasks":
         folder_rects = draw_manage_tasks_hub(screen, spoons,
@@ -235,6 +242,18 @@ while running:
         
     elif page == "complete_misc_tasks":
         draw_complete_tasks(screen,"Misc", misc_tasks_list, task_buttons_misc, spoons, scroll_offset,
+                        complete_tasks_task_color, icon_image, spoon_name,
+                            folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        draw_task_toggle(screen, page)
+
+    elif page == "complete_exams_tasks":
+        draw_complete_tasks(screen,"Exams", exams_tasks_list, task_buttons_exams, spoons, scroll_offset,
+                        complete_tasks_task_color, icon_image, spoon_name,
+                            folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        draw_task_toggle(screen, page)
+
+    elif page == "complete_projects_tasks":
+        draw_complete_tasks(screen,"Projects", projects_tasks_list, task_buttons_projects, spoons, scroll_offset,
                         complete_tasks_task_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         draw_task_toggle(screen, page)
@@ -306,11 +325,13 @@ while running:
         
     elif page == "stats":
         draw_stats(screen, font, big_font, personal_stats, global_leaderboard)
+
+    draw_border(screen, (0, 0, screen_width, screen_height), page)
         
     for event in pygame.event.get():
         manager.process_events(event)
         if event.type == pygame.QUIT:
-            save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
+            save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,
               daily_spoons, current_theme, icon_image, spoon_name_input,
               folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
               streak_dates)
@@ -320,7 +341,7 @@ while running:
                 if icon_rect.collidepoint(event.pos):
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         save_data(
-                            spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
+                            spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,
                             daily_spoons, current_theme, icon_image, spoon_name_input,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
                             streak_dates
@@ -350,9 +371,7 @@ while running:
                                                            daily_spoons, spoons)
             
         elif page == "input_tasks":
-            input_active, page, folder, recurring_toggle_on, current_task, current_spoons, task_month, task_day, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, task_how_often, task_how_long, task_repetitions_amount = logic_input_tasks(event, screen, current_task, current_spoons, folder, task_month, task_day, task_how_often, task_how_long, task_repetitions_amount,
-                      recurring_toggle_on, max_days, input_active, 
-                      homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list)
+            input_active,page,folder,recurring_toggle_on,current_task,current_spoons,task_month,task_day,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list,task_how_often,task_how_long,task_repetitions_amount = logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month,task_day,task_how_often,task_how_long,task_repetitions_amount,recurring_toggle_on,max_days,input_active,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list)
         elif page == "manage_tasks":
             page = logic_manage_tasks_hub(event, page, folder_rects)
         elif page == "complete_homework_tasks":
@@ -371,6 +390,14 @@ while running:
             scroll_limit = max(0, len(misc_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             task_completed, spoons, confetti_particles, streak_dates = logic_complete_tasks(misc_tasks_list, task_buttons_misc, event, spoons, streak_dates, streak_task_completed)
+        elif page == "complete_exams_tasks":
+            scroll_limit = max(0, len(exams_tasks_list) - 8)
+            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
+            task_completed, spoons, confetti_particles, streak_dates = logic_complete_tasks(exams_tasks_list, task_buttons_exams, event, spoons, streak_dates, streak_task_completed)
+        elif page == "complete_projects_tasks":
+            scroll_limit = max(0, len(projects_tasks_list) - 8)
+            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
+            task_completed, spoons, confetti_particles, streak_dates = logic_complete_tasks(projects_tasks_list, task_buttons_projects, event, spoons, streak_dates, streak_task_completed)
         elif page == "edit_homework_tasks":
             scroll_limit = max(0, len(homework_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)

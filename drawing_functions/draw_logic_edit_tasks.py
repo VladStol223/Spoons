@@ -3,7 +3,6 @@ import pygame
 import calendar
 from datetime import datetime
 from drawing_functions.draw_rounded_button import draw_rounded_button
-from drawing_functions.draw_spoons import draw_spoons
 from drawing_functions.draw_input_box import draw_input_box
 
 # Add these global variables
@@ -68,9 +67,6 @@ def draw_normal_interface(screen, spoons, type, task_list, buttons, scroll_offse
     else:
         scroll_offset = 0
 
-
-    draw_spoons(screen, spoons, icon_image, spoon_name)
-
     if type == "Homework":
         title = font.render(f"What {folder_one} tasks do you want to edit?", True, BLACK)# type: ignore
     elif type == "Chores":
@@ -123,7 +119,6 @@ def draw_normal_interface(screen, spoons, type, task_list, buttons, scroll_offse
 def draw_editing_interface(screen, spoons, task_list, complete_tasks_task_color, input_active, icon_image, spoon_name, buttons):
     """ Draws the editing interface for a single task """
     draw_rounded_button(screen, hub_toggle, LIGHT_GRAY, BLACK, 0, 2)  # type: ignore
-    draw_spoons(screen, spoons, icon_image, spoon_name)
 
     # Draw the task being edited
     task = editing_state["original_task"]

@@ -1,4 +1,3 @@
-from .draw_spoons import draw_spoons
 from .draw_input_box import draw_input_box
 from .draw_rounded_button import draw_rounded_button
 from .draw_hub_buttons import draw_hub_buttons
@@ -13,3 +12,5 @@ from .draw_logic_calendar import draw_calendar, logic_calendar
 from .draw_logic_settings import draw_settings
 from .draw_intro_sequence import draw_intro_sequence
 from .draw_logic_task_toggle import draw_task_toggle, logic_task_toggle
+from .draw_border import draw_border
+from .draw_inventory import draw_inventory

@@ -11,7 +11,7 @@ pygame.font.init()
 screen_height = 520
 screen_width = 960
 
-font = pygame.font.Font(None, int(screen_height * 0.06))
+font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.06))
 big_font = pygame.font.Font(None, int(screen_height * 0.067))
 small_font = pygame.font.Font(None, int(screen_height * 0.047))
 smaller_font = pygame.font.Font(None, int(screen_height * 0.033))
@@ -51,6 +51,19 @@ image_files = {
     "calendar_icon": ["calendarIcon.png", (1024, 1024)],
     "store_icon": ["storeIcon.png", (1024, 1024)],
     "settings_icon": ["settingsIcon.png", (1024, 1024)],
+    "corner": ["borderCorner.png", (12, 12)],
+    "edge1": ["Border1.png", (6, 12)],
+    "edge2": ["Border2.png", (6, 12)],
+    "connector": ["borderConnector.png", (15, 15)],
+    "tcorner": ["borderTcorner.png", (14, 12)],
+    "short_rest_icon": ["shortRestIcon.png", (790,790)],
+    "half_rest_icon": ["halfRestIcon.png", (864,864)],
+    "full_rest_icon": ["fullRestIcon.png", (820,820)],
+    "coin_image": ["coin.png", (15, 17)],
+    "xp_bar": ["xpBar.png", (155, 30)],
+    "manilla_folder": ["manillaFolder.png", (150, 62)],
+    "manilla_folder_open": ["manillaFolderOpen.png", (150, 62)],
+    "manilla_folder_tab": ["manillaFolderTab.png", (48, 7)],
 }
 
 # Load and transform images
@@ -84,6 +97,19 @@ study_icon = loaded_images.get("study_icon")
 calendar_icon = loaded_images.get("calendar_icon")
 store_icon = loaded_images.get("store_icon")
 settings_icon = loaded_images.get("settings_icon")
+corner = loaded_images.get("corner")
+edge_one = loaded_images.get("edge1")
+edge_two = loaded_images.get("edge2")
+connector = loaded_images.get("connector")
+tcorner = loaded_images.get("tcorner")
+short_rest = loaded_images.get("short_rest_icon")
+half_rest = loaded_images.get("half_rest_icon")
+full_rest = loaded_images.get("full_rest_icon")
+coin_image = loaded_images.get("coin_image")
+xp_bar_image = loaded_images.get("xp_bar")
+manilla_folder = loaded_images.get("manilla_folder")
+manilla_folder_open = loaded_images.get("manilla_folder_open")
+manilla_folder_tab = loaded_images.get("manilla_folder_tab")
 
 #background images
 light_academia_background = loaded_images.get("light_academia_background")
@@ -246,6 +272,8 @@ task_buttons_homework = []
 task_buttons_chores = []
 task_buttons_work = []
 task_buttons_misc = []
+task_buttons_exams = []
+task_buttons_projects = []
 input_active = False
 current_time = datetime.now()
 previous_month = current_time.month
@@ -336,3 +364,5 @@ global_leaderboard = [
 #streaks stuff
 streak_dates = []
 streak_task_completed = False
+coins = 7
+level = 2.66

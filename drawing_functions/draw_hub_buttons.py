@@ -2,11 +2,11 @@ from config import *
 import pygame
 from datetime import datetime
 
-button_widths = {}
+button_widths = {}  # no longer used, but left to avoid breaking interfaces
 
-# fonts: small for date, large for hover labels
-_date_font  = pygame.font.SysFont("arial", 24, bold=True)
-_label_font = pygame.font.SysFont("Impact", 30, bold=False)
+# fonts: small for date, large for static labels
+_date_font  = pygame.font.SysFont("fonts/Stardew_Valley.ttf", 24, bold=True)
+_label_font = pygame.font.SysFont("fonts/Stardew_Valley.ttf", 30, bold=False)
 
 def draw_hub_buttons(
     screen,
@@ -26,7 +26,6 @@ def draw_hub_buttons(
 ):
     global hub_buttons_showing, button_widths
     hub_buttons_showing = True
-    button_widths = button_widths_dict
 
     # icon definitions
     icon_buttons = [
@@ -40,19 +39,19 @@ def draw_hub_buttons(
     ]
 
     # sizes and spacing
-    icon_size  = 64
+    icon_size  = 56
     cal_size   = int(icon_size * 1.5)
     y_spacing  = 10
     total_h    = cal_size + y_spacing + (len(icon_buttons)-1)*(icon_size + y_spacing)
     start_y    = (screen.get_height() - total_h) // 2
-    x_base     = 10
+    x_base     = 23
 
     button_rects = {}
     today = datetime.now().strftime("%m/%d")
 
     # --- Calendar icon + date ---
-    cal_x = x_base - 10
-    cal_y = start_y + 10
+    cal_x = x_base - 13
+    cal_y = start_y + 5
     cal_rect = pygame.Rect(cal_x, cal_y, cal_size, cal_size)
     img = icon_buttons[0][1]
     if img:
@@ -70,8 +69,6 @@ def draw_hub_buttons(
             image,
             label,
             _label_font,
-            button_widths,
-            delta_time,
             selected = (page_key == page),
             bg_color = background_color
         )
@@ -79,41 +76,17 @@ def draw_hub_buttons(
 
     return button_rects
 
+
 def draw_icon_button(
     screen,
     rect,
     icon_img,
     label,
     font,
-    button_widths,
-    delta_time,
-    padding    = 10,
-    speed      = 8,
     selected   = False,
     bg_color   = (30,30,30)
 ):
-    # key for this button
-    rect_key = (rect.x, rect.y)
-
-    # render label text once
-    text_surface = font.render(label, True, BLACK) #type: ignore
-    label_w, label_h = text_surface.get_size()
-
-    # sliding offset logic
-    max_offset = label_w + padding + 10
-    if rect_key not in button_widths:
-        button_widths[rect_key] = 0
-    hover_rect = pygame.Rect(
-        rect.x, rect.y,
-        int(button_widths[rect_key]) + rect.width,
-        rect.height
-    )
-    is_hover = hover_rect.collidepoint(pygame.mouse.get_pos())
-    target = max_offset if is_hover else 0
-    button_widths[rect_key] = lerp(button_widths[rect_key], target, speed, delta_time)
-    x_offset = int(button_widths[rect_key])
-
-      # draw circular gradient glow behind icon if selected
+    # draw circular gradient glow behind icon if selected
     if selected and icon_img:
         glow_scale = 1.3
         gw = int(rect.width  * glow_scale)
@@ -123,36 +96,25 @@ def draw_icon_button(
         glow_color = tuple(min(255, c + 60) for c in bg_color)
         center = (gw // 2, gh // 2)
         max_radius = gw // 2
-        max_alpha  = 255  # peak at center
+        max_alpha  = 255
 
-        # draw from outermost to innermost
+        # fade out toward edges
         for r in range(max_radius, 0, -1):
-            # invert alpha so center (r small) is strong, edge (r large) is weak
-            alpha = int(max_alpha * (1 - (r / max_radius)))
+            frac  = (1 - (r / max_radius))**2
+            alpha = int(max_alpha * frac)
             pygame.draw.circle(glow_surf, glow_color + (alpha,), center, r)
 
-        gx = rect.x + x_offset - (gw - rect.width)//2
-        gy = rect.y       - (gh - rect.height)//2
+        gx = rect.x - (gw - rect.width)//2
+        gy = rect.y - (gh - rect.height)//2
         screen.blit(glow_surf, (gx, gy))
 
-
-
-    # draw the main icon
+    # draw the main icon (always at rect.x, rect.y)
     if icon_img:
         icon_surf = pygame.transform.scale(icon_img, (rect.width, rect.height))
-        screen.blit(icon_surf, (rect.x + x_offset, rect.y))
+        screen.blit(icon_surf, (rect.x, rect.y))
 
-    # reveal label text as it slides
-    revealed = max(0, x_offset - padding)
-    if revealed > 0:
-        clip_surf = pygame.Surface((revealed, label_h), pygame.SRCALPHA)
-        clip_surf.blit(text_surface, (0,0), (0,0,revealed,label_h))
-        screen.blit(
-            clip_surf,
-            (rect.x + padding, rect.y + (rect.height - label_h)//2)
-        )
-
-    return pygame.Rect(rect.x, rect.y, x_offset + rect.width, rect.height)
+    # no label reveal, so return the icon rect only
+    return rect
 
 
 def draw_centered_text(screen, font, text, rect, color):
@@ -161,12 +123,3 @@ def draw_centered_text(screen, font, text, rect, color):
     x = rect.x + (rect.width - w)//2
     y = rect.y + 12 + (rect.height - h)//2
     screen.blit(surf, (x, y))
-
-
-def lerp(a, b, t, delta_time):
-    return a + (b - a) * min(t * delta_time, 1)
-
-
-def reset_button_widths():
-    global button_widths
-    button_widths.clear()

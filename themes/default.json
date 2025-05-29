@@ -22,9 +22,18 @@
         "selected_bg_colour": "#005577",
         "selected_font_colour": "#FFFFFF"
     },
-
+    
+    "default_font": {
+        "name": "Stardew Regular",
+        "point_size": 24,
+        "style": "regular",
+        "file_path": "fonts/Stardew_Valley.ttf"
+    },
     "label": {
-        "font_size": 20,
-        "font_colour": "#CCCCCC"
-    }
+        "text_shadow_distance": [1, 1],
+        "text_shadow_colour": "#000000",
+        "font": "Stardew Regular",
+        "font_size": 24
+  }
 }
+

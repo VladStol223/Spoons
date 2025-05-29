@@ -53,7 +53,7 @@ Returns:
     No returns.
 """
 
-def save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, 
+def save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,
               daily_spoons, theme, icon_image, spoon_name_input,
               folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
               streak_dates):
@@ -80,6 +80,10 @@ def save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, m
             f.write(f'  "work_tasks_list": {json.dumps([task_to_serializable(t) for t in work_tasks_list])},\n')
             # Line 5: misc_tasks_list
             f.write(f'  "misc_tasks_list": {json.dumps([task_to_serializable(t) for t in misc_tasks_list])},\n')
+            # Line 5: exams_tasks_list
+            f.write(f'  "exams_tasks_list": {json.dumps([task_to_serializable(t) for t in exams_tasks_list])},\n')
+            # Line 5: projects_tasks_list
+            f.write(f'  "projects_tasks_list": {json.dumps([task_to_serializable(t) for t in projects_tasks_list])},\n')
             # Line 6: daily_spoons
             f.write(f'  "daily_spoons": {json.dumps(daily_spoons)},\n')
             # Line 7: theme
@@ -137,7 +141,7 @@ Returns:
 """
 
 def load_data():
-    global spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, current_theme, daily_spoons, icon_image, streak_dates
+    global spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, current_theme, daily_spoons, icon_image, streak_dates
 
     try:
         with open("data.json", "r") as f:
@@ -149,6 +153,8 @@ def load_data():
             chores_tasks_list = [task_from_serializable(task) for task in data.get("chores_tasks_list", [])]
             work_tasks_list = [task_from_serializable(task) for task in data.get("work_tasks_list", [])]
             misc_tasks_list = [task_from_serializable(task) for task in data.get("misc_tasks_list", [])]
+            exams_tasks_list = [task_from_serializable(task) for task in data.get("exams_tasks_list", [])]
+            projects_tasks_list = [task_from_serializable(task) for task in data.get("projects_tasks_list", [])]
             print("Tasks loaded successfully")
 
             # Theme
@@ -178,8 +184,8 @@ def load_data():
             folder_two = data.get("folder_two", "Chores")
             folder_three = data.get("folder_three", "Work")
             folder_four = data.get("folder_four", "Misc")
-            folder_five = data.get("folder_five", "")
-            folder_six = data.get("folder_six", "")
+            folder_five = data.get("folder_five", "Exams")
+            folder_six = data.get("folder_six", "Projects")
 
             #load streak data
             streak_dates = data.get("streak_dates", [])
@@ -188,4 +194,4 @@ def load_data():
     except Exception as e:
         print(f"Error loading data: {e}")
 
-    return spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, daily_spoons, loaded_theme, icon_image, spoon_name_input, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, streak_dates
+    return spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image, spoon_name_input, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, streak_dates

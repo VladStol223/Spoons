@@ -1,71 +1,32 @@
+from config import *
 import pygame
 
 # Global list of clickable folder rects
 folder_rects = []
 
-def draw_complete_tasks_folders(screen, selected_folder, active_color, inactive_color,
-                                 folder_one, folder_two, folder_three,
-                                 folder_four, folder_five, folder_six):
-    global folder_rects
-    folder_rects = []
-
-    # === CONFIGURABLE LAYOUT ===
-    folder_width = 300
-    folder_height = 200
-    tab_width = 120
-    tab_height = 26
-    tab_offset_x = 0
-    tab_indent = 15
-    slide_offset = 20
-    folder_spacing = 20
-
-    start_x = screen.get_width() - folder_width + slide_offset + 140
-    start_y = 120
-
-    folder_names = [
-        ("homework", folder_one),
-        ("chores", folder_two),
-        ("important", folder_three),
-        ("work", folder_four),
-        ("exams", folder_five),
-        ("projects", folder_six)
-    ]
-
-    font = pygame.font.SysFont("arial", 18, bold=True)
-
-    for i, (folder_key, folder_name) in enumerate(folder_names):
-        overlap_px = 130   # how many pixels each folder should overlap the one above
-        vertical_step = folder_height - overlap_px
-        y = start_y + i * vertical_step
-
-        x = start_x - slide_offset if folder_key == selected_folder else start_x
-
-        color = active_color if folder_key == selected_folder else inactive_color
-
-        # --- Tab Polygon ---
-        tab_points = [
-            (x + tab_offset_x, y),
-            (x + tab_offset_x + tab_indent, y - tab_height),
-            (x + tab_offset_x + tab_width - tab_indent, y - tab_height),
-            (x + tab_offset_x + tab_width, y)
-        ]
-        pygame.draw.polygon(screen, color, tab_points)
-        pygame.draw.polygon(screen, (0, 0, 0), tab_points, width=2)
-
-        # --- Folder Body Rectangle ---
-        folder_rect = pygame.Rect(x, y, folder_width, folder_height)
-        pygame.draw.rect(screen, color, folder_rect)
-        pygame.draw.rect(screen, (0, 0, 0), folder_rect, width=2)
-
-        # --- Folder Name inside the tab ---
-        text_surf = font.render(folder_name, True, (0, 0, 0))
-        text_rect = text_surf.get_rect(center=(x + tab_offset_x + tab_width // 2, y - tab_height // 2 + 2))
-        screen.blit(text_surf, text_rect)
-
-        # Full clickable area includes tab and body
-        click_rect = pygame.Rect(x, y - tab_height, folder_width, folder_height + tab_height)
-        folder_rects.append((folder_key, click_rect))
-
-    # Debug: visualize clickable zones (optional)
-    # for _, r in folder_rects:
-    #     pygame.draw.rect(screen, (255, 0, 0), r, 1)
+def draw_complete_tasks_folders(screen,selected_folder,folder_one,folder_two,folder_three,folder_four,folder_five,folder_six,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list):
+    global folder_rects; folder_rects=[]
+    # config
+    right_offset=0; top_offset=125; vertical_spacing=-32
+    scale_factor=1.5
+    # images from config: body closed/open and separate tab
+    base_closed=pygame.transform.scale(manilla_folder,(int(manilla_folder.get_width()*scale_factor),int(manilla_folder.get_height()*scale_factor)))
+    base_open=pygame.transform.scale(manilla_folder_open,(int(manilla_folder_open.get_width()*scale_factor),int(manilla_folder_open.get_height()*scale_factor)))
+    tab_img=pygame.transform.scale(manilla_folder_tab,(int(manilla_folder_tab.get_width()*scale_factor),int(manilla_folder_tab.get_height()*scale_factor)))
+    fw,fh=base_closed.get_size(); tw,th=tab_img.get_size()
+    # folder definitions
+    folder_list=[("homework",folder_one),("chores",folder_two),("important",folder_three),("work",folder_four),("exams",folder_five),("projects",folder_six)]
+    # draw each
+    for i,(key,name) in enumerate(folder_list):
+        img=base_open if key==selected_folder else base_closed
+        x=screen.get_width()-right_offset-fw; y=top_offset+i*(fh+vertical_spacing)
+        # draw tab then body underneath
+        screen.blit(tab_img,(x,y))
+        screen.blit(img,(x,y+th))
+        # text centered on tab
+        text_surf=font.render(name,True,BLACK) #type: ignore
+        tx= (x+tw+(fw-tw-text_surf.get_width())//2 - 20) if key ==selected_folder else (x+tw+(fw-tw-text_surf.get_width())//2 - 30)
+        ty= (y+th+(fh-th-text_surf.get_height())//2 ) if key ==selected_folder else (y+th+(fh-th-text_surf.get_height())//2 - 10)
+        screen.blit(text_surf,(tx,ty))
+        # click rect covers tab+body
+        folder_rects.append((key,pygame.Rect(x,y,fw,fh+th)))

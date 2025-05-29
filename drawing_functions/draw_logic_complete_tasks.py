@@ -1,7 +1,6 @@
 from config import *
 
 from drawing_functions.draw_rounded_button import draw_rounded_button
-from drawing_functions.draw_spoons import draw_spoons
 
 import pygame
 import time
@@ -65,9 +64,6 @@ def draw_complete_tasks(screen, type, task_list, buttons, spoons, scroll_offset,
     else:
         scroll_offset = 0
 
-
-    draw_spoons(screen, spoons, icon_image, spoon_name)
-
     if type == "Homework":
         title = font.render(f"What {folder_one} tasks have you completed?", True, BLACK)# type: ignore
     elif type == "Chores":
@@ -76,6 +72,10 @@ def draw_complete_tasks(screen, type, task_list, buttons, spoons, scroll_offset,
         title = font.render(f"What {folder_three} tasks have you completed?", True, BLACK)# type: ignore
     elif type == "Misc":
         title = font.render(f"What {folder_four} tasks have you completed?", True, BLACK)# type: ignore
+    elif type == "Exams":
+        title = font.render(f"What {folder_five} tasks have you completed?", True, BLACK)# type: ignore
+    elif type == "Projects":
+        title = font.render(f"What {folder_six} tasks have you completed?", True, BLACK)# type: ignore
     screen.blit(title, (50, 65))
     buttons.clear()
     mouse_pos = pygame.mouse.get_pos()
