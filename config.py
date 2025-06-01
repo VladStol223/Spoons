@@ -64,6 +64,7 @@ image_files = {
     "manilla_folder": ["manillaFolder.png", (150, 62)],
     "manilla_folder_open": ["manillaFolderOpen.png", (150, 62)],
     "manilla_folder_tab": ["manillaFolderTab.png", (48, 7)],
+    "manilla_folder_full": ["manillaFolderFull.png", (150, 83)],
 }
 
 # Load and transform images
@@ -110,6 +111,7 @@ xp_bar_image = loaded_images.get("xp_bar")
 manilla_folder = loaded_images.get("manilla_folder")
 manilla_folder_open = loaded_images.get("manilla_folder_open")
 manilla_folder_tab = loaded_images.get("manilla_folder_tab")
+manilla_folder_full = loaded_images.get("manilla_folder_full")
 
 #background images
 light_academia_background = loaded_images.get("light_academia_background")

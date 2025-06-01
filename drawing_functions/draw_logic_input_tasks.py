@@ -11,6 +11,8 @@ import pygame
 import math
 from datetime import datetime, timedelta
 
+current_spoons = ""
+
 """
 Summary:
     Draws the task input interface on the given screen, including task name, spoons needed, due date, and time options.
@@ -39,50 +41,67 @@ Returns:
 layout_heights = {
     "task_label":                  0.28,    # “Enter task name:”
     "task_input_line":             0.35,   # y=195/600
-    "due_date_label":              0.48,   # “Enter due date:” & “Enter Start date:”
-    "due_date_input_line":         0.55,   # y=305/600
-    "how_often_label":             0.550,   # “How Often:”
-    "how_often_input_line":        0.55,   # y=305/600
+    "due_date_label":              0.51,   # “Enter due date:” & “Enter Start date:”
+    "due_date_input_line":         0.58,   # y=305/600
+    "spoons_label":                0.74,   # “Enter spoons needed:”
+    "spoons_input_line":           0.81,   # y=420/600
+
+    "time_toggle_label":           0.100,   # y=60/600
+
+    "repetitions_amount_label":    0.65,   # “Repetitions:”
+    "repetitions_input_line":      0.70,   # y=420/600
     "how_long_label":              0.538,   # “How Long:”
     "how_long_input_line":         0.583,   # y=290/600
-    "repetitions_amount_label":    0.642,   # “Repetitions:”
-    "repetitions_input_line":      0.683,   # y=350/600
-    "spoons_label":                0.68,   # “Enter spoons needed:”
-    "spoons_input_line":           0.75,   # y=420/600
-    "time_toggle_label":           0.100,   # y=60/600
-    "done_button":                 0.833,   # y=500/600
-    "top_arrow":                   0.447,   # y=303/600
-    "bottom_arrow":                0.489,   # y=328/600
 }
 
 def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active, 
                      folder, task_month, task_day, time_toggle_on, recurring_toggle_on,
-                     start_time, end_time, done_button_color,
+                     start_time, end_time, done_button_color, background_color,
                      add_tasks_choose_folder_color, add_tasks_chosen_folder_color,
                      icon_image, spoon_name_input, task_how_often, task_how_long,
                      task_repetitions_amount, folder_one, folder_two,
                      folder_three, folder_four, folder_five, folder_six
                      , homework_tasks_list,chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list):
+    
+    if isinstance(current_spoons, int):
+        # if it’s the initial int‐0, show nothing; any other int would become a string
+        display_spoons = "" if current_spoons == 0 else str(current_spoons)
+    else:
+        # once the user has started typing, current_spoons will be a string
+        display_spoons = current_spoons
 
     screen_h = screen.get_height()
     y_pos = {k: int(v * screen_h) for k, v in layout_heights.items()}
 
+    r, g, b = background_color
+    folder_list = ["homework", "chores", "work", "misc", "exams", "projects"]
+    done_button_y_pos = 144 + 60 * folder_list.index(folder)
+
+    # subtract 20 from each channel, but ensure you don't drop below 0
+    done_button_color = ( max(r - 20, 0),max(g - 20, 0),max(b - 20, 0))
+    due_date_infill_color = ( max(r + 20, 0),max(g + 20, 0),max(b + 20, 0))
+
     # Task Input boxes
     task_input_box = pygame.Rect(250, y_pos["task_input_line"], 300, 50)
     spoon_input_box = pygame.Rect(375, y_pos["spoons_input_line"], 50, 50)
-    done_button       = pygame.Rect(300, y_pos["done_button"],       200, 50)
+    done_button       = pygame.Rect(630, done_button_y_pos,50, 32)
+    arrow_points = [
+    (done_button.right, done_button.top - 10),                       # top‐left corner
+    (done_button.right + 30, done_button.centery),                  # middle of right side (arrow tip)
+    (done_button.right, done_button.bottom + 10)                     # bottom‐left corner
+    ]
 
     # Recurring toggle (still at fixed y=50, could be pulled into layout_heights too)
     recurring_toggle_button = pygame.Rect(760, 50, 40, 40)
 
     # Repeat-task inputs & arrows
-    how_often_input_box          = pygame.Rect(410, y_pos["how_often_input_line"], 120, 50)
-    how_often_up_button          = pygame.Rect(510, int(y_pos["top_arrow"] + 7), 15, 15)
-    how_often_down_button        = pygame.Rect(510, int(y_pos["bottom_arrow"] + 7), 15, 15)
+    how_often_input_box          = pygame.Rect(410, y_pos["due_date_input_line"], 120, 50)
+    how_often_up_button          = pygame.Rect(510, int(y_pos["due_date_input_line"] + 7), 15, 15)
+    how_often_down_button        = pygame.Rect(510, int(y_pos["due_date_input_line"] + 7), 15, 15)
 
     how_long_input_box           = pygame.Rect(555, y_pos["how_long_input_line"], 115, 30)
-    how_long_up_button           = pygame.Rect(650, int(y_pos["top_arrow"] - 7), 15, 15)
-    how_long_down_button         = pygame.Rect(650, int(y_pos["bottom_arrow"] - 7), 15, 15)
+    how_long_up_button           = pygame.Rect(650, int(y_pos["due_date_input_line"] - 7), 15, 15)
+    how_long_down_button         = pygame.Rect(650, int(y_pos["due_date_input_line"] - 7), 15, 15)
 
     repetitions_amount_input_box = pygame.Rect(555, y_pos["repetitions_input_line"], 115, 30)
     repetitions_amount_up_button = pygame.Rect(650, y_pos["repetitions_input_line"] + 0, 15, 15)
@@ -90,107 +109,109 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
 
     # Due-date boxes (normal vs shifted for recurring)
     month_input_box_normal = pygame.Rect(280, y_pos["due_date_input_line"], 160, 50)
-    month_up_button_normal = pygame.Rect(420, int(y_pos["top_arrow"] + 7), 15, 15)
-    month_down_button_normal = pygame.Rect(420, int(y_pos["bottom_arrow"] + 7), 15, 15)
+    month_up_button_normal = pygame.Rect(420, int(y_pos["due_date_input_line"] + 7), 15, 15)
+    month_down_button_normal = pygame.Rect(420, int(y_pos["due_date_input_line"] + 25), 15, 15)
     day_input_box_normal   = pygame.Rect(465, y_pos["due_date_input_line"], 70, 50)
-    day_up_button_normal   = pygame.Rect(515, int(y_pos["top_arrow"] + 7), 15, 15)
-    day_down_button_normal = pygame.Rect(515, int(y_pos["bottom_arrow"] + 7), 15, 15)
+    day_up_button_normal   = pygame.Rect(515, int(y_pos["due_date_input_line"] + 7), 15, 15)
+    day_down_button_normal = pygame.Rect(515, int(y_pos["due_date_input_line"] + 25), 15, 15)
 
     month_input_box_recurring_shifted = pygame.Rect(150, y_pos["due_date_input_line"], 160, 50)
-    month_up_button_recurring_shifted = pygame.Rect(290, int(y_pos["top_arrow"] + 7), 15, 15)
-    month_down_button_recurring_shifted = pygame.Rect(290, int(y_pos["bottom_arrow"] + 7), 15, 15)
+    month_up_button_recurring_shifted = pygame.Rect(290, int(y_pos["due_date_input_line"] + 7), 15, 15)
+    month_down_button_recurring_shifted = pygame.Rect(290, int(y_pos["due_date_input_line"] + 25), 15, 15)
     day_input_box_recurring_shifted   = pygame.Rect(325, y_pos["due_date_input_line"], 70, 50)
-    day_up_button_recurring_shifted   = pygame.Rect(375, int(y_pos["top_arrow"] + 7), 15, 15)
-    day_down_button_recurring_shifted = pygame.Rect(375, int(y_pos["bottom_arrow"] + 7), 15, 15)
+    day_up_button_recurring_shifted   = pygame.Rect(375, int(y_pos["due_date_input_line"] + 7), 15, 15)
+    day_down_button_recurring_shifted = pygame.Rect(375, int(y_pos["due_date_input_line"] + 25), 15, 15)
 
     # Draw folder selector & spoons
     draw_complete_tasks_folders(screen,folder,folder_one,folder_two,folder_three,folder_four,folder_five,folder_six, homework_tasks_list,chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list)
     
 
     # Text‐inputs
-    draw_input_box(screen, task_input_box,input_active == "task", current_task,GREEN, LIGHT_GRAY)#type: ignore
+    draw_input_box(screen, task_input_box,input_active == "task", current_task,LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light")#type: ignore
 
-    draw_input_box(screen, spoon_input_box,input_active == "spoons", str(current_spoons),GREEN, LIGHT_GRAY)#type: ignore
+    draw_input_box(screen, spoon_input_box, input_active == "spoons", display_spoons, LIGHT_GRAY, DARK_SLATE_GRAY, True, background_color, "light")#type: ignore
 
 
-    up_arrow   = font.render(">", True, BLACK)#type: ignore
-    down_arrow = font.render("<", True, BLACK)#type: ignore
+    arrow   = font.render(">", True, done_button_color)#type: ignore
+    up_arrow = pygame.transform.rotate(arrow, 90) # rotate to point up
+    down_arrow = pygame.transform.rotate(arrow, 270)   
 
     if recurring_toggle_on:
         # recurring date & repeat settings
-        screen.blit(font.render("Enter Start date:", True, BLACK),(170, y_pos["due_date_label"]))#type: ignore
+        screen.blit(font.render("Enter Start date:", True, WHITE),(170, y_pos["due_date_label"]))#type: ignore
     
-        draw_input_box(screen, month_input_box_recurring_shifted,False, str(months[task_month - 1]),GREEN, LIGHT_GRAY)#type: ignore
+        draw_input_box(screen, month_input_box_recurring_shifted,False, str(months[task_month - 1]),DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light")#type: ignore
     
-        draw_input_box(screen, day_input_box_recurring_shifted,False, str(task_day), GREEN, LIGHT_GRAY)#type: ignore
+        draw_input_box(screen, day_input_box_recurring_shifted,False, str(task_day), DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light")#type: ignore
     
         # arrows
         for btn in (month_up_button_recurring_shifted,
                     month_down_button_recurring_shifted,
                     day_up_button_recurring_shifted,
                     day_down_button_recurring_shifted):
-            pygame.draw.rect(screen, done_button_color, btn)
+            pygame.draw.rect(screen, background_color, btn)
         screen.blit(up_arrow,   (month_up_button_recurring_shifted.x, month_up_button_recurring_shifted.y - 7))
         screen.blit(down_arrow, (month_down_button_recurring_shifted.x, month_down_button_recurring_shifted.y - 7))
         screen.blit(up_arrow,   (day_up_button_recurring_shifted.x, day_up_button_recurring_shifted.y - 7))
         screen.blit(down_arrow, (day_down_button_recurring_shifted.x, day_down_button_recurring_shifted.y - 7))
 
         # How Often
-        screen.blit(font.render("How Often:", True, BLACK), (395, y_pos["how_often_label"]))#type: ignore
+        screen.blit(font.render("How Often:", True, WHITE), (395, y_pos["due_date_input_line"]))#type: ignore
     
-        draw_input_box(screen, how_often_input_box, False, f"{task_how_often} days", GREEN, LIGHT_GRAY)#type: ignore
+        draw_input_box(screen, how_often_input_box, False, f"{task_how_often} days", GREEN, LIGHT_GRAY, False, background_color, "light")#type: ignore
     
-        pygame.draw.rect(screen, done_button_color, how_often_up_button)
-        pygame.draw.rect(screen, done_button_color, how_often_down_button)
+        pygame.draw.rect(screen, background_color, how_often_up_button)
+        pygame.draw.rect(screen, background_color, how_often_down_button)
         screen.blit(up_arrow,   (how_often_up_button.x, how_often_up_button.y - 7))
         screen.blit(down_arrow, (how_often_down_button.x, how_often_down_button.y - 7))
 
         # How Long
-        screen.blit(small_font.render("How Long:", True, BLACK),(560, y_pos["how_long_label"]))#type: ignore
+        screen.blit(small_font.render("How Long:", True, WHITE),(560, y_pos["how_long_label"]))#type: ignore
     
-        draw_input_box( screen, how_long_input_box, False, f"{task_how_long} weeks", GREEN, LIGHT_GRAY)#type: ignore
+        draw_input_box( screen, how_long_input_box, False, f"{task_how_long} weeks", GREEN, LIGHT_GRAY, False, background_color, "light")#type: ignore
     
-        pygame.draw.rect(screen, done_button_color, how_long_up_button)
-        pygame.draw.rect(screen, done_button_color, how_long_down_button)
+        pygame.draw.rect(screen, background_color, how_long_up_button)
+        pygame.draw.rect(screen, background_color, how_long_down_button)
         screen.blit(up_arrow,   (how_long_up_button.x, how_long_up_button.y - 7))
         screen.blit(down_arrow, (how_long_down_button.x, how_long_down_button.y - 7))
 
         # Repetitions
-        screen.blit(small_font.render("Repetitions:", True, BLACK), (552, y_pos["repetitions_amount_label"]))#type: ignore
+        screen.blit(small_font.render("Repetitions:", True, WHITE), (552, y_pos["repetitions_amount_label"]))#type: ignore
     
-        draw_input_box( screen, repetitions_amount_input_box, False, f"{task_repetitions_amount} times", GREEN, LIGHT_GRAY)#type: ignore
+        draw_input_box( screen, repetitions_amount_input_box, False, f"{task_repetitions_amount} times", GREEN, LIGHT_GRAY, False, background_color, "light")#type: ignore
     
-        pygame.draw.rect(screen, done_button_color, repetitions_amount_up_button)
-        pygame.draw.rect(screen, done_button_color, repetitions_amount_down_button)
+        pygame.draw.rect(screen, background_color, repetitions_amount_up_button)
+        pygame.draw.rect(screen, background_color, repetitions_amount_down_button)
         screen.blit(up_arrow,   (repetitions_amount_up_button.x, repetitions_amount_up_button.y - 7))
         screen.blit(down_arrow, (repetitions_amount_down_button.x, repetitions_amount_down_button.y - 7))
 
-        screen.blit( small_font.render("Remove Recurring Task", True, BLACK), (recurring_toggle_button.x - 280, y_pos["time_toggle_label"]))#type: ignore
+        screen.blit( small_font.render("Remove Recurring Task", True, WHITE), (recurring_toggle_button.x - 280, y_pos["time_toggle_label"]))#type: ignore
     
 
     else:
         # normal due date
-        screen.blit( font.render("Enter due date:", True, BLACK),  (305, y_pos["due_date_label"]))#type: ignore
+        screen.blit( font.render("Due Date:", True, WHITE),  (345, y_pos["due_date_label"]))#type: ignore
     
-        draw_input_box(  screen, month_input_box_normal, input_active == "month", str(months[task_month - 1]), GREEN, LIGHT_GRAY)#type: ignore
+        draw_input_box(  screen, month_input_box_normal, input_active == "month", str(months[task_month - 1]), DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light")#type: ignore
     
-        draw_input_box(  screen, day_input_box_normal, input_active == "day",  str(task_day), GREEN, LIGHT_GRAY)#type: ignore
+        draw_input_box(  screen, day_input_box_normal, input_active == "day",  str(task_day), DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light")#type: ignore
     
         for btn in (month_up_button_normal, month_down_button_normal,
                     day_up_button_normal,   day_down_button_normal):
-            pygame.draw.rect(screen, done_button_color, btn)
-        screen.blit(up_arrow,   (month_up_button_normal.x, month_up_button_normal.y - 7))
-        screen.blit(down_arrow, (month_down_button_normal.x, month_down_button_normal.y - 7))
-        screen.blit(up_arrow,   (day_up_button_normal.x, day_up_button_normal.y - 7))
-        screen.blit(down_arrow, (day_down_button_normal.x, day_down_button_normal.y - 7))
+            pygame.draw.rect(screen, due_date_infill_color, btn)
+        screen.blit(up_arrow,   (month_up_button_normal.x - 9, month_up_button_normal.y))
+        screen.blit(down_arrow, (month_down_button_normal.x - 12, month_down_button_normal.y))
+        screen.blit(up_arrow,   (day_up_button_normal.x - 9, day_up_button_normal.y))
+        screen.blit(down_arrow, (day_down_button_normal.x - 12, day_down_button_normal.y))
 
-        #screen.blit(small_font.render("Add Recurring Task", True, BLACK),(recurring_toggle_button.x - 240, y_pos["time_toggle_label"]))
+        #screen.blit(small_font.render("Add Recurring Task", True, WHITE),(recurring_toggle_button.x - 240, y_pos["time_toggle_label"]))
 
     # bottom labels & done#type: ignore
-    screen.blit(font.render("Enter task name:", True, BLACK),(300, y_pos["task_label"]))#type: ignore
-    screen.blit(font.render("Enter spoons needed:", True, BLACK),(280, y_pos["spoons_label"]))#type: ignore
-    draw_rounded_button(screen, done_button, done_button_color, BLACK, 15)#type: ignore
-    screen.blit(font.render("Done", True, WHITE),(done_button.x + 69, done_button.y + (done_button.height // 4)))#type: ignore
+    screen.blit(font.render("Task Name:", True, WHITE),(335, y_pos["task_label"]))#type: ignore
+    screen.blit(font.render("Spoons:", True, WHITE),(360, y_pos["spoons_label"]))#type: ignore
+    pygame.draw.rect(screen, done_button_color, done_button)
+    pygame.draw.polygon(screen, done_button_color, arrow_points)
+    screen.blit(font.render("Add", True, BLACK),(done_button.x + 15, done_button.y + 2))#type: ignore
 
 
 """
@@ -227,22 +248,30 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
     screen_h = screen.get_height()
     y_pos = {k: int(v * screen_h) for k, v in layout_heights.items()}
 
+    folder_list = ["homework", "chores", "work", "misc", "exams", "projects"]
+    done_button_y_pos = 144 + 60 * folder_list.index(folder)
+
     # Task Input boxes
     task_input_box = pygame.Rect(250, y_pos["task_input_line"], 300, 50)
     spoon_input_box = pygame.Rect(375, y_pos["spoons_input_line"], 50, 50)
-    done_button       = pygame.Rect(300, y_pos["done_button"],       200, 50)
+    done_button       = pygame.Rect(630, done_button_y_pos,50, 32)
+    arrow_points = [
+    (done_button.right, done_button.top - 10),                       # top‐left corner
+    (done_button.right + 30, done_button.centery),                  # middle of right side (arrow tip)
+    (done_button.right, done_button.bottom + 10)                     # bottom‐left corner
+    ]
 
     # Recurring toggle (still at fixed y=50, could be pulled into layout_heights too)
     recurring_toggle_button = pygame.Rect(760, 50, 40, 40)
 
     # Repeat-task inputs & arrows
-    how_often_input_box          = pygame.Rect(410, y_pos["how_often_input_line"], 120, 50)
-    how_often_up_button          = pygame.Rect(510, int(y_pos["top_arrow"] + 7), 15, 15)
-    how_often_down_button        = pygame.Rect(510, int(y_pos["bottom_arrow"] + 7), 15, 15)
+    how_often_input_box          = pygame.Rect(410, y_pos["due_date_input_line"], 120, 50)
+    how_often_up_button          = pygame.Rect(510, int(y_pos["due_date_input_line"] + 7), 15, 15)
+    how_often_down_button        = pygame.Rect(510, int(y_pos["due_date_input_line"] + 7), 15, 15)
 
     how_long_input_box           = pygame.Rect(555, y_pos["how_long_input_line"], 115, 30)
-    how_long_up_button           = pygame.Rect(650, int(y_pos["top_arrow"] - 7), 15, 15)
-    how_long_down_button         = pygame.Rect(650, int(y_pos["bottom_arrow"] - 7), 15, 15)
+    how_long_up_button           = pygame.Rect(650, int(y_pos["due_date_input_line"] - 7), 15, 15)
+    how_long_down_button         = pygame.Rect(650, int(y_pos["due_date_input_line"] - 7), 15, 15)
 
     repetitions_amount_input_box = pygame.Rect(555, y_pos["repetitions_input_line"], 115, 30)
     repetitions_amount_up_button = pygame.Rect(650, y_pos["repetitions_input_line"] + 0, 15, 15)
@@ -250,18 +279,18 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
 
     # Due-date boxes (normal vs shifted for recurring)
     month_input_box_normal = pygame.Rect(280, y_pos["due_date_input_line"], 160, 50)
-    month_up_button_normal = pygame.Rect(420, int(y_pos["top_arrow"] + 7), 15, 15)
-    month_down_button_normal = pygame.Rect(420, int(y_pos["bottom_arrow"] + 7), 15, 15)
+    month_up_button_normal = pygame.Rect(420, int(y_pos["due_date_input_line"] + 7), 15, 15)
+    month_down_button_normal = pygame.Rect(420, int(y_pos["due_date_input_line"] + 25), 15, 15)
     day_input_box_normal   = pygame.Rect(465, y_pos["due_date_input_line"], 70, 50)
-    day_up_button_normal   = pygame.Rect(515, int(y_pos["top_arrow"] + 7), 15, 15)
-    day_down_button_normal = pygame.Rect(515, int(y_pos["bottom_arrow"] + 7), 15, 15)
+    day_up_button_normal   = pygame.Rect(515, int(y_pos["due_date_input_line"] + 7), 15, 15)
+    day_down_button_normal = pygame.Rect(515, int(y_pos["due_date_input_line"] + 25), 15, 15)
 
     month_input_box_recurring_shifted = pygame.Rect(150, y_pos["due_date_input_line"], 160, 50)
-    month_up_button_recurring_shifted = pygame.Rect(290, int(y_pos["top_arrow"] + 7), 15, 15)
-    month_down_button_recurring_shifted = pygame.Rect(290, int(y_pos["bottom_arrow"] + 7), 15, 15)
+    month_up_button_recurring_shifted = pygame.Rect(290, int(y_pos["due_date_input_line"] + 7), 15, 15)
+    month_down_button_recurring_shifted = pygame.Rect(290, int(y_pos["due_date_input_line"] + 25), 15, 15)
     day_input_box_recurring_shifted   = pygame.Rect(325, y_pos["due_date_input_line"], 70, 50)
-    day_up_button_recurring_shifted   = pygame.Rect(375, int(y_pos["top_arrow"] + 7), 15, 15)
-    day_down_button_recurring_shifted = pygame.Rect(375, int(y_pos["bottom_arrow"] + 7), 15, 15)
+    day_up_button_recurring_shifted   = pygame.Rect(375, int(y_pos["due_date_input_line"] + 7), 15, 15)
+    day_down_button_recurring_shifted = pygame.Rect(375, int(y_pos["due_date_input_line"] + 25), 15, 15)
 
     if event.type == pygame.MOUSEBUTTONDOWN:
         # Toggle recurring task entry
@@ -338,6 +367,7 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
         # Done button: create task(s)
         elif done_button.collidepoint(event.pos):
             if current_task and current_spoons:
+                current_spoons = int(current_spoons)
                 task_date = datetime(current_time.year, task_month, int(task_day))
                 days_till_due = (task_date - current_time).days + 1
 
@@ -393,7 +423,7 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
 
                 # reset inputs
                 current_task = ""
-                current_spoons = 0
+                current_spoons = ""
                 input_active = False
 
         # Folder selection
@@ -411,11 +441,18 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
                 current_task = current_task[:-1]
             else:
                 current_task += event.unicode
-
         elif input_active == "spoons":
+        # if for some reason current_spoons is still an int, make it an empty string first:
+            if isinstance(current_spoons, int):
+                current_spoons = ""
+
             if event.key == pygame.K_BACKSPACE:
-                current_spoons //= 10
+                current_spoons = current_spoons[:-1]
             elif event.unicode.isdigit():
-                current_spoons = current_spoons * 10 + int(event.unicode)
+                current_spoons = current_spoons + event.unicode
+            if current_spoons.isdigit() and int(current_spoons) > 20:
+                current_spoons = "20"
+
+
 
     return (input_active,page,folder,recurring_toggle_on,current_task,current_spoons,task_month,task_day,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list,task_how_often,task_how_long,task_repetitions_amount)

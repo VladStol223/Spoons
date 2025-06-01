@@ -15,7 +15,7 @@ def draw_complete_tasks_folders(screen,selected_folder,folder_one,folder_two,fol
     tab_img=pygame.transform.scale(manilla_folder_tab,(int(manilla_folder_tab.get_width()*scale_factor),int(manilla_folder_tab.get_height()*scale_factor)))
     fw,fh=base_closed.get_size(); tw,th=tab_img.get_size()
     # folder definitions
-    folder_list=[("homework",folder_one),("chores",folder_two),("important",folder_three),("work",folder_four),("exams",folder_five),("projects",folder_six)]
+    folder_list=[("homework",folder_one),("chores",folder_two),("work",folder_three),("misc",folder_four),("exams",folder_five),("projects",folder_six)]
     # draw each
     for i,(key,name) in enumerate(folder_list):
         img=base_open if key==selected_folder else base_closed
@@ -24,7 +24,7 @@ def draw_complete_tasks_folders(screen,selected_folder,folder_one,folder_two,fol
         screen.blit(tab_img,(x,y))
         screen.blit(img,(x,y+th))
         # text centered on tab
-        text_surf=font.render(name,True,BLACK) #type: ignore
+        text_surf=font.render(name,True, BLACK if key == selected_folder else DARK_SLATE_GRAY) #type: ignore
         tx= (x+tw+(fw-tw-text_surf.get_width())//2 - 20) if key ==selected_folder else (x+tw+(fw-tw-text_surf.get_width())//2 - 30)
         ty= (y+th+(fh-th-text_surf.get_height())//2 ) if key ==selected_folder else (y+th+(fh-th-text_surf.get_height())//2 - 10)
         screen.blit(text_surf,(tx,ty))

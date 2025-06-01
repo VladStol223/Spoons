@@ -138,7 +138,7 @@ def draw_border(screen, rect, page):
             )
             tx += ht.get_width()
 
-    if page == "input_tasks":
+    if page == "input_tasks" or page == "manage_tasks":
         # y position of that border
         y_horiz = inventory_border_offset
 
@@ -198,8 +198,7 @@ def draw_border(screen, rect, page):
         screen.blit(tcorner_s,
                     (right_x, hub_border_offset - edge_h//4 - edge_h//2 + 3))
         
-        # 5a-3) vertical border at same X as avatar slice
-        # ------------------------------------------------
+    if page == "input_tasks":
         # y start just below inventory border
         y_start2 = inventory_border_offset + edge_h//2
         # y end matches hub bottom

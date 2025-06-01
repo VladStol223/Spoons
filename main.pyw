@@ -210,11 +210,10 @@ while running:
     elif page == "input_tasks":
         draw_input_tasks(screen, spoons, current_task, current_spoons, input_active, 
                          folder, task_month, task_day, time_toggle_on, recurring_toggle_on,  start_time, end_time,
-                         done_button_color, add_tasks_choose_folder_color, add_tasks_chosen_folder_color, icon_image, spoon_name_input,
+                         done_button_color, background_color, add_tasks_choose_folder_color, add_tasks_chosen_folder_color, icon_image, spoon_name_input,
                          task_how_often, task_how_long, task_repetitions_amount,
                          folder_one, folder_two, folder_three, folder_four, folder_five, folder_six
                          , homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list)
-        draw_inventory(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level)
         
     elif page == "manage_tasks":
         folder_rects = draw_manage_tasks_hub(screen, spoons,
@@ -327,6 +326,7 @@ while running:
         draw_stats(screen, font, big_font, personal_stats, global_leaderboard)
 
     draw_border(screen, (0, 0, screen_width, screen_height), page)
+    draw_inventory(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page)
         
     for event in pygame.event.get():
         manager.process_events(event)
