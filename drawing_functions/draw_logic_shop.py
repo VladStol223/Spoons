@@ -23,10 +23,6 @@ def draw_settings(screen, tool_tips, spoon_name_input, icon_image, input_active,
                   folder_one, folder_two, folder_three, folder_four, folder_five, folder_six):
     mouse_pos = pygame.mouse.get_pos()
     global hub_buttons_showing
-    draw_rounded_button(screen,hub_toggle,LIGHT_GRAY,BLACK,0,2)# type: ignore
-    pygame.draw.rect(screen, BLACK, hub_menu1)# type: ignore
-    pygame.draw.rect(screen, BLACK, hub_menu2)# type: ignore
-    pygame.draw.rect(screen, BLACK, hub_menu3)# type: ignore
 
     tool_tips_text = font.render("Tool Tips:", True, BLACK)# type: ignore
     screen.blit(tool_tips_text, (30,550))
@@ -49,7 +45,7 @@ def draw_settings(screen, tool_tips, spoon_name_input, icon_image, input_active,
     screen.blit(icon_prompt, (50, 20))
 
     Theme_text = font.render("Themes:", True, BLACK)# type: ignore
-    screen.blit(Theme_text, (30,70))
+    screen.blit(Theme_text, (430,70))
 
     draw_rounded_button(screen, aquatic_theme, (0,105,148), BLACK, 18)# type: ignore
     draw_rounded_button(screen, foresty_theme, (85,107,47), BLACK, 18)# type: ignore

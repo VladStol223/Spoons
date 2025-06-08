@@ -53,7 +53,7 @@ def draw_input_box(
     # 2) Compute text position
     if centered:
         text_x = rect.x + (rect.width - text_surface.get_width()) // 2
-        text_y = rect.y + (rect.height - text_surface.get_height()) // 2
+        text_y = rect.y + 12
     else:
         text_x = rect.x + 5
         text_y = rect.y + 12

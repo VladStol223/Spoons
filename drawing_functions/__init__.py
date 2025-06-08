@@ -4,12 +4,12 @@ from .draw_hub_buttons import draw_hub_buttons
 from .draw_complete_tasks_folders import draw_complete_tasks_folders
 from .draw_logic_input_spoons import draw_input_spoons, logic_input_spoons
 from .draw_logic_input_tasks import draw_input_tasks, logic_input_tasks
-from .draw_logic_manage_tasks import draw_manage_tasks_hub
-from .draw_logic_complete_tasks import draw_complete_tasks
+from .draw_logic_manage_tasks_hub import draw_manage_tasks_hub
+from .draw_logic_manage_tasks import draw_complete_tasks
 from .draw_logic_remove_tasks import draw_remove_tasks, logic_remove_tasks
 from .draw_daily_schedule import draw_daily_schedule
 from .draw_logic_calendar import draw_calendar, logic_calendar
-from .draw_logic_settings import draw_settings
+from .draw_logic_shop import draw_settings
 from .draw_intro_sequence import draw_intro_sequence
 from .draw_logic_task_toggle import draw_task_toggle, logic_task_toggle
 from .draw_border import draw_border

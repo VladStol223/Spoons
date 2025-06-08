@@ -7,7 +7,8 @@ base_sizes = {
     "corner":    (12, 12),
     "edge":      (6,  12),
     "connector": (8, 8),
-    "t_corner":  (14, 12)
+    "t_corner":  (14, 12),
+    "calendar":   (9, 24),
 }
 
 scale = 3                # multiplier for pixel-art → screen pixels
@@ -16,7 +17,7 @@ spoons_border_offset = 185  # px up from bottom for input_spoons horizontal bord
 inventory_border_offset = 120  # px from top edge for inventory page
 avatar_border_offset = 250  # px from right edge for input_tasks vertical border
 
-def draw_border(screen, rect, page):
+def draw_border(screen, rect, page, background_color):
     x, y, w, h = rect
     sw, sh = screen.get_size()
 
@@ -34,18 +35,22 @@ def draw_border(screen, rect, page):
     conn_base     = pygame.transform.scale(connector, (cw, ch))
     tcw, tch = base_sizes["t_corner"]
     tcorner_base  = pygame.transform.scale(tcorner,  (tcw, tch))
+    cbw, cbh = base_sizes["calendar"]
+    calendar_base = pygame.transform.scale(calendar_border, (cbw, cbh))
 
     # scale up by scale
     scw, sch   = bw * scale, bh * scale
     sew, seh   = ew * scale, eh * scale
     scw2, sch2 = cw * scale, ch * scale
     stcw, stch = tcw * scale, tch * scale
+    cbw, cbh = cbw * scale, cbh * scale
 
     corner_s    = pygame.transform.scale(corner_base,    (scw,  sch))
     edge1_s     = pygame.transform.scale(edge1_base,     (sew,  seh))
     edge2_s     = pygame.transform.scale(edge2_base,     (sew,  seh))
     connector_s = pygame.transform.scale(conn_base,      (scw2, sch2))
     tcorner_s   = pygame.transform.scale(tcorner_base,   (stcw, stch))
+    calendar_s  = pygame.transform.scale(calendar_base,  (cbw,  cbh))
 
     # corner variants
     tl = corner_s
@@ -138,7 +143,7 @@ def draw_border(screen, rect, page):
             )
             tx += ht.get_width()
 
-    if page == "input_tasks" or page == "manage_tasks":
+    if page == "input_tasks" or page == "manage_tasks" or page[:8] == "complete" or page[:4] == "edit" or page[:7] == "delete":
         # y position of that border
         y_horiz = inventory_border_offset
 
@@ -213,3 +218,29 @@ def draw_border(screen, rect, page):
         screen.blit(top_tc,(right_x,inventory_border_offset + edge_h//4))
         # bottom T-corner at hub bottom
         screen.blit(tcorner_s,(right_x,sh-tc_h-edge_h//2))
+
+    if page == "calendar":
+        left_border = 400
+        right_border = 600
+        r, g, b = background_color
+        lighter_background = (max(0, r + 20), max(0, g + 20), max(0, b + 20))
+        pygame.draw.rect(screen, lighter_background, (left_border, 0, 218, 60))
+        calendar_s_right = pygame.transform.flip(calendar_s, True,  False)
+        screen.blit(calendar_s, (left_border, 0))
+        screen.blit(calendar_s_right, (right_border, 0))
+
+        # ── draw the horizontal “edge” border between them ──
+        left_x  = left_border + calendar_s.get_width()
+        right_x = right_border
+        # center tiles on the bottom of the calendar corners
+        def horiz(tile): 
+            return pygame.transform.rotate(tile, -90)
+        tx = left_x
+        while tx < right_x:
+            bot_tile  = pygame.transform.rotate(edge_tile,  90)
+            tile = rng.choice([pygame.transform.rotate(edge1_s,  180), pygame.transform.rotate(edge2_s,  180)])
+            ht   = horiz(tile)
+            # vertically center on the bottom edge of calendar_s
+            y = calendar_s.get_height() - ht.get_height() // 2 - 9
+            screen.blit(ht, (tx, y))
+            tx += ht.get_width()

@@ -11,10 +11,13 @@ pygame.font.init()
 screen_height = 520
 screen_width = 960
 
+total_content_height = 0
+frame_buttons = []
+
 font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.06))
-big_font = pygame.font.Font(None, int(screen_height * 0.067))
-small_font = pygame.font.Font(None, int(screen_height * 0.047))
-smaller_font = pygame.font.Font(None, int(screen_height * 0.033))
+big_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.067))
+small_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.047))
+smaller_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.033))
 
 #input buttons
 input_active = False
@@ -41,12 +44,12 @@ image_files = {
     "spoon_bracket_image": ["spoon_bracket.png", (33, 33)],
     "color_wheel": ["color_wheel.png", (200, 200)],
     "light_academia_background": ["light_academia_background.png", (800, 600)],
-    "edit_toggle_icon": ["pencil.png", (25, 25)],
+    "edit_toggle_icon": ["pencil.png", (20, 20)],
     "complete_toggle_icon": ["checkmark.png", (25, 25)],
-    "remove_toggle_icon": ["cross.png", (25, 25)],
+    "remove_toggle_icon": ["cross.png", (20, 20)],
     "add_spoons_icon": ["addSpoonsIcon.png", (1024, 1024)],
     "add_task_icon": ["addTasksIcon.png", (1024, 1024)],
-    "manage_task_icon": ["manageTasksIcon.png", (1024, 1024)],
+    "manage_task_icon": ["manageTasksIcon.png", (150, 83)],
     "study_icon": ["studyIcon.png", (1024, 1024)],
     "calendar_icon": ["calendarIcon.png", (1024, 1024)],
     "store_icon": ["storeIcon.png", (1024, 1024)],
@@ -56,6 +59,7 @@ image_files = {
     "edge2": ["Border2.png", (6, 12)],
     "connector": ["borderConnector.png", (15, 15)],
     "tcorner": ["borderTcorner.png", (14, 12)],
+    "calendar_border": ["borderCalendarLeft.png", (9, 24)],
     "short_rest_icon": ["shortRestIcon.png", (790,790)],
     "half_rest_icon": ["halfRestIcon.png", (864,864)],
     "full_rest_icon": ["fullRestIcon.png", (820,820)],
@@ -65,6 +69,12 @@ image_files = {
     "manilla_folder_open": ["manillaFolderOpen.png", (150, 62)],
     "manilla_folder_tab": ["manillaFolderTab.png", (48, 7)],
     "manilla_folder_full": ["manillaFolderFull.png", (150, 83)],
+    "task_spoons_border": ["taskSpoonsBorder.png", (750, 50)],
+    "progress_bar_spoon_siding": ["progressBarSpoonSiding.png", (6, 34)],
+    "progress_bar_spoon_top": ["progressBarSpoonTop.png", (10, 2)],
+    "scroll_bar_body": ["scrollBarBody.png", (20, 350)],
+    "scroll_bar_slider": ["scrollBarSlider.png", (10, 50)],
+    "remove_edit_icons": ["removeEditIcons.png", (20, 40)],
 }
 
 # Load and transform images
@@ -103,6 +113,7 @@ edge_one = loaded_images.get("edge1")
 edge_two = loaded_images.get("edge2")
 connector = loaded_images.get("connector")
 tcorner = loaded_images.get("tcorner")
+calendar_border = loaded_images.get("calendar_border")
 short_rest = loaded_images.get("short_rest_icon")
 half_rest = loaded_images.get("half_rest_icon")
 full_rest = loaded_images.get("full_rest_icon")
@@ -112,6 +123,13 @@ manilla_folder = loaded_images.get("manilla_folder")
 manilla_folder_open = loaded_images.get("manilla_folder_open")
 manilla_folder_tab = loaded_images.get("manilla_folder_tab")
 manilla_folder_full = loaded_images.get("manilla_folder_full")
+task_spoons_border = loaded_images.get("task_spoons_border")
+progress_bar_spoon_siding = loaded_images.get("progress_bar_spoon_siding")
+progress_bar_spoon_top = loaded_images.get("progress_bar_spoon_top")
+scroll_bar = loaded_images.get("scroll_bar_body")
+scroll_bar_slider = loaded_images.get("scroll_bar_slider")
+remove_edit_icons = loaded_images.get("remove_edit_icons")
+
 
 #background images
 light_academia_background = loaded_images.get("light_academia_background")
@@ -191,27 +209,27 @@ scroll_bar_body = pygame.Rect(10,100,30,450)
 scroll_bar_up_button = pygame.Rect(12,102,26,32)
 scroll_bar_down_button = pygame.Rect(12,516,26,32)
 #calendar page
-previous_month_button = pygame.Rect(500,25,27,27)
-next_month_button = pygame.Rect(538,25,27,27)
+previous_month_button = pygame.Rect(418,15,27,27)
+next_month_button = pygame.Rect(582,15,27,27)
 
 #settings page
 tool_tip_toggle = pygame.Rect(150, 550, 23, 23)
 spoon_name_input_box = pygame.Rect(260, 15, 100, 40)
 #themes
-aquatic_theme = pygame.Rect(100, 110, 40, 40)
-foresty_theme = pygame.Rect(100, 160, 40, 40)
-girly_pop_theme = pygame.Rect(100, 210, 40, 40)
-vampire_goth_theme = pygame.Rect(100, 260, 40, 40)
-sunset_glow_theme = pygame.Rect(100, 310, 40, 40)
+aquatic_theme = pygame.Rect(500, 110, 40, 40)
+foresty_theme = pygame.Rect(500, 160, 40, 40)
+girly_pop_theme = pygame.Rect(500, 210, 40, 40)
+vampire_goth_theme = pygame.Rect(500, 260, 40, 40)
+sunset_glow_theme = pygame.Rect(500, 310, 40, 40)
 #extra themes
-light_academia_theme = pygame.Rect(30, 110, 40, 40)
-retro_theme = pygame.Rect(30, 160, 40, 40)
-minimalist_theme = pygame.Rect(30, 210, 40, 40)
-cosmic_theme = pygame.Rect(30, 260, 40, 40)
-autumn_harvest_theme = pygame.Rect(30, 310, 40, 40)
-tropical_oasis_theme = pygame.Rect(30, 360, 40, 40)
-pastel_dreams_theme = pygame.Rect(30, 410, 40, 40)
-steampunk_theme = pygame.Rect(30, 460, 40, 40)
+light_academia_theme = pygame.Rect(430, 110, 40, 40)
+retro_theme = pygame.Rect(430, 160, 40, 40)
+minimalist_theme = pygame.Rect(430, 210, 40, 40)
+cosmic_theme = pygame.Rect(430, 260, 40, 40)
+autumn_harvest_theme = pygame.Rect(430, 310, 40, 40)
+tropical_oasis_theme = pygame.Rect(430, 360, 40, 40)
+pastel_dreams_theme = pygame.Rect(430, 410, 40, 40)
+steampunk_theme = pygame.Rect(430, 460, 40, 40)
 #image outlines
 spoon_image_outline = pygame.Rect(410,20,35,35)
 battery_image_outline = pygame.Rect(460,20,35,35)

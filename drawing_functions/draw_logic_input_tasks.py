@@ -378,7 +378,7 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
                         entry = [
                             current_task,
                             current_spoons,
-                            "❌",
+                            0,
                             days_left,
                             actual_date,
                             # no time fields
@@ -401,7 +401,7 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
                     entry = [
                         current_task,
                         current_spoons,
-                        "❌",
+                        0,
                         days_till_due,
                         task_date,
                         [0,0,0,0],
@@ -450,8 +450,8 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
                 current_spoons = current_spoons[:-1]
             elif event.unicode.isdigit():
                 current_spoons = current_spoons + event.unicode
-            if current_spoons.isdigit() and int(current_spoons) > 20:
-                current_spoons = "20"
+            if current_spoons.isdigit() and int(current_spoons) > 10:
+                current_spoons = "10"
 
 
 

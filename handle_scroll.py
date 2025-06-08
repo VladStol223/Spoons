@@ -2,27 +2,22 @@ from config import *
 
 import pygame
 
-"""
-Handles the scroll event for task pages.
-
-Args:
-    event (pygame.event.Event): The current Pygame event.
-    scroll_offset (int): The current scroll offset.
-    scroll_limit (int): The maximum scroll limit.
-    scroll_multiplier (int): How many items to scroll per wheel action.
-
-Returns:
-    int: The updated scroll offset.
-"""
-
-def handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1):
+def handle_task_scroll(event, scroll_offset, total_content_height, scroll_multiplier=40):
+    """
+    Args:
+      event: pygame.event.Event
+      scroll_offset: current y-offset in pixels
+      total_content_height: height of everything inside the scrolling region
+      scroll_multiplier: how many pixels to move per wheel tick
+    Returns:
+      new scroll_offset (clamped).
+    """
     if event.type == pygame.MOUSEBUTTONDOWN:
-        if event.button == 4:  # Scroll up
-            scroll_offset = max(scroll_offset - (1 * scroll_multiplier), 0)
-        elif event.button == 5:  # Scroll down
-            scroll_offset = min(scroll_offset + (1 * scroll_multiplier), scroll_limit)
+        if event.button == 4:     # scroll up
+            scroll_offset -= scroll_multiplier
+        elif event.button == 5:   # scroll down
+            scroll_offset += scroll_multiplier
 
+    max_scroll = max(0, total_content_height)
+    scroll_offset = max(0, min(scroll_offset, max_scroll))
     return scroll_offset
-
-def handle_daily_schedule_scroll():
-    pass

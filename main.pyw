@@ -127,12 +127,12 @@ def hub_buttons(event):
 from drawing_functions.draw_hub_buttons import draw_hub_buttons
 from drawing_functions.draw_logic_input_spoons import draw_input_spoons, logic_input_spoons
 from drawing_functions.draw_logic_input_tasks import draw_input_tasks, logic_input_tasks
-from drawing_functions.draw_logic_manage_tasks import draw_manage_tasks_hub, logic_manage_tasks_hub
-from drawing_functions.draw_logic_complete_tasks import draw_complete_tasks, logic_complete_tasks, update_and_draw_confetti
+from drawing_functions.draw_logic_manage_tasks_hub import draw_manage_tasks_hub, logic_manage_tasks_hub
+from drawing_functions.draw_logic_manage_tasks import draw_complete_tasks, logic_complete_tasks
 from drawing_functions.draw_logic_remove_tasks import draw_remove_tasks, logic_remove_tasks
 from drawing_functions.draw_daily_schedule import draw_daily_schedule, logic_daily_schedule, get_available_time_blocks, allocate_tasks_to_time_blocks, sort_tasks_by_priority_and_due_date
 from drawing_functions.draw_logic_calendar import draw_calendar, logic_calendar
-from drawing_functions.draw_logic_settings import draw_settings, logic_settings
+from drawing_functions.draw_logic_shop import draw_settings, logic_settings
 from drawing_functions.draw_intro_sequence import draw_intro_sequence
 from drawing_functions.draw_logic_task_toggle import draw_task_toggle, logic_task_toggle
 from drawing_functions.draw_logic_edit_tasks import draw_edit_tasks, logic_edit_tasks
@@ -217,101 +217,48 @@ while running:
         
     elif page == "manage_tasks":
         folder_rects = draw_manage_tasks_hub(screen, spoons,
-                            homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
+                            homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,exams_tasks_list, projects_tasks_list,
                             complete_tasks_hub_folder_color, icon_image, spoon_name_input,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         
     elif page == "complete_homework_tasks":
-        draw_complete_tasks(screen, "Homework", homework_tasks_list, task_buttons_homework, spoons,  scroll_offset,
-                            complete_tasks_task_color, icon_image, spoon_name,
+        scroll_offset, total_content_height = draw_complete_tasks(screen, "Homework", homework_tasks_list, task_buttons_homework, spoons,  scroll_offset,
+                            background_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        draw_task_toggle(screen, page)
         
     elif page == "complete_chores_tasks":
-        draw_complete_tasks(screen,"Chores", chores_tasks_list, task_buttons_chores, spoons, scroll_offset,
-                        complete_tasks_task_color, icon_image, spoon_name,
+        scroll_offset, total_content_height = draw_complete_tasks(screen, "Chores", chores_tasks_list, task_buttons_chores, spoons,  scroll_offset,
+                            background_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        draw_task_toggle(screen, page)
         
     elif page == "complete_work_tasks":
-        draw_complete_tasks(screen,"Work", work_tasks_list, task_buttons_work, spoons, scroll_offset,
-                        complete_tasks_task_color, icon_image, spoon_name,
+        scroll_offset, total_content_height = draw_complete_tasks(screen, "Work", work_tasks_list, task_buttons_work, spoons,  scroll_offset,
+                            background_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        draw_task_toggle(screen, page)
         
     elif page == "complete_misc_tasks":
-        draw_complete_tasks(screen,"Misc", misc_tasks_list, task_buttons_misc, spoons, scroll_offset,
-                        complete_tasks_task_color, icon_image, spoon_name,
+        scroll_offset, total_content_height = draw_complete_tasks(screen, "Misc", misc_tasks_list, task_buttons_misc, spoons,  scroll_offset,
+                            background_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        draw_task_toggle(screen, page)
 
     elif page == "complete_exams_tasks":
-        draw_complete_tasks(screen,"Exams", exams_tasks_list, task_buttons_exams, spoons, scroll_offset,
-                        complete_tasks_task_color, icon_image, spoon_name,
+        scroll_offset, total_content_height = draw_complete_tasks(screen, "Exams", exams_tasks_list, task_buttons_exams, spoons,  scroll_offset,
+                            background_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        draw_task_toggle(screen, page)
 
     elif page == "complete_projects_tasks":
-        draw_complete_tasks(screen,"Projects", projects_tasks_list, task_buttons_projects, spoons, scroll_offset,
-                        complete_tasks_task_color, icon_image, spoon_name,
+        scroll_offset, total_content_height = draw_complete_tasks(screen, "Projects", projects_tasks_list, task_buttons_projects, spoons,  scroll_offset,
+                            background_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        draw_task_toggle(screen, page)
-        
-    elif page == "edit_homework_tasks":
-        draw_edit_tasks(screen, spoons, "Homework", homework_tasks_list, task_buttons_homework, input_active,
-                                                 scroll_offset, complete_tasks_task_color, icon_image, spoon_name,
-                                                 folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        draw_task_toggle(screen, page)
-        
-    elif page == "edit_chores_tasks":
-        draw_edit_tasks(screen, spoons, "Chores", chores_tasks_list, task_buttons_chores, input_active,
-                                                 scroll_offset, complete_tasks_task_color, icon_image, spoon_name,
-                                                 folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        draw_task_toggle(screen, page)
-        
-    elif page == "edit_work_tasks":
-        draw_edit_tasks(screen, spoons, "Work", work_tasks_list, task_buttons_work, input_active,
-                                                 scroll_offset, complete_tasks_task_color, icon_image, spoon_name,
-                                                 folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        draw_task_toggle(screen, page)
-        
-    elif page == "edit_misc_tasks":
-        draw_edit_tasks(screen, spoons, "Misc", misc_tasks_list, task_buttons_misc, input_active,
-                                                 scroll_offset, complete_tasks_task_color, icon_image, spoon_name,
-                                                 folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        draw_task_toggle(screen, page)
-        
-    elif page == "remove_homework_tasks":
-        draw_remove_tasks(screen, "Homework", homework_tasks_list, task_buttons_homework, spoons, scroll_offset,
-                        remove_tasks_task_color, icon_image, spoon_name,
-                        folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        draw_task_toggle(screen, page)
-        
-    elif page == "remove_chores_tasks":
-        draw_remove_tasks(screen, "Chores", chores_tasks_list, task_buttons_chores, spoons, scroll_offset,
-                        remove_tasks_task_color, icon_image, spoon_name,
-                        folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        draw_task_toggle(screen, page)
-        
-    elif page == "remove_work_tasks":
-        draw_remove_tasks(screen, "Work", work_tasks_list, task_buttons_work, spoons, scroll_offset,
-                        remove_tasks_task_color, icon_image, spoon_name,
-                        folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        draw_task_toggle(screen, page)
-        
-    elif page == "remove_misc_tasks":
-        draw_remove_tasks(screen, "Misc", misc_tasks_list, task_buttons_misc, spoons, scroll_offset,
-                        remove_tasks_task_color, icon_image, spoon_name,
-                        folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-        draw_task_toggle(screen, page)
         
     elif page == "study":
         draw_study(screen, study_timer, font, dropdown_open, list(TIMER_MODES.keys()))
         
     elif page == "calendar":
+        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color)
         draw_calendar(screen, spoon_name_input,
                   homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
-                  displayed_month, displayed_year,
+                  displayed_month, displayed_year, background_color,
                   homework_fol_color, chores_fol_color, work_fol_color, misc_fol_color,calendar_month_color, 
                   calendar_previous_day_header_color, calendar_next_day_header_color, calendar_current_day_header_color,
                   calendar_previous_day_color, calendar_current_day_color, calendar_next_day_color,
@@ -325,8 +272,9 @@ while running:
     elif page == "stats":
         draw_stats(screen, font, big_font, personal_stats, global_leaderboard)
 
-    draw_border(screen, (0, 0, screen_width, screen_height), page)
-    draw_inventory(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page)
+    if page != "calendar":
+        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color)
+        draw_inventory(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page)
         
     for event in pygame.event.get():
         manager.process_events(event)
@@ -375,8 +323,7 @@ while running:
         elif page == "manage_tasks":
             page = logic_manage_tasks_hub(event, page, folder_rects)
         elif page == "complete_homework_tasks":
-            scroll_limit = max(0, len(homework_tasks_list) - 8)
-            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
+            scroll_offset = handle_task_scroll(event, scroll_offset, total_content_height, scroll_multiplier=17)
             task_completed, spoons, confetti_particles, streak_dates = logic_complete_tasks(homework_tasks_list, task_buttons_homework, event, spoons, streak_dates, streak_task_completed)
         elif page == "complete_chores_tasks":
             scroll_limit = max(0, len(chores_tasks_list) - 8)
@@ -398,38 +345,6 @@ while running:
             scroll_limit = max(0, len(projects_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             task_completed, spoons, confetti_particles, streak_dates = logic_complete_tasks(projects_tasks_list, task_buttons_projects, event, spoons, streak_dates, streak_task_completed)
-        elif page == "edit_homework_tasks":
-            scroll_limit = max(0, len(homework_tasks_list) - 8)
-            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            input_active, homework_tasks_list = logic_edit_tasks(event, input_active, mouse_pos, homework_tasks_list, task_buttons_homework, max_days)
-        elif page == "edit_chores_tasks":
-            scroll_limit = max(0, len(chores_tasks_list) - 8)
-            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            input_active, chores_tasks_list = logic_edit_tasks(event, input_active, mouse_pos, chores_tasks_list, task_buttons_chores, max_days)
-        elif page == "edit_work_tasks":
-            scroll_limit = max(0, len(work_tasks_list) - 8)
-            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            input_active, work_tasks_list = logic_edit_tasks(event, input_active, mouse_pos, work_tasks_list, task_buttons_work, max_days)
-        elif page == "edit_misc_tasks":
-            scroll_limit = max(0, len(misc_tasks_list) - 8)
-            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            input_active, misc_tasks_list = logic_edit_tasks(event, input_active, mouse_pos, misc_tasks_list, task_buttons_misc, max_days)
-        elif page == "remove_homework_tasks":
-            scroll_limit = max(0, len(homework_tasks_list) - 8)
-            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            logic_remove_tasks(homework_tasks_list, task_buttons_homework, event)
-        elif page == "remove_chores_tasks":
-            scroll_limit = max(0, len(chores_tasks_list) - 8)
-            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            logic_remove_tasks(chores_tasks_list, task_buttons_chores, event)
-        elif page == "remove_work_tasks":
-            scroll_limit = max(0, len(work_tasks_list) - 8)
-            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            logic_remove_tasks(work_tasks_list, task_buttons_work, event)
-        elif page == "remove_misc_tasks":
-            scroll_limit = max(0, len(misc_tasks_list) - 8)
-            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            logic_remove_tasks(misc_tasks_list, task_buttons_misc, event)
         elif page == "study":
             dropdown_open = logic_study(event, study_timer, dropdown_open, list(TIMER_MODES.keys()))
         elif page == "calendar": 
@@ -439,7 +354,6 @@ while running:
             switch_theme(current_theme, globals())
         elif page == "stats":
             logic_stats(event)
-    update_and_draw_confetti(screen, confetti_particles)
     pygame.display.flip()
     manager.update(delta_time)
     manager.draw_ui(screen)

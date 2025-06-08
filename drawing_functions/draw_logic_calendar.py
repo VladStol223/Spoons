@@ -36,7 +36,7 @@ Returns:
 
 def draw_calendar(screen, spoon_name_input,
                   homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
-                  displayed_month, displayed_year,
+                  displayed_month, displayed_year, background_color,
                   homework_fol_color, chores_fol_color, work_fol_color, misc_fol_color,calendar_month_color, 
                   calendar_previous_day_header_color, calendar_next_day_header_color, calendar_current_day_header_color,
                   calendar_previous_day_color, calendar_current_day_color, calendar_next_day_color,
@@ -44,15 +44,14 @@ def draw_calendar(screen, spoon_name_input,
                   streak_dates):
     global hub_buttons_showing
 
-    draw_rounded_button(screen, hub_toggle, LIGHT_GRAY, BLACK, 0, 2)# type: ignore
-    pygame.draw.rect(screen, BLACK, hub_menu1)# type: ignore
-    pygame.draw.rect(screen, BLACK, hub_menu2)# type: ignore
-    pygame.draw.rect(screen, BLACK, hub_menu3)# type: ignore
-
+    bigger_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.075))
+    r, g, b = background_color
+    darker_background = ( max(r - 40, 0),max(g - 40, 0),max(b - 40, 0))
+    lighter_background = ( max(r + 20, 0),max(g + 20, 0),max(b + 20, 0))
     # Define the dimensions and spacing
     day_box_width = 100
-    start_x = 50  # Start position for the calendar grid
-    start_y = 100  # Start position for the calendar grid
+    start_x = 150  # Start position for the calendar grid
+    start_y = 105  # Start position for the calendar grid
     margin = 0
     top_padding = 30  # Padding from the top for day names
     days_of_week = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
@@ -89,16 +88,19 @@ def draw_calendar(screen, spoon_name_input,
 
     # Determine if the month requires 6 rows
     total_days = first_weekday + number_of_days
-    day_box_height = 80 if total_days > 35 else 95
+    day_box_height = 60 if total_days > 35 else 75
     folder_box_height = 12 if total_days > 35 else 16
 
     # Draw the month name at the top
-    month_text = big_font.render(calendar.month_name[displayed_month] + ' ' + str(displayed_year), True, BLACK)# type: ignore
-    screen.blit(month_text, (570, 25))
-    draw_rounded_button(screen, previous_month_button, calendar_month_color, BLACK, 2)# type: ignore
-    draw_rounded_button(screen, next_month_button, calendar_month_color, BLACK, 2)# type: ignore
-    month_button_text = big_font.render("<   >", True, BLACK)# type: ignore
-    screen.blit(month_button_text, (505, 23))
+    draw_rounded_button(screen, previous_month_button, lighter_background, lighter_background, 0)# type: ignore
+    draw_rounded_button(screen, next_month_button, lighter_background, lighter_background, 0)# type: ignore
+    right_arrow = bigger_font.render(">", True, darker_background)# type: ignore
+    left_arrow = pygame.transform.rotate(right_arrow, 180) # rotate to point left
+    screen.blit(left_arrow, (419, 5))
+    screen.blit(right_arrow, (588, 8))
+    #month_text = big_font.render(calendar.month_name[displayed_month] + ' ' + str(displayed_year), True, BLACK)# type: ignore
+    month_text = big_font.render(calendar.month_name[displayed_month], True, BLACK) #type: ignore 
+    screen.blit(month_text,month_text.get_rect(midtop=(513, 10)))
 
     # Draw the day names
     for i, day_name in enumerate(days_of_week):

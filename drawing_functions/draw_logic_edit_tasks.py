@@ -136,7 +136,7 @@ def draw_editing_interface(screen, spoons, task_list, complete_tasks_task_color,
         if editing_state["new_done_status"] == "✅":
             screen.blit(icon_image, (button.x + j * 40 + 310, button.y + 10))
 
-    hover_text = font.render(f"{editing_state["days_until_due"]} days", True, BLACK)# type: ignore
+    hover_text = font.render(f"{editing_state['days_until_due']} days", True, BLACK)# type: ignore
     screen.blit(hover_text, (button.x + button.width + 10, button.y))
     screen.blit(font.render("left", True, BLACK), (button.x + button.width + 10, button.y + 25))# type: ignore
 

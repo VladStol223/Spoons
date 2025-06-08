@@ -63,13 +63,18 @@ def draw_hub_buttons(
     for idx, (page_key, image, label) in enumerate(icon_buttons[1:], start=1):
         y_pos = start_y + cal_size + y_spacing + (idx-1)*(icon_size + y_spacing)
         rect = pygame.Rect(x_base, y_pos, icon_size, icon_size)
+
+        # treat any "complete_..." page as selecting manage_tasks
+        is_manage_glow = (page_key == "manage_tasks"
+                          and (page == "manage_tasks" or page.startswith("complete_")))
+
         icon_rect = draw_icon_button(
             screen,
             rect,
             image,
             label,
             _label_font,
-            selected = (page_key == page),
+            selected = (page_key == page) or is_manage_glow,
             bg_color = background_color
         )
         button_rects[page_key] = icon_rect
@@ -95,7 +100,7 @@ def draw_icon_button(
         glow_surf = pygame.Surface((gw, gh), pygame.SRCALPHA)
         glow_color = tuple(min(255, c + 60) for c in bg_color)
         center = (gw // 2, gh // 2)
-        max_radius = gw // 2
+        max_radius = gw // 2 + 15
         max_alpha  = 255
 
         # fade out toward edges

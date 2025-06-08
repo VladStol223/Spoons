@@ -1,15 +1,15 @@
 {
-  "spoons": 14,
-  "homework_tasks_list": [{"task_name": "hw", "spoons_needed": 1, "done": "\u274c", "days_till_due_date": -3, "due_date": "2025-05-28T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}],
-  "chores_tasks_list": [{"task_name": "ex", "spoons_needed": 1, "done": "\u274c", "days_till_due_date": -3, "due_date": "2025-05-28T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}],
-  "work_tasks_list": [{"task_name": "chores", "spoons_needed": 1, "done": "\u274c", "days_till_due_date": 0, "due_date": "2025-05-31T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}, {"task_name": "testerrrrr", "spoons_needed": 0, "done": "\u274c", "days_till_due_date": 0, "due_date": "2025-05-31T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}, {"task_name": "imp", "spoons_needed": 1, "done": "\u2705", "days_till_due_date": -3, "due_date": "2025-05-28T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}],
-  "misc_tasks_list": [{"task_name": "peepeepoopoo", "spoons_needed": 4, "done": "\u274c", "days_till_due_date": 0, "due_date": "2025-05-31T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}],
-  "exams_tasks_list": [{"task_name": "test", "spoons_needed": 1, "done": "\u274c", "days_till_due_date": 0, "due_date": "2025-05-27T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}, {"task_name": "wo", "spoons_needed": 1, "done": "\u274c", "days_till_due_date": 0, "due_date": "2025-05-28T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}, {"task_name": "work", "spoons_needed": 1, "done": "\u274c", "days_till_due_date": 0, "due_date": "2025-05-31T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}],
-  "projects_tasks_list": [{"task_name": "test", "spoons_needed": 1, "done": "\u274c", "days_till_due_date": 0, "due_date": "2025-05-27T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}, {"task_name": "me", "spoons_needed": 1, "done": "\u274c", "days_till_due_date": 0, "due_date": "2025-05-28T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}, {"task_name": "test", "spoons_needed": 3, "done": "\u274c", "days_till_due_date": 0, "due_date": "2025-05-31T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}],
-  "daily_spoons": {"Mon": 10, "Tue": 12, "Wed": 12, "Thu": 12, "Fri": 10, "Sat": 15, "Sun": 15},
+  "spoons": 8,
+  "homework_tasks_list": [{"task_name": "hfdshgf", "spoons_needed": 6, "done": 2, "days_till_due_date": 0, "due_date": "2025-06-08T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}],
+  "chores_tasks_list": [],
+  "work_tasks_list": [{"task_name": "ghgffh", "spoons_needed": 8, "done": 8, "days_till_due_date": -1, "due_date": "2025-06-07T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}, {"task_name": "do kitty litter", "spoons_needed": 3, "done": 3, "days_till_due_date": -1, "due_date": "2025-06-07T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}],
+  "misc_tasks_list": [],
+  "exams_tasks_list": [],
+  "projects_tasks_list": [],
+  "daily_spoons": {"Mon": 10, "Tue": 12, "Wed": 13216, "Thu": 12, "Fri": 10, "Sat": 15, "Sun": 15},
   "theme": "foresty",
-  "icon_image": "star.png",
+  "icon_image": "spoon.png",
   "spoon_name_input": "Stars",
   "folder_one": "Homework", "folder_two": "Exams",  "folder_three": "Chores",  "folder_four": "Important",  "folder_five": "Work",  "folder_six": "Meow",
-  "streak_dates": [["2025-05-07", "2025-05-07"], ["2025-05-19", "2025-05-19"], ["2025-05-31", "2025-05-31"]]
+  "streak_dates": [["2025-05-07", "2025-05-07"], ["2025-05-19", "2025-05-19"], ["2025-05-31", "2025-06-02"]]
 }
