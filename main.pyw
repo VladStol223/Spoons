@@ -20,21 +20,21 @@ Total pages:
 13.) Remove Folder 2 Tasks
 14.) Remove Folder 3 Tasks
 15.) Remove Folder 4 Tasks
-16.) Study
+16.) inventory
 17.) Calendar
-18.) Store
+18.) shop
 19.) Statistics
 
 To do:
 3.) -Add the following to the Calendar: 
 -Visual streak tracking (e.g., fire symbol next to date) 
 -Hover or click shows current streak length 
--Streak data stored and updated daily
+-Streak data shopd and updated daily
 
 4.) -Add the following core systems: 
 -Streak System 
 -Track daily completions by folder 
--Store current and longest streaks 
+-shop current and longest streaks 
 -Reset streak if no task is completed that day 
 -Integrate "streak saver" item that prevents reset once 
 -Goal System with Random Rewards 
@@ -48,16 +48,16 @@ To do:
 -Show progress and rewards in Manage Tasks Hub 
 -Badge System 
 -Unlock badges based on user actions (first task, streaks, spoons, etc.) 
--Track and store badges earned 
+-Track and shop badges earned 
 -Display badges in the Statistics page 
 -Optional tiering system (bronze, silver, gold) 
 -Spoon Bucks System 
 -Track spoon buck balance 
 -Award spoon bucks for task completions and goal rewards 
--Deduct spoon bucks in Store upon purchase 
+-Deduct spoon bucks in shop upon purchase 
 -Display current balance consistently on UI
 
-5.) -Add the following to the Store page: 
+5.) -Add the following to the shop page: 
 -Display available items (themes, icons, icon names, streak savers) 
 -Show item previews and costs 
 -Confirm purchase before deducting spoon bucks 
@@ -103,9 +103,9 @@ def hub_buttons(event):
         "input_spoons": hub_add_spoons,
         "input_tasks": hub_add_task,
         "manage_tasks": hub_manage_task,
-        "study": hub_study,
+        "inventory": hub_inventory,
         "calendar": hub_calendar,
-        "store": hub_store,
+        "shop": hub_shop,
         "stats": hub_stats,
     }
 
@@ -132,14 +132,14 @@ from drawing_functions.draw_logic_manage_tasks import draw_complete_tasks, logic
 from drawing_functions.draw_logic_remove_tasks import draw_remove_tasks, logic_remove_tasks
 from drawing_functions.draw_daily_schedule import draw_daily_schedule, logic_daily_schedule, get_available_time_blocks, allocate_tasks_to_time_blocks, sort_tasks_by_priority_and_due_date
 from drawing_functions.draw_logic_calendar import draw_calendar, logic_calendar
-from drawing_functions.draw_logic_shop import draw_settings, logic_settings
+from drawing_functions.draw_logic_shop import draw_shop, logic_shop
 from drawing_functions.draw_intro_sequence import draw_intro_sequence
 from drawing_functions.draw_logic_task_toggle import draw_task_toggle, logic_task_toggle
 from drawing_functions.draw_logic_edit_tasks import draw_edit_tasks, logic_edit_tasks
-from drawing_functions.draw_logic_study import draw_study, logic_study, Timer
+from drawing_functions.draw_logic_inventory import draw_inventory, logic_inventory
 from drawing_functions.draw_logic_stats import draw_stats, logic_stats
 from drawing_functions.draw_border import draw_border
-from drawing_functions.draw_inventory import draw_inventory
+from drawing_functions.draw_hotbar import draw_hotbar
 
 # Miscellanous Functions
 from load_save import save_data, load_data
@@ -151,8 +151,6 @@ draw_intro_sequence(screen, clock)
 spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image, spoon_name_input, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, streak_dates = load_data()
 current_theme = switch_theme(loaded_theme, globals())
 
-#timer init
-study_timer = Timer()
 
 # ----------------------------------------------------------------------------------------------------
 # Main loop
@@ -196,8 +194,8 @@ while running:
 
     hub_icon_rects = draw_hub_buttons(screen, page, tool_tips, background_color,
                                   add_spoons_color, add_tasks_color,
-                                  manage_tasks_color, study_color, calendar_color,
-                                  store_color, stats_color, button_widths, hub_closing, delta_time)
+                                  manage_tasks_color, inventory_color, calendar_color,
+                                  shop_color, stats_color, button_widths, hub_closing, delta_time)
 
 
     if page == "input_spoons":
@@ -251,8 +249,8 @@ while running:
                             background_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         
-    elif page == "study":
-        draw_study(screen, study_timer, font, dropdown_open, list(TIMER_MODES.keys()))
+    elif page == "inventory":
+        draw_inventory(screen, spoon_name, background_color, input_active, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         
     elif page == "calendar":
         draw_border(screen, (0, 0, screen_width, screen_height), page, background_color)
@@ -265,8 +263,8 @@ while running:
                   folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
                   streak_dates)
         
-    elif page == "store":
-        draw_settings(screen, tool_tips, spoon_name_input, icon_image, input_active, hub_background_color,
+    elif page == "shop":
+        draw_shop(screen, tool_tips, spoon_name_input, icon_image, input_active, hub_background_color,
                   folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         
     elif page == "stats":
@@ -275,7 +273,7 @@ while running:
 
     if page not in ("calendar", "stats"):
         draw_border(screen, (0, 0, screen_width, screen_height), page, background_color)
-        draw_inventory(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page)
+        draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page)
         
     for event in pygame.event.get():
         manager.process_events(event)
@@ -346,12 +344,12 @@ while running:
             scroll_limit = max(0, len(projects_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             task_completed, spoons, confetti_particles, streak_dates = logic_complete_tasks(projects_tasks_list, task_buttons_projects, event, spoons, streak_dates, streak_task_completed)
-        elif page == "study":
-            dropdown_open = logic_study(event, study_timer, dropdown_open, list(TIMER_MODES.keys()))
+        elif page == "inventory":
+            spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_inventory(event, tool_tips, spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         elif page == "calendar": 
             displayed_month, displayed_year = logic_calendar(event, displayed_month, displayed_year)
-        elif page == "store":
-            tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_settings(event, tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        elif page == "shop":
+            tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_shop(event, tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
             switch_theme(current_theme, globals())
         elif page == "stats":
             logic_stats(event)

@@ -8,7 +8,7 @@ font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.06))
 coin_scale = 1.8
 xp_scale = 1.4
 
-def draw_inventory(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page):
+def draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page):
 
     # 1) draw your existing spoons UI
     draw_spoons(screen, spoons, icon_image, spoon_name_input)

@@ -19,33 +19,48 @@ Returns:
     No returns.
 """
 
-def draw_settings(screen, tool_tips, spoon_name_input, icon_image, input_active, hub_background_color,
+#image outlines
+spoon_image_outline = pygame.Rect(410,180,35,35)
+battery_image_outline = pygame.Rect(460,180,35,35)
+star_image_outline = pygame.Rect(510,180,35,35)
+potion_image_outline = pygame.Rect(560,180,35,35)
+
+#themes
+aquatic_theme = pygame.Rect(300, 180, 40, 30)
+foresty_theme = pygame.Rect(300, 220, 40, 30)
+girly_pop_theme = pygame.Rect(300, 260, 40, 30)
+vampire_goth_theme = pygame.Rect(300, 300, 40, 30)
+sunset_glow_theme = pygame.Rect(300, 340, 40, 30)
+#extra themes
+light_academia_theme = pygame.Rect(230, 180, 40, 30)
+retro_theme = pygame.Rect(230, 220, 40, 30)
+minimalist_theme = pygame.Rect(230, 260, 40, 30)
+cosmic_theme = pygame.Rect(230, 300, 40, 30)
+autumn_harvest_theme = pygame.Rect(230, 340, 40, 30)
+tropical_oasis_theme = pygame.Rect(230, 380, 40, 30)
+pastel_dreams_theme = pygame.Rect(230, 420, 40, 30)
+steampunk_theme = pygame.Rect(230, 460, 40, 30)
+
+def draw_shop(screen, tool_tips, spoon_name_input, icon_image, input_active, hub_background_color,
                   folder_one, folder_two, folder_three, folder_four, folder_five, folder_six):
     mouse_pos = pygame.mouse.get_pos()
     global hub_buttons_showing
 
-    tool_tips_text = font.render("Tool Tips:", True, BLACK)# type: ignore
-    screen.blit(tool_tips_text, (30,550))
-
-    draw_rounded_button(screen,tool_tip_toggle,GREEN if tool_tips == True else RED,BLACK,2,2)# type: ignore
-
     draw_rounded_button(screen,spoon_image_outline,hub_background_color,GREEN if icon_image == spoon_image else BLACK,2,2)# type: ignore
-    screen.blit(spoon_image, (410, 20))
+    screen.blit(spoon_image, (410, 180))
     draw_rounded_button(screen,battery_image_outline,hub_background_color,GREEN if icon_image == battery_image else BLACK,2,2)# type: ignore
-    screen.blit(battery_image, (460, 20))
+    screen.blit(battery_image, (460, 180))
     draw_rounded_button(screen,star_image_outline,hub_background_color,GREEN if icon_image == star_image else BLACK,2,2)# type: ignore
-    screen.blit(star_image, (510, 20))
+    screen.blit(star_image, (510, 180))
     draw_rounded_button(screen,potion_image_outline,hub_background_color,GREEN if icon_image == potion_image else BLACK,2,2)# type: ignore
-    screen.blit(potion_image, (560, 20))
+    screen.blit(potion_image, (560, 180))
 
-    pygame.draw.rect(screen, LIGHT_GRAY if not input_active == "spoon_name" else GREEN, spoon_name_input_box, 2)# type: ignore
-    spoon_name_text = font.render(spoon_name_input, True, BLACK)# type: ignore
-    screen.blit(spoon_name_text, (spoon_name_input_box.x + 5, spoon_name_input_box.y + 7))
-    icon_prompt = font.render("Enter icon name:", True, BLACK)# type: ignore
-    screen.blit(icon_prompt, (50, 20))
 
     Theme_text = font.render("Themes:", True, BLACK)# type: ignore
-    screen.blit(Theme_text, (430,70))
+    screen.blit(Theme_text, (230,140))
+
+    Theme_text = font.render("Icons:", True, BLACK)# type: ignore
+    screen.blit(Theme_text, (410,140))
 
     draw_rounded_button(screen, aquatic_theme, (0,105,148), BLACK, 18)# type: ignore
     draw_rounded_button(screen, foresty_theme, (85,107,47), BLACK, 18)# type: ignore
@@ -102,27 +117,9 @@ def draw_settings(screen, tool_tips, spoon_name_input, icon_image, input_active,
         hover_text = font.render("Minimalist", True, BLACK)# type: ignore
         screen.blit(hover_text, (mouse_pos[0]+40, mouse_pos[1]))
 
-    #Draw Folder renaming:
-    rename_folders_text = font.render("Rename Folders:", True, BLACK)# type: ignore
-    screen.blit(rename_folders_text, (240,70))
 
-    draw_input_box(screen, folder_one_name_input_box, input_active == "folder_one", folder_one, GREEN, LIGHT_GRAY)# type: ignore
-    draw_input_box(screen, folder_two_name_input_box, input_active == "folder_two", folder_two, GREEN, LIGHT_GRAY)# type: ignore
-    draw_input_box(screen, folder_three_name_input_box, input_active == "folder_three", folder_three, GREEN, LIGHT_GRAY)# type: ignore
-    draw_input_box(screen, folder_four_name_input_box, input_active == "folder_four", folder_four, GREEN, LIGHT_GRAY)# type: ignore
-    draw_input_box(screen, folder_five_name_input_box, input_active == "folder_five", folder_five, GREEN, LIGHT_GRAY)# type: ignore
-    draw_input_box(screen, folder_six_name_input_box, input_active == "folder_six", folder_six, GREEN, LIGHT_GRAY)# type: ignore
-
-
-
-def logic_settings(event, tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six):
+def logic_shop(event, tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six):
     if event.type == pygame.MOUSEBUTTONDOWN:
-        if tool_tip_toggle.collidepoint(event.pos):
-            tool_tips = not tool_tips
-        if spoon_name_input_box.collidepoint(event.pos):
-            input_active = "spoon_name"
-        else:
-            input_active = False
         if spoon_image_outline.collidepoint(event.pos):
             icon_image = spoon_image
         elif battery_image_outline.collidepoint(event.pos):
@@ -132,18 +129,6 @@ def logic_settings(event, tool_tips, spoon_name_input, input_active, current_the
         elif potion_image_outline.collidepoint(event.pos):
             icon_image = potion_image
 
-        if folder_one_name_input_box.collidepoint(event.pos):
-            input_active = "folder_one"
-        elif folder_two_name_input_box.collidepoint(event.pos):
-            input_active = "folder_two"
-        elif folder_three_name_input_box.collidepoint(event.pos):
-            input_active = "folder_three"
-        elif folder_four_name_input_box.collidepoint(event.pos):
-            input_active = "folder_four"
-        elif folder_five_name_input_box.collidepoint(event.pos):
-            input_active = "folder_five"
-        elif folder_six_name_input_box.collidepoint(event.pos):
-            input_active = "folder_six"
 
         if aquatic_theme.collidepoint(event.pos):
             try:

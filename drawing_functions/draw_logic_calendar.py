@@ -82,7 +82,9 @@ def draw_calendar(screen, spoon_name_input,
                         streak_dates)
 
     elif calendar_mode == "year":
-        draw_year_mode()
+        draw_year_mode(screen, font, smaller_font, bigger_font,
+                        darker_background, lighter_background,
+                        displayed_year, background_color)
 
 def draw_day_mode():
     pass
@@ -332,8 +334,75 @@ def draw_month_mode(screen, font, bigger_font, smaller_font, darker_background, 
             more = smaller_font.render(f"{total-2} other tasks", True, BLACK) #type: ignore
             screen.blit(more, (x + 5, text_y))
 
-def draw_year_mode():
-    pass
+def draw_year_mode(
+    screen, font, smaller_font, bigger_font,
+    darker_background, lighter_background,
+    displayed_year, background_color
+):
+    screen_w, screen_h = screen.get_size()
+    # region bounds
+    region_x, region_y = 115, 70
+    region_w = screen_w - region_x - 25
+    region_h = screen_h - region_y - 25
+
+    year_str = str(displayed_year)
+    year_text = big_font.render(year_str, True, BLACK) #type: ignore
+    screen.blit(year_text, year_text.get_rect(midtop=(522, 7)))
+
+    draw_rounded_button(screen, previous_month_button, lighter_background, lighter_background, 0)
+    draw_rounded_button(screen, next_month_button, lighter_background, lighter_background, 0)
+    right_arrow = bigger_font.render(">", True, darker_background)
+    left_arrow = pygame.transform.rotate(right_arrow, 180)
+    screen.blit(left_arrow, (419, 2))
+    screen.blit(right_arrow, (606, 5))
+
+    # grid settings
+    cols, rows = 4, 3
+    gap_x, gap_y = 10, 10  # space between month‐cells
+
+    cell_w = (region_w - gap_x*(cols-1)) / cols
+    cell_h = (region_h - gap_y*(rows-1)) / rows
+
+    for month in range(1, 13):
+        col = (month - 1) % cols
+        row = (month - 1) // cols
+
+        x = region_x + col*(cell_w + gap_x)
+        y = region_y + row*(cell_h + gap_y)
+
+        # draw month frame
+        pygame.draw.rect(screen, lighter_background, (x, y, cell_w, cell_h))
+
+        # month name + underline
+        name_surf = font.render(calendar.month_name[month], True, BLACK) #type: ignore
+        tx = x + (cell_w - name_surf.get_width()) / 2
+        ty = y + 5
+        screen.blit(name_surf, (tx, ty))
+        ul_y = ty + name_surf.get_height() + 2
+        pygame.draw.line(screen, BLACK, (tx, ul_y), (tx + name_surf.get_width(), ul_y), 2) #type: ignore
+
+        # days grid inside this cell
+        first_wd, num_days = calendar.monthrange(displayed_year, month)
+        first_wd = (first_wd + 1) % 7  # convert Mon=0 → Sun=0
+
+        # reserve space below underline for day numbers
+        days_y0 = ul_y + 8
+        grid_h = cell_h - (days_y0 - y) - 5
+        weeks = 6
+        day_h = grid_h / weeks
+        day_w = cell_w / 7
+
+        for day in range(1, num_days + 1):
+            idx = first_wd + (day - 1)
+            wd = idx % 7   # column 0–6
+            wk = idx // 7  # row 0–5
+
+            cx = x + wd * day_w
+            cy = days_y0 + wk * day_h
+
+            day_surf = smaller_font.render(str(day), True, BLACK) #type: ignore
+            dr = day_surf.get_rect(center=(cx + day_w/2, cy + day_h/2))
+            screen.blit(day_surf, dr)
 
 def logic_calendar(event, displayed_month, displayed_year):
     global calendar_mode
@@ -362,5 +431,12 @@ def logic_calendar(event, displayed_month, displayed_year):
                 if displayed_month > 12:
                     displayed_month = 1
                     displayed_year += 1
+
+        if calendar_mode == "year":
+            if previous_month_button.collidepoint(event.pos):
+                displayed_year -= 1
+
+            elif next_month_button.collidepoint(event.pos):
+                displayed_year += 1
 
     return displayed_month, displayed_year

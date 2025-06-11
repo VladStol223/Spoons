@@ -22,9 +22,9 @@ HUB_BUTTON_COLOR_KEYS = [
     "add_spoons_color",
     "add_tasks_color",
     "manage_tasks_color",
-    "study_color",
+    "inventory_color",
     "calendar_color",
-    "store_color",
+    "shop_color",
     "stats_color"
 ]
 CALENDAR_COLOR_KEYS = [
@@ -114,7 +114,7 @@ THEME_REMOVE_TASKS = { #remove tasks hub folder color    remove tasks task color
     "rustic_charm":   ["BURGUNDY_RED",      "TERRACOTTA"]
 }
 
-THEME_HUB_BUTTONS = { #add spoons color    add tasks color    complete tasks color    study color    calendar color    store color    stats color
+THEME_HUB_BUTTONS = { #add spoons color    add tasks color    complete tasks color    inventory color    calendar color    shop color    stats color
     "aquatic":        ["DEEP_SKY_BLUE", "DARK_CYAN",      "AQUAMARINE",
                        "LIGHT_SEA_GREEN", "BLUE_LAGOON", "DEEP_AQUATIC_BLUE", "LIGHT_SEA_GREEN"],
     "foresty":        ["OLIVE_DRAB",    "DARK_SEA_GREEN", "FOREST_GREEN",
@@ -239,7 +239,7 @@ DROPDOWN_LISTS = {
             ["remove tasks", COLORS["TURQUOISE"]],
             ["daily schedule", COLORS["LIGHT_SEA_GREEN"]],
             ["calendar", COLORS["BLUE_LAGOON"]],
-            ["store", COLORS["DEEP_AQUATIC_BLUE"]],
+            ["shop", COLORS["DEEP_AQUATIC_BLUE"]],
         ],
         "dropdown_calendar_colors_list": [
             ["current day", COLORS["DEEP_AQUATIC_BLUE"]],
@@ -273,7 +273,7 @@ DROPDOWN_LISTS = {
             ["remove tasks", COLORS["FOREST_GREEN"]],
             ["daily schedule", COLORS["MEDIUM_SEA_GREEN"]],
             ["calendar", COLORS["LAWN_GREEN"]],
-            ["store", COLORS["DARK_OLIVE_GREEN"]],
+            ["shop", COLORS["DARK_OLIVE_GREEN"]],
         ],
         "dropdown_calendar_colors_list": [
             ["current day", COLORS["DARK_OLIVE_GREEN"]],
@@ -307,7 +307,7 @@ DROPDOWN_LISTS = {
             ["remove tasks", COLORS["LIGHT_SALMON"]],
             ["daily schedule", COLORS["LAVENDER"]],
             ["calendar", COLORS["PLUM"]],
-            ["store", COLORS["LIGHT_PINK"]],
+            ["shop", COLORS["LIGHT_PINK"]],
         ],
         "dropdown_calendar_colors_list": [
             ["current day", COLORS["LIGHT_PINK"]],
@@ -341,7 +341,7 @@ DROPDOWN_LISTS = {
             ["remove tasks", COLORS["DARK_SLATE_BLUE"]],
             ["daily schedule", COLORS["DIM_GRAY"]],
             ["calendar", COLORS["MAROON"]],
-            ["store", COLORS["CRIMSON"]],
+            ["shop", COLORS["CRIMSON"]],
         ],
         "dropdown_calendar_colors_list": [
             ["current day", COLORS["CRIMSON"]],
@@ -375,7 +375,7 @@ DROPDOWN_LISTS = {
             ["remove tasks", COLORS["LIGHT_SALMON"]],
             ["daily schedule", COLORS["GOLD"]],
             ["calendar", COLORS["DARK_ORANGE"]],
-            ["store", COLORS["RED_ORANGE"]],
+            ["shop", COLORS["RED_ORANGE"]],
         ],
         "dropdown_calendar_colors_list": [
             ["current day", COLORS["DARK_ORANGE"]],

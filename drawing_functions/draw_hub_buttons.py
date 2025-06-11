@@ -16,9 +16,9 @@ def draw_hub_buttons(
     add_spoons_color,
     add_tasks_color,
     manage_tasks_color,
-    study_color,
+    inventory_color,
     calendar_color,
-    store_color,
+    shop_color,
     stats_color,
     button_widths_dict,
     hub_closing,
@@ -33,8 +33,8 @@ def draw_hub_buttons(
         ("input_spoons", loaded_images.get("add_spoons_icon"),   "Add Spoons"),
         ("input_tasks",  loaded_images.get("add_task_icon"),     "Add Tasks"),
         ("manage_tasks", loaded_images.get("manage_task_icon"),  "Manage Tasks"),
-        ("study",        loaded_images.get("study_icon"),        "Study"),
-        ("store",        loaded_images.get("store_icon"),        "Store"),
+        ("inventory",        loaded_images.get("inventory_icon"),        "inventory"),
+        ("shop",        loaded_images.get("shop_icon"),        "shop"),
         ("stats",        loaded_images.get("settings_icon"),     "Statistics")
     ]
 

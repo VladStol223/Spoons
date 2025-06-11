@@ -47,12 +47,12 @@ image_files = {
     "edit_toggle_icon": ["pencil.png", (20, 20)],
     "complete_toggle_icon": ["checkmark.png", (25, 25)],
     "remove_toggle_icon": ["cross.png", (20, 20)],
-    "add_spoons_icon": ["addSpoonsIcon.png", (1024, 1024)],
+    "add_spoons_icon": ["addSpoonsIcon.png", (56, 56)],
     "add_task_icon": ["addTasksIcon.png", (1024, 1024)],
     "manage_task_icon": ["manageTasksIcon.png", (150, 83)],
-    "study_icon": ["studyIcon.png", (1024, 1024)],
+    "inventory_icon": ["inventoryIcon.png", (1024, 1024)],
     "calendar_icon": ["calendarIcon.png", (1024, 1024)],
-    "store_icon": ["storeIcon.png", (1024, 1024)],
+    "shop_icon": ["shopIcon.png", (1024, 1024)],
     "settings_icon": ["settingsIcon.png", (1024, 1024)],
     "corner": ["borderCorner.png", (12, 12)],
     "edge1": ["Border1.png", (6, 12)],
@@ -105,9 +105,9 @@ remove_toggle_icon = loaded_images.get("remove_toggle_icon")
 add_spoons_icon = loaded_images.get("add_spoons_icon") # hub icons
 add_task_icon = loaded_images.get("add_task_icon")
 manage_task_icon = loaded_images.get("manage_task_icon")
-study_icon = loaded_images.get("study_icon")
+inventory_icon = loaded_images.get("inventory_icon")
 calendar_icon = loaded_images.get("calendar_icon")
-store_icon = loaded_images.get("store_icon")
+shop_icon = loaded_images.get("shop_icon")
 settings_icon = loaded_images.get("settings_icon")
 corner = loaded_images.get("corner")
 edge_one = loaded_images.get("edge1")
@@ -163,9 +163,9 @@ full_rest_button = pygame.Rect(540, 250, 220, 50)
 hub_add_spoons    = pygame.Rect(0,   0, 250, 86)
 hub_add_task      = pygame.Rect(0,  86, 250, 86)
 hub_manage_task   = pygame.Rect(0, 172, 250, 86)
-hub_study         = pygame.Rect(0, 258, 250, 86)
+hub_inventory         = pygame.Rect(0, 258, 250, 86)
 hub_calendar      = pygame.Rect(0, 344, 250, 85)
-hub_store         = pygame.Rect(0, 429, 250, 85)
+hub_shop         = pygame.Rect(0, 429, 250, 85)
 hub_stats         = pygame.Rect(0, 514, 250, 86)
 
 hub_toggle = pygame.Rect(0,0,5,600)
@@ -213,36 +213,7 @@ scroll_bar_down_button = pygame.Rect(12,516,26,32)
 previous_month_button = pygame.Rect(418,9,27,27)
 next_month_button = pygame.Rect(600,9,27,27)
 
-#settings page
-tool_tip_toggle = pygame.Rect(150, 550, 23, 23)
-spoon_name_input_box = pygame.Rect(260, 15, 100, 40)
-#themes
-aquatic_theme = pygame.Rect(500, 110, 40, 40)
-foresty_theme = pygame.Rect(500, 160, 40, 40)
-girly_pop_theme = pygame.Rect(500, 210, 40, 40)
-vampire_goth_theme = pygame.Rect(500, 260, 40, 40)
-sunset_glow_theme = pygame.Rect(500, 310, 40, 40)
-#extra themes
-light_academia_theme = pygame.Rect(430, 110, 40, 40)
-retro_theme = pygame.Rect(430, 160, 40, 40)
-minimalist_theme = pygame.Rect(430, 210, 40, 40)
-cosmic_theme = pygame.Rect(430, 260, 40, 40)
-autumn_harvest_theme = pygame.Rect(430, 310, 40, 40)
-tropical_oasis_theme = pygame.Rect(430, 360, 40, 40)
-pastel_dreams_theme = pygame.Rect(430, 410, 40, 40)
-steampunk_theme = pygame.Rect(430, 460, 40, 40)
-#image outlines
-spoon_image_outline = pygame.Rect(410,20,35,35)
-battery_image_outline = pygame.Rect(460,20,35,35)
-star_image_outline = pygame.Rect(510,20,35,35)
-potion_image_outline = pygame.Rect(560,20,35,35)
 #Folder Input Boxes
-folder_one_name_input_box = pygame.Rect(260, 110, 140, 40)
-folder_two_name_input_box = pygame.Rect(260, 160, 140, 40)
-folder_three_name_input_box = pygame.Rect(260, 210, 140, 40)
-folder_four_name_input_box = pygame.Rect(260, 260, 140, 40)
-folder_five_name_input_box = pygame.Rect(260, 310, 140, 40)
-folder_six_name_input_box = pygame.Rect(260, 360, 140, 40)
 folder_one = "Homework"
 folder_two = "Chores"
 folder_three = "Work"
@@ -270,8 +241,8 @@ remove_tasks_task_color = LIME_GREEN# type: ignore
 add_spoons_color = GOLD# type: ignore
 add_tasks_color = LIME_GREEN# type: ignore
 manage_tasks_color = GREEN# type: ignore
-study_color = RED# type: ignore
-store_color = LIGHT_BLUE# type: ignore
+inventory_color = RED# type: ignore
+shop_color = LIGHT_BLUE# type: ignore
 calendar_color = BLUE# type: ignore
 stats_color = DARK_GRAY# type: ignore
 
@@ -351,14 +322,14 @@ task_how_often = 1
 task_how_long = 1
 task_repetitions_amount = 1
 
-#study stuff
+#inventory stuff
 TIMER_MODES = {
     "Pomodoro (25/5)": (25, 5),
     "Extended (50/10)": (50, 10),
     "Deep Work (90/20)": (90, 20),
     "Custom": (0, 0)
 }
-study_timer = None
+inventory_timer = None
 dropdown_open = False
 
 #stats stuff

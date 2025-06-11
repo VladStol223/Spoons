@@ -24,7 +24,8 @@ def draw_input_box(
         inactive_color,
         centered=False,
         background_color=None,
-        infill=None
+        infill=None,
+        pullUp = 0,
     ):
     """
     Draws a text input box with an optional infill color.
@@ -53,10 +54,10 @@ def draw_input_box(
     # 2) Compute text position
     if centered:
         text_x = rect.x + (rect.width - text_surface.get_width()) // 2
-        text_y = rect.y + 12
+        text_y = rect.y + 12 - pullUp
     else:
         text_x = rect.x + 5
-        text_y = rect.y + 12
+        text_y = rect.y + 12 - pullUp
 
     # 3) If infill is requested, compute fill color and draw filled rect
     if infill and background_color is not None:
