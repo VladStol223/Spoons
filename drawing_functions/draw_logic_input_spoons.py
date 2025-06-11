@@ -8,17 +8,17 @@ from config import *
 daily_inputs    = {}
 labels          = []
 spoon_rects     = []  # for the 20-spoons grid
-rest_icon_rects = {}  # for our 3 rest icons
+rest_icon_rects = {}  # for our 3 rest icons 
 rest_labels = {}
 
 layout_heights = {
-    "spoon_label":     0.075,
-    "spoon_input_line":0.175,
-    "rest_buttons":    0.375,
-    "daily_prompt":    0.7,
-    "day_label":       0.775,
-    "day_input":       0.85
+    "spoon_label":     0.32,
+    "spoon_input_line":0.42,
+    "rest_buttons":    0.65,
+    "daily_prompt":    0.27,
 }
+
+days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
 
 def set_opacity(image, alpha):
     temp = image.copy()
@@ -43,15 +43,57 @@ def draw_input_spoons(screen, manager, UI_elements_initialized, daily_spoons, sp
     full_rest_amount  = 10
 
     sw, sh = screen.get_size()
+    sw = sw - 200  # leave some space for the UI manager
     mouse_x, mouse_y = pygame.mouse.get_pos()
+
+    # — title & prompt —
+    title_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(sh * 0.07))
+    title_surf = title_font.render("Current Spoon Status", True, (255,255,255))
+    tx = ((sw - title_surf.get_width())//2) + x_offset
+    ty = int(sh * layout_heights["spoon_label"])
+    screen.blit(title_surf, (tx, ty))
+    prompt_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(sh * 0.045))
+    prompt_surf1 = prompt_font.render("Enter the number of", True, (255,255,255))
+    prompt_surf2 = prompt_font.render("spoons you start", True, (255,255,255))
+    prompt_surf3 = prompt_font.render("start with each day:", True, (255,255,255))
+    px1 = 755
+    py1 = int(sh * layout_heights["daily_prompt"])
+    px2 = px1 + 20
+    py2 = py1 + prompt_surf1.get_height()
+    px3 = px1
+    py3 = py2 + prompt_surf2.get_height()
+    screen.blit(prompt_surf1, (px1, py1))
+    screen.blit(prompt_surf2, (px2, py2))
+    screen.blit(prompt_surf3, (px3, py3))
+
+    box_w = int(sw * 0.06)
+    box_h = 30
+    dx = 785
+    dy = py3 + prompt_surf3.get_height()  # start just below prompt
+    day_font = pygame.font.Font("fonts/Stardew_Valley.ttf", 24)
+    for day in days:
+        # render label
+        lbl = day_font.render(f"{day}:", True, (255,255,255))
+        screen.blit(lbl, (dx, dy))
+        dy += box_h + 10
 
     if not UI_elements_initialized:
         manager.clear_and_reset()
         labels.clear()
         daily_inputs.clear()
 
+        # draw day inputs vertically under prompt
+        dy = py3 + prompt_surf3.get_height()
+        for day in days:
+            # input box
+            inp_rect = pygame.Rect((dx + 50, dy), (box_w, box_h))
+            inp = UITextEntryLine(inp_rect, manager=manager)
+            inp.set_text(str(daily_spoons.get(day,0)))
+            daily_inputs[day] = inp
+            dy += box_h + 10
+
     # — rest-icon rects —
-    button_w = button_h = int(sh * 0.15)
+    button_w = button_h = int(sh * 0.175)
     spacing  = sw * 0.05
     total_w  = 3 * button_w + 2 * spacing
     start_x  = ((sw - total_w) // 2) + x_offset
@@ -72,35 +114,7 @@ def draw_input_spoons(screen, manager, UI_elements_initialized, daily_spoons, sp
         lbl_rect = surf.get_rect(center=(rect.centerx, rect.bottom + surf.get_height()/2 + 5))
         rest_labels[name] = (surf, lbl_rect)
 
-    # — title & prompt —
-    title_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(sh * 0.06))
-    title_surf = title_font.render("Current Spoon Status", True, (255,255,255))
-    tx = ((sw - title_surf.get_width())//2) + x_offset
-    ty = int(sh * layout_heights["spoon_label"])
-    screen.blit(title_surf, (tx, ty))
-    prompt_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(sh * 0.045))
-    prompt_surf = prompt_font.render("Enter the number of spoons you start with each day:", True, (255,255,255))
-    px = ((sw - prompt_surf.get_width())//2) + x_offset
-    py = int(sh * layout_heights["daily_prompt"])
-    screen.blit(prompt_surf, (px, py))
-
-    # — day inputs —
-    days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
-    box_w = int(sw * 0.06)
-    box_h = 30
-    total_w = len(days)*box_w + (len(days)-1)*spacing
-    sx = ((sw - total_w)//2) + x_offset
-    day_font = pygame.font.Font("fonts/Stardew_Valley.ttf", 24)
-    for i, day in enumerate(days):
-        x = sx + i*(box_w + spacing)
-        y_label = int(sh * layout_heights["day_label"])
-        day_surf = day_font.render(f"{day}:", True, (255,255,255))
-        screen.blit(day_surf, (x, y_label))
-        inp = UITextEntryLine(pygame.Rect((x, sh*layout_heights["day_input"]), (box_w,box_h)), manager=manager)
-        inp.set_text(str(daily_spoons.get(day,0)))
-        daily_inputs[day] = inp
-
-    UI_elements_initialized = True
+    
 
     # — draw rest icons & detect hover —
     icons = {"short": short_rest, "half": half_rest, "full": full_rest}
@@ -161,44 +175,29 @@ def draw_input_spoons(screen, manager, UI_elements_initialized, daily_spoons, sp
 
     return UI_elements_initialized, daily_spoons, spoons
 
-
-
-
-def logic_input_spoons(event, manager, short_rest_amount, half_rest_amount, full_rest_amount,
-                       daily_spoons, spoons):
+def logic_input_spoons(event, manager, short_rest_amount, half_rest_amount, full_rest_amount, daily_spoons, spoons):
     global spoon_rects, rest_icon_rects
-
     page = "input_spoons"
 
+    # handle rest and spoon-grid clicks
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-        # check rest icons first
+        # rest icons first
         for name, rect in rest_icon_rects.items():
             if rect.collidepoint(event.pos):
-                if name == "short":
-                    spoons += short_rest_amount
-                elif name == "half":
-                    spoons += half_rest_amount
-                elif name == "full":
-                    spoons += full_rest_amount
-                # consume the click
+                spoons += {'short':short_rest_amount,'half':half_rest_amount,'full':full_rest_amount}[name]
                 return spoons, daily_spoons, page
-
-        # then check spoon grid
+        # spoon grid
         for i, rect in spoon_rects:
             if rect.collidepoint(event.pos):
-                spoons = i + 1
+                spoons = i+1
                 break
 
-    # sanitize daily inputs
+    # sanitize inputs
     for day, inp in daily_inputs.items():
         txt = inp.get_text()
         num = ''.join(ch for ch in txt if ch.isdigit())
-        if txt != num:
-            inp.set_text(num)
-        try:
-            daily_spoons[day] = int(num)
-        except:
-            daily_spoons[day] = 0
+        inp.set_text(num)
+        daily_spoons[day] = int(num) if num else 0
 
     spoons = min(spoons, 20)
     return spoons, daily_spoons, page

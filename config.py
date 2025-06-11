@@ -75,6 +75,7 @@ image_files = {
     "scroll_bar_body": ["scrollBarBody.png", (20, 350)],
     "scroll_bar_slider": ["scrollBarSlider.png", (10, 50)],
     "remove_edit_icons": ["removeEditIcons.png", (20, 40)],
+    "magnifying_glass": ["magnifyingGlass.png", (20, 20)],
 }
 
 # Load and transform images
@@ -129,7 +130,7 @@ progress_bar_spoon_top = loaded_images.get("progress_bar_spoon_top")
 scroll_bar = loaded_images.get("scroll_bar_body")
 scroll_bar_slider = loaded_images.get("scroll_bar_slider")
 remove_edit_icons = loaded_images.get("remove_edit_icons")
-
+magnifying_glass = loaded_images.get("magnifying_glass")
 
 #background images
 light_academia_background = loaded_images.get("light_academia_background")
@@ -209,8 +210,8 @@ scroll_bar_body = pygame.Rect(10,100,30,450)
 scroll_bar_up_button = pygame.Rect(12,102,26,32)
 scroll_bar_down_button = pygame.Rect(12,516,26,32)
 #calendar page
-previous_month_button = pygame.Rect(418,15,27,27)
-next_month_button = pygame.Rect(582,15,27,27)
+previous_month_button = pygame.Rect(418,9,27,27)
+next_month_button = pygame.Rect(600,9,27,27)
 
 #settings page
 tool_tip_toggle = pygame.Rect(150, 550, 23, 23)
@@ -386,3 +387,7 @@ streak_dates = []
 streak_task_completed = False
 coins = 7
 level = 2.66
+
+calendar_mode = "month"            # or "week"
+hovered_week_idx = None   # 0–5 for which row the mouse is over
+selected_week_idx = None  # when the magnifier is clicked

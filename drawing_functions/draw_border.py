@@ -102,48 +102,7 @@ def draw_border(screen, rect, page, background_color):
     screen.blit(tcorner_s,
                 (hub_border_offset - half_w, sh - tc_h - edge_h//2))
 
-    # 5) horizontal hub border if on input_spoons page
-    if page == "input_spoons":
-        # y position of that border
-        y_horiz = sh - spoons_border_offset
-
-        # rotate & mirror your T-corners so their “stem” points down
-        left_tc  = pygame.transform.rotate(tcorner_s,  -90)
-        right_tc = pygame.transform.flip(left_tc, True, False)
-
-        # compute the start and end X so you don’t overlap vertical hub or go past the main rect
-        # the main rect is at x, width w → its right edge is at x + w
-        start_x = hub_border_offset + left_tc.get_width() // 2
-        end_x   = x + w - right_tc.get_width() // 2 - right_tc.get_width() // 2 - edge_h/2
-
-        # draw left T-corner, centered on hub_border_offset
-        screen.blit(
-            left_tc,
-            (hub_border_offset + (edge_h/4),
-             y_horiz - left_tc.get_height() // 2)
-        )
-
-        # draw right T-corner, centered at rect’s right minus half-width
-        screen.blit(
-            right_tc,
-            (x + w - right_tc.get_width() // 2 - right_tc.get_width() // 2 - edge_h/2,
-             y_horiz - right_tc.get_height() // 2)
-        )
-
-        # now tile your horizontal edges (rotated from vertical)
-        def horiz(t): return pygame.transform.rotate(t, -90)
-        tx = start_x
-        while tx < end_x:
-            tile = rng.choice([edge1_s, edge2_s])
-            ht = horiz(tile)
-            screen.blit(
-                ht,
-                (tx,
-                 y_horiz - ht.get_height() // 2)
-            )
-            tx += ht.get_width()
-
-    if page == "input_tasks" or page == "manage_tasks" or page[:8] == "complete" or page[:4] == "edit" or page[:7] == "delete":
+    if page not in ("calendar", "stats"):
         # y position of that border
         y_horiz = inventory_border_offset
 
@@ -203,7 +162,7 @@ def draw_border(screen, rect, page, background_color):
         screen.blit(tcorner_s,
                     (right_x, hub_border_offset - edge_h//4 - edge_h//2 + 3))
         
-    if page == "input_tasks":
+    if page == "input_tasks" or page == "input_spoons":
         # y start just below inventory border
         y_start2 = inventory_border_offset + edge_h//2
         # y end matches hub bottom
@@ -220,18 +179,15 @@ def draw_border(screen, rect, page, background_color):
         screen.blit(tcorner_s,(right_x,sh-tc_h-edge_h//2))
 
     if page == "calendar":
-        left_border = 400
-        right_border = 600
+        left_border = 390
+        right_border = 626
         r, g, b = background_color
         lighter_background = (max(0, r + 20), max(0, g + 20), max(0, b + 20))
-        pygame.draw.rect(screen, lighter_background, (left_border, 0, 218, 60))
-        calendar_s_right = pygame.transform.flip(calendar_s, True,  False)
-        screen.blit(calendar_s, (left_border, 0))
-        screen.blit(calendar_s_right, (right_border, 0))
+        pygame.draw.rect(screen, lighter_background, (left_border, 0, right_border - left_border + 18, 50))
 
         # ── draw the horizontal “edge” border between them ──
         left_x  = left_border + calendar_s.get_width()
-        right_x = right_border
+        right_x = right_border - 6
         # center tiles on the bottom of the calendar corners
         def horiz(tile): 
             return pygame.transform.rotate(tile, -90)
@@ -241,6 +197,10 @@ def draw_border(screen, rect, page, background_color):
             tile = rng.choice([pygame.transform.rotate(edge1_s,  180), pygame.transform.rotate(edge2_s,  180)])
             ht   = horiz(tile)
             # vertically center on the bottom edge of calendar_s
-            y = calendar_s.get_height() - ht.get_height() // 2 - 9
+            y = calendar_s.get_height() - ht.get_height() // 2 - 18
             screen.blit(ht, (tx, y))
             tx += ht.get_width()
+        
+        calendar_s_right = pygame.transform.flip(calendar_s, True,  False)
+        screen.blit(calendar_s, (left_border, -9))
+        screen.blit(calendar_s_right, (right_border, -9))

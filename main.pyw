@@ -257,7 +257,7 @@ while running:
     elif page == "calendar":
         draw_border(screen, (0, 0, screen_width, screen_height), page, background_color)
         draw_calendar(screen, spoon_name_input,
-                  homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
+                  homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,
                   displayed_month, displayed_year, background_color,
                   homework_fol_color, chores_fol_color, work_fol_color, misc_fol_color,calendar_month_color, 
                   calendar_previous_day_header_color, calendar_next_day_header_color, calendar_current_day_header_color,
@@ -271,8 +271,9 @@ while running:
         
     elif page == "stats":
         draw_stats(screen, font, big_font, personal_stats, global_leaderboard)
+        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color)
 
-    if page != "calendar":
+    if page not in ("calendar", "stats"):
         draw_border(screen, (0, 0, screen_width, screen_height), page, background_color)
         draw_inventory(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page)
         

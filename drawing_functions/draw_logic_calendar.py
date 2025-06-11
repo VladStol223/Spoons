@@ -1,278 +1,366 @@
-from config import *
+import pygame
 from datetime import datetime
 import calendar
-
+from config import *
 from drawing_functions.draw_rounded_button import draw_rounded_button
 
-import pygame
 
-"""
-Summary:
-    Draws a calendar on the given screen with tasks and their respective colors for a specified month and year.
+day_mode_button   = pygame.Rect(120, 25,  120, 30)
+week_mode_button  = pygame.Rect(260, 25,  120, 30)
+month_mode_button = pygame.Rect(665, 25,  120, 30)
+year_mode_button  = pygame.Rect(805, 25,  120, 30)
 
-Parameters:
-    screen (pygame.Surface): The surface on which the calendar will be drawn.
-    homework_tasks_list (list): List of homework tasks.
-    chores_tasks_list (list): List of chores tasks.
-    work_tasks_list (list): List of work tasks.
-    misc_tasks_list (list): List of miscellaneous tasks.
-    displayed_month (int): The month to be displayed on the calendar.
-    displayed_year (int): The year to be displayed on the calendar.
-    homework_fol_color (tuple): Color for homework tasks.
-    chores_fol_color (tuple): Color for chores tasks.
-    work_fol_color (tuple): Color for work tasks.
-    misc_fol_color (tuple): Color for miscellaneous tasks.
-    calendar_month_color (tuple): Color for the calendar month header.
-    calendar_previous_day_header_color (tuple): Color for the previous day's header.
-    calendar_next_day_header_color (tuple): Color for the next day's header.
-    calendar_current_day_header_color (tuple): Color for the current day's header.
-    calendar_previous_day_color (tuple): Color for the previous day's box.
-    calendar_current_day_color (tuple): Color for the current day's box.
-    calendar_next_day_color (tuple): Color for the next day's box.
+def blend(c1, c2):
+    """Return the midpoint blend of two RGB colors."""
+    return (
+        (c1[0] + c2[0]*3) // 4,
+        (c1[1] + c2[1]*3) // 4,
+        (c1[2] + c2[2]*3) // 4,)
 
-Returns:
-    No returns.
-"""
 
 def draw_calendar(screen, spoon_name_input,
-                  homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
+                  homework_tasks_list, chores_tasks_list, work_tasks_list,
+                  misc_tasks_list, exams_tasks_list, projects_tasks_list,
                   displayed_month, displayed_year, background_color,
-                  homework_fol_color, chores_fol_color, work_fol_color, misc_fol_color,calendar_month_color, 
+                  homework_fol_color, chores_fol_color, work_fol_color,
+                  misc_fol_color, calendar_month_color,
+                  calendar_previous_day_header_color, calendar_next_day_header_color,
+                  calendar_current_day_header_color,
+                  calendar_previous_day_color, calendar_current_day_color,
+                  calendar_next_day_color,
+                  folder_one, folder_two, folder_three, folder_four,
+                  folder_five, folder_six,
+                  streak_dates):
+
+    screen_width, screen_height = screen.get_size()
+    bigger_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.075))
+    smaller_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.033))
+    font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.035))
+    r, g, b = background_color
+    darker_background = (max(r - 40, 0), max(g - 40, 0), max(b - 40, 0))
+    lighter_background = (min(r + 20, 255), min(g + 20, 255), min(b + 20, 255))
+
+    # —— draw your mode buttons ——  
+    for btn, label in [
+        (day_mode_button,   "day"),
+        (week_mode_button,  "week"),
+        (month_mode_button, "month"),
+        (year_mode_button,  "year"),
+    ]:
+        pygame.draw.rect(screen, darker_background, btn)      # button bg
+        txt = font.render(label, True, BLACK) #type: ignore
+        txt_rect = txt.get_rect(center=btn.center)
+        screen.blit(txt, txt_rect)
+
+    if calendar_mode == "day":
+        draw_day_mode()
+
+    elif calendar_mode == "week":
+        draw_week_mode(screen, font, bigger_font, smaller_font, 
+                        homework_tasks_list, chores_tasks_list, work_tasks_list,
+                        misc_tasks_list, exams_tasks_list, projects_tasks_list,
+                        displayed_month, displayed_year, background_color,
+                        calendar_previous_day_header_color, calendar_next_day_header_color,
+                        calendar_current_day_header_color,
+                        calendar_previous_day_color, calendar_current_day_color,
+                        calendar_next_day_color, streak_dates,
+                        lighter_background, darker_background)
+
+    elif calendar_mode == "month":
+        draw_month_mode(screen, font, bigger_font, smaller_font,
+                        darker_background, lighter_background,
+                        homework_tasks_list, chores_tasks_list,
+                        work_tasks_list, misc_tasks_list,
+                        exams_tasks_list, projects_tasks_list,
+                        displayed_month, displayed_year, background_color,
+                        calendar_previous_day_header_color,
+                        calendar_next_day_header_color,
+                        calendar_current_day_header_color,
+                        calendar_previous_day_color,
+                        calendar_current_day_color,
+                        calendar_next_day_color,
+                        streak_dates)
+
+    elif calendar_mode == "year":
+        draw_year_mode()
+
+def draw_day_mode():
+    pass
+
+def draw_week_mode(screen, font, bigger_font, smaller_font,
+    homework_tasks_list, chores_tasks_list, work_tasks_list,
+    misc_tasks_list, exams_tasks_list, projects_tasks_list,
+    displayed_month, displayed_year, background_color,
+    prev_hdr_col, next_hdr_col, curr_hdr_col,
+    prev_col, curr_col, next_col, streak_dates,
+    lighter_background, darker_background):
+
+    draw_rounded_button(screen, previous_month_button, lighter_background, lighter_background, 0)
+    draw_rounded_button(screen, next_month_button, lighter_background, lighter_background, 0)
+    right_arrow = bigger_font.render(">", True, darker_background)
+    left_arrow = pygame.transform.rotate(right_arrow, 180)
+    screen.blit(left_arrow, (419, 2))
+    screen.blit(right_arrow, (606, 5))
+
+    today = datetime.now()
+    # box dimensions & positions
+    day_box_width  = 105
+    day_box_height = 120
+    margin         = 0
+    start_x        = 160
+    start_y        = 74
+
+    # compute month boundaries
+    prev_month = displayed_month - 1 or 12
+    prev_year  = displayed_year - (1 if displayed_month == 1 else 0)
+    next_month = displayed_month + 1 if displayed_month < 12 else 1
+    next_year  = displayed_year + (1 if displayed_month == 12 else 0)
+
+    first_wd, num_days = calendar.monthrange(displayed_year, displayed_month)
+    first_wd = (first_wd + 1) % 7            # convert Mon=0 → Sun=0
+    _, prev_days      = calendar.monthrange(prev_year, prev_month)
+
+    # 1) Day‐of‐week headers
+    days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
+    for i, d in enumerate(days):
+        hdr_txt = big_font.render(d, True, (0,0,0))
+        screen.blit(hdr_txt, (start_x + i*(day_box_width+margin) + 25, 67))
+    # 2) The single row of date‐boxes
+    y = start_y + font.get_height() + 5
+    for col in range(7):
+        x = start_x + col*(day_box_width + margin)
+        offset = col - first_wd + 1
+
+        # pick which month/day
+        if offset < 1:
+            day   = prev_days + offset
+            slot  = datetime(prev_year, prev_month, day)
+            hdr_c = blend(prev_hdr_col, background_color)
+            box_c = blend(prev_col,      background_color)
+        elif offset > num_days:
+            day   = offset - num_days
+            slot  = datetime(next_year, next_month, day)
+            hdr_c = blend(next_hdr_col, background_color)
+            box_c = blend(next_col,     background_color)
+        else:
+            day  = offset
+            slot = datetime(displayed_year, displayed_month, day)
+            if   slot.date() < today.date():  hdr_c, box_c = prev_hdr_col, prev_col
+            elif slot.date() > today.date():  hdr_c, box_c = next_hdr_col, next_col
+            else:                              hdr_c, box_c = curr_hdr_col, curr_col
+
+        # header rectangle
+        pygame.draw.rect(screen, hdr_c, (x, y, day_box_width, day_box_height//4))
+        pygame.draw.rect(screen, (0,0,0), (x, y, day_box_width, day_box_height//4), 1)
+        # body rectangle
+        body_y = y + day_box_height//4
+        pygame.draw.rect(screen, box_c, (x, body_y, day_box_width, day_box_height*3))
+        pygame.draw.rect(screen, (0,0,0), (x, body_y, day_box_width, day_box_height*3), 1)
+
+        # day number
+        dn = font.render(str(day), True, (0,0,0))
+        screen.blit(dn, (x + day_box_width - 20, y + 2))
+
+        # streak indicator
+        date_str = slot.strftime("%Y-%m-%d")
+        if any(start <= date_str <= end for start, end in streak_dates):
+            s = font.render("S", True, (0,0,0))
+            screen.blit(s, (x + day_box_width - 35, y + 2))
+
+        # tasks due that day
+        tasks = []
+        for lst, col in [
+            (homework_tasks_list, (0,0,0)),
+            (chores_tasks_list,   (0,0,0)),
+            (work_tasks_list,     (0,0,0)),
+            (misc_tasks_list,     (0,0,0)),
+            (exams_tasks_list,    (0,0,0)),
+            (projects_tasks_list, (0,0,0)),
+        ]:
+            for t in lst:
+                if t[4] == slot:
+                    tasks.append((t[0], col))
+
+        ty = body_y + 5
+        # show up to 3 tasks, then “+N more”
+        for name, col in tasks[:3]:
+            surf = smaller_font.render(name, True, col)
+            screen.blit(surf, (x + 5, ty))
+            ty += smaller_font.get_height() - 2
+        if len(tasks) > 3:
+            more = smaller_font.render(f"+{len(tasks)-3} more", True, (0,0,0))
+            screen.blit(more, (x + 5, ty))
+
+def draw_month_mode(screen, font, bigger_font, smaller_font, darker_background, lighter_background,
+                  homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,
+                  displayed_month, displayed_year, background_color,
                   calendar_previous_day_header_color, calendar_next_day_header_color, calendar_current_day_header_color,
                   calendar_previous_day_color, calendar_current_day_color, calendar_next_day_color,
-                  folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
                   streak_dates):
-    global hub_buttons_showing
-
-    bigger_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.075))
-    r, g, b = background_color
-    darker_background = ( max(r - 40, 0),max(g - 40, 0),max(b - 40, 0))
-    lighter_background = ( max(r + 20, 0),max(g + 20, 0),max(b + 20, 0))
-    # Define the dimensions and spacing
-    day_box_width = 100
-    start_x = 150  # Start position for the calendar grid
-    start_y = 105  # Start position for the calendar grid
+    # Calendar grid settings
+    day_box_width = 105
     margin = 0
-    top_padding = 30  # Padding from the top for day names
+    start_x = 160
+    start_y = 97
+    top_padding = 30
     days_of_week = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
     today_date = datetime.now()
 
-    def is_streak_day(date_to_check_str):
-        for start_str, end_str in streak_dates:
-            if start_str <= date_to_check_str <= end_str:
-                return True
-        return False
+    # Compute month boundaries
+    prev_month = displayed_month - 1 or 12
+    prev_year = displayed_year - (1 if displayed_month == 1 else 0)
+    next_month = displayed_month + 1 if displayed_month < 12 else 1
+    next_year = displayed_year + (1 if displayed_month == 12 else 0)
 
-
-    task_colors = {
-        "homework": homework_fol_color,
-        "chores": chores_fol_color,
-        "work": work_fol_color,
-        "misc": misc_fol_color
-    }
-    task_lists = {
-        "homework": homework_tasks_list,
-        "chores": chores_tasks_list,
-        "work": work_tasks_list,
-        "misc": misc_tasks_list
-    }  
-
-    # Get the mouse position
-    mouse_pos = pygame.mouse.get_pos()
-    hovered_task_folder = None
-    hovered_task_folder_info = None
-
-    # Get the first weekday of the displayed month and the number of days in the month
-    first_weekday, number_of_days = calendar.monthrange(displayed_year, displayed_month)
+    first_weekday, num_days = calendar.monthrange(displayed_year, displayed_month)
     first_weekday = (first_weekday + 1) % 7
+    _, prev_num_days = calendar.monthrange(prev_year, prev_month)
 
-    # Determine if the month requires 6 rows
-    total_days = first_weekday + number_of_days
-    day_box_height = 60 if total_days > 35 else 75
-    folder_box_height = 12 if total_days > 35 else 16
+    total_days = first_weekday + num_days
+    day_box_height = 65
+    folder_box_height = 12
 
-    # Draw the month name at the top
-    draw_rounded_button(screen, previous_month_button, lighter_background, lighter_background, 0)# type: ignore
-    draw_rounded_button(screen, next_month_button, lighter_background, lighter_background, 0)# type: ignore
-    right_arrow = bigger_font.render(">", True, darker_background)# type: ignore
-    left_arrow = pygame.transform.rotate(right_arrow, 180) # rotate to point left
-    screen.blit(left_arrow, (419, 5))
-    screen.blit(right_arrow, (588, 8))
-    #month_text = big_font.render(calendar.month_name[displayed_month] + ' ' + str(displayed_year), True, BLACK)# type: ignore
-    month_text = big_font.render(calendar.month_name[displayed_month], True, BLACK) #type: ignore 
-    screen.blit(month_text,month_text.get_rect(midtop=(513, 10)))
+    # Draw month header and navigation
+    draw_rounded_button(screen, previous_month_button, lighter_background, lighter_background, 0)
+    draw_rounded_button(screen, next_month_button, lighter_background, lighter_background, 0)
+    right_arrow = bigger_font.render(">", True, darker_background)
+    left_arrow = pygame.transform.rotate(right_arrow, 180)
+    screen.blit(left_arrow, (419, 2))
+    screen.blit(right_arrow, (606, 5))
+    month_str = calendar.month_name[displayed_month]
+    month_text = big_font.render(month_str, True, BLACK) #type: ignore
+    screen.blit(month_text, month_text.get_rect(midtop=(522, 7)))
 
-    # Draw the day names
+    # Day-of-week labels
     for i, day_name in enumerate(days_of_week):
-        day_text = font.render(day_name, True, BLACK)# type: ignore
+        day_text = big_font.render(day_name, True, BLACK) #type: ignore
         screen.blit(day_text, (start_x + i * (day_box_width + margin) + 25, start_y - top_padding))
 
-    # Draw the calendar boxes
-    day_number = 1
-    for row in range(6):  # Maximum of 6 rows in a month
-        for col in range(7):  # 7 columns for the days of the week
-            # Only draw the day number if it's within the current month
-            if row == 0 and col < first_weekday:  # Skip the empty days before the 1st of the month
-                continue
-            if day_number > number_of_days:  # Stop if we've drawn all days in the month
-                break
+    # Draw 6x7 grid of days
+    for idx in range(42):
+        row = idx // 7
+        col = idx % 7
+        x = start_x + col * (day_box_width + margin)
+        y = start_y + row * (day_box_height + margin)
 
-            # Determine the x and y position for the current box
-            x = start_x + col * (day_box_width + margin)
-            y = start_y + row * (day_box_height + margin)
-            checked_date = datetime(displayed_year, displayed_month, day_number)
-
-            # Draw day boxes for previous, current, and future days
-            if checked_date < today_date:
-                pygame.draw.rect(screen, calendar_previous_day_header_color, (x, y, day_box_width, day_box_height))
-                pygame.draw.rect(screen, BLACK, (x, y, day_box_width, day_box_height), 2)# type: ignore
-                if total_days > 35:
-                    pygame.draw.rect(screen, calendar_previous_day_color, (x, y + 14, day_box_width, day_box_height - 14))
-                    pygame.draw.rect(screen, BLACK, (x, y + 14, day_box_width, day_box_height - 14), 2)# type: ignore
-                else:
-                    pygame.draw.rect(screen, calendar_previous_day_color, (x, y + 16, day_box_width, day_box_height - 16))
-                    pygame.draw.rect(screen, BLACK, (x, y + 16, day_box_width, day_box_height - 16), 2)# type: ignore
-            elif checked_date > today_date:
-                pygame.draw.rect(screen, calendar_next_day_header_color, (x, y, day_box_width, day_box_height))
-                pygame.draw.rect(screen, BLACK, (x, y, day_box_width, day_box_height), 2)# type: ignore
-                if total_days > 35:
-                    pygame.draw.rect(screen, calendar_next_day_color, (x, y + 14, day_box_width, day_box_height - 14))
-                    pygame.draw.rect(screen, BLACK, (x, y + 14, day_box_width, day_box_height - 14), 2)# type: ignore
-                else:
-                    pygame.draw.rect(screen, calendar_next_day_color, (x, y + 16, day_box_width, day_box_height - 16))
-                    pygame.draw.rect(screen, BLACK, (x, y + 16, day_box_width, day_box_height - 16), 2)# type: ignore
-            if (displayed_month == datetime.now().month and displayed_year == datetime.now().year and day_number == today_date.day):
-                pygame.draw.rect(screen, calendar_current_day_header_color, (x, y, day_box_width, day_box_height))
-                pygame.draw.rect(screen, BLACK, (x, y, day_box_width, day_box_height), 2)# type: ignore
-                if total_days > 35:
-                    pygame.draw.rect(screen, calendar_current_day_color, (x, y + 14, day_box_width, day_box_height - 14))
-                    pygame.draw.rect(screen, BLACK, (x, y + 14, day_box_width, day_box_height - 14), 2)# type: ignore
-                else:
-                    pygame.draw.rect(screen, calendar_current_day_color, (x, y + 16, day_box_width, day_box_height - 16))
-                    pygame.draw.rect(screen, BLACK, (x, y + 16, day_box_width, day_box_height - 16), 2)# type: ignore
-
-            # Draw the day number in the top right of the box
-            day_text = smaller_font.render(str(day_number), True, BLACK)# type: ignore
-            checked_date_str = checked_date.strftime("%Y-%m-%d")
-            if is_streak_day(checked_date_str):
-                s_text = smaller_font.render("S", True, BLACK)# type: ignore
-                screen.blit(s_text, (x + day_box_width - 33, y + 2))  # S appears left of the day number
-
-            if day_number > 9:
-                screen.blit(day_text, (x + day_box_width - 19, y + 2))
-            else:
-                screen.blit(day_text, (x + day_box_width - 11, y + 2))
-
-            # Check for tasks on this day and draw folder boxes
-            task_y_offset = y + 20  # Starting y-offset for the folder boxes
-
-            for task_type, task_list in task_lists.items():
-                # Filter tasks due on this date
-                tasks_for_date = [task for task in task_list if task[4] == checked_date]
-                task_count = len(tasks_for_date)
-
-                if task_count > 0:
-                    # Define folder box rect
-                    folder_box_rect = pygame.Rect(x + 5, task_y_offset, day_box_width - 15, folder_box_height)
-                    draw_rounded_button(screen, folder_box_rect, task_colors[task_type], BLACK, 1, 1)# type: ignore
-
-                    # Check if all tasks are completed
-                    all_completed = all(task[2] == "✅" for task in tasks_for_date)
-
-                    # Check if mouse is hovering over this folder box
-                    if folder_box_rect.collidepoint(mouse_pos):
-                        hovered_task_folder = task_type
-                        hovered_task_folder_info = {
-                            "folder_name": task_type,
-                            "task_count": task_count,
-                            "task_details": tasks_for_date,
-                            "hover_position": (x, y),
-                            "column": col
-                        }
-
-                    # Draw the task count text with strike-through if all completed
-                    if task_type == "homework":
-                        task_text = smaller_font.render(f"{task_count} {folder_one}" if task_count == 1 else f"{task_count} {folder_one}s", True, BLACK)# type: ignore
-                    elif task_type == "chores":
-                        task_text = smaller_font.render(f"{task_count} {folder_two}" if task_count == 1 else f"{task_count} {folder_two}s", True, BLACK)# type: ignore
-                    elif task_type == "work":
-                        task_text = smaller_font.render(f"{task_count} {folder_three}" if task_count == 1 else f"{task_count} {folder_three}s", True, BLACK)# type: ignore
-                    elif task_type == "misc":
-                        task_text = smaller_font.render(f"{task_count} {folder_four}" if task_count == 1 else f"{task_count} {folder_four}s", True, BLACK)# type: ignore
-                    screen.blit(task_text, (x + 10, task_y_offset + 1))
-                    if all_completed:
-                        pygame.draw.line(screen, BLACK, (x + 10, task_y_offset + 10), (x + 50, task_y_offset + 5), 2)# type: ignore
-
-                    # Move down for the next folder box
-                    task_y_offset += folder_box_height + 2
-
-            # Move to the next day
-            day_number += 1
-
-        # Stop if we've drawn all days in the month
-        if day_number > number_of_days:
-            break
-
-    # Draw the hover box with task details if hovering over a folder
-    if hovered_task_folder_info:
-        hover_x, hover_y = hovered_task_folder_info['hover_position']
-        if hovered_task_folder_info["column"] <= 3:
-            hover_rect = pygame.Rect(hover_x + day_box_width, hover_y, day_box_width * 3, day_box_height)
+        # Determine which day to display
+        day_offset = idx - first_weekday + 1
+        if day_offset < 1:
+            # previous month
+            disp_day = prev_num_days + day_offset
+            slot_date = datetime(prev_year, prev_month, disp_day)
+            hdr_col = blend(calendar_previous_day_header_color, background_color)
+            box_col = blend(calendar_previous_day_color, background_color)
+        elif day_offset > num_days:
+            # next month
+            disp_day = day_offset - num_days
+            slot_date = datetime(next_year, next_month, disp_day)
+            hdr_col = blend(calendar_next_day_header_color, background_color)
+            box_col = blend(calendar_next_day_color, background_color)
         else:
-            hover_rect = pygame.Rect(hover_x - (day_box_width * 3), hover_y, day_box_width * 3, day_box_height)
+            # current month
+            disp_day = day_offset
+            slot_date = datetime(displayed_year, displayed_month, disp_day)
+            if slot_date < today_date:
+                hdr_col = calendar_previous_day_header_color
+                box_col = calendar_previous_day_color
+            elif slot_date > today_date:
+                hdr_col = calendar_next_day_header_color
+                box_col = calendar_next_day_color
+            else:
+                hdr_col = calendar_current_day_header_color
+                box_col = calendar_current_day_color
 
-        pygame.draw.rect(screen, calendar_current_day_color, hover_rect)
-        pygame.draw.rect(screen, BLACK, hover_rect, 2)# type: ignore
+        # Header rectangle
+        pygame.draw.rect(screen, hdr_col, (x, y, day_box_width, day_box_height))
+        pygame.draw.rect(screen, BLACK, (x, y, day_box_width, day_box_height), 1) #type: ignore
 
-        # Display folder name and task details with strike-through if completed
-        hover_text_y = hover_y - 5
-        if hovered_task_folder_info["folder_name"] == "homework":
-            folder_name_text = font.render(folder_one, True, BLACK)# type: ignore
-        elif hovered_task_folder_info["folder_name"] == "chores":
-            folder_name_text = font.render(folder_two, True, BLACK)# type: ignore
-        elif hovered_task_folder_info["folder_name"] == "work":
-            folder_name_text = font.render(folder_three, True, BLACK)# type: ignore
-        elif hovered_task_folder_info["folder_name"] == "misc":
-            folder_name_text = font.render(folder_four, True, BLACK)# type: ignore
-        screen.blit(folder_name_text, (hover_rect.x + 5, hover_text_y + 8))
-        underline = pygame.Rect(hover_rect.x + 5, hover_text_y + 30, 100, 3)
-        draw_rounded_button(screen, underline, BLACK, 1, 0)# type: ignore
+        # Body slice
+        slice_top = y + (14 if total_days > 35 else 16)
+        slice_h = day_box_height - (14 if total_days > 35 else 16)
+        pygame.draw.rect(screen, box_col, (x, slice_top, day_box_width, slice_h))
+        pygame.draw.rect(screen, BLACK, (x, slice_top, day_box_width, slice_h), 1) #type: ignore
 
-        hover_text_y += 20
-        for task in hovered_task_folder_info["task_details"]:
-            task_name_text = smaller_font.render(f"{task[1]} {spoon_name_input} for {task[0]}", True, BLACK)# type: ignore
-            screen.blit(task_name_text, (hover_rect.x + 5, hover_text_y + 15))
-            
-            # Calculate the width of the text for the strike-through line
-            text_width = task_name_text.get_width()
-            
-            if task[2] == "✅":  # If the task is marked as completed
-                pygame.draw.line(screen, BLACK, (hover_rect.x + 5, hover_text_y + 23), (hover_rect.x + 5 + text_width, hover_text_y + 18), 2)# type: ignore
-            hover_text_y += 15
+        # Day number
+        day_text = smaller_font.render(str(disp_day), True, BLACK) #type: ignore
+        tx = x + day_box_width - (19 if disp_day > 9 else 11)
+        screen.blit(day_text, (tx, y + 1))
 
-"""
-Summary:
-    Handles the logic for navigating the calendar by changing the displayed month and year based on user input.
+        # Draw streak indicator if needed
+        date_str = slot_date.strftime("%Y-%m-%d")
+        if any(start <= date_str <= end for start, end in streak_dates):
+            s_text = smaller_font.render("S", True, BLACK) #type: ignore
+            screen.blit(s_text, (x + day_box_width - 33, y + 1))
 
-Parameters:
-    event (pygame.event.Event): The event object containing information about the user input.
-    displayed_month (int): The currently displayed month on the calendar.
-    displayed_year (int): The currently displayed year on the calendar.
+                # — instead of folder rectangles, render up to 3 lines of text — 
+        line_height = smaller_font.get_height()
+        text_y = slice_top + 2
 
-Returns:
-    (tuple) Updated values for: displayed month and year.
-"""
+                # — build list of (task_list, display_color) in the order you want —
+        folders = [
+            (homework_tasks_list, BLACK), #type: ignore
+            (chores_tasks_list,   BLACK), #type: ignore
+            (work_tasks_list,     BLACK), #type: ignore
+            (misc_tasks_list,     BLACK), #type: ignore
+            (exams_tasks_list,    BLACK), #type: ignore
+            (projects_tasks_list, BLACK), #type: ignore
+        ]
+
+        all_due = []
+        for lst, col in folders:
+            for t in lst:
+                if t[4] == slot_date:
+                    all_due.append((t[0], col))
+
+        total = len(all_due)
+        text_y = slice_top + 2
+        line_h = smaller_font.get_height() - 2
+
+        if total <= 3:
+            # show every single task (up to 3)
+            for name, col in all_due:
+                surf = smaller_font.render(name, True, col)
+                screen.blit(surf, (x + 5, text_y))
+                text_y += line_h
+        else:
+            # show first two tasks
+            for name, col in all_due[:2]:
+                surf = smaller_font.render(name, True, col)
+                screen.blit(surf, (x + 5, text_y))
+                text_y += line_h
+            # then “+N” for the rest
+            more = smaller_font.render(f"{total-2} other tasks", True, BLACK) #type: ignore
+            screen.blit(more, (x + 5, text_y))
+
+def draw_year_mode():
+    pass
 
 def logic_calendar(event, displayed_month, displayed_year):
+    global calendar_mode
+
     if event.type == pygame.MOUSEBUTTONDOWN:
-        if previous_month_button.collidepoint(event.pos):
-            displayed_month -= 1
-            if displayed_month < 1:
-                displayed_month = 12
-                displayed_year -= 1
-        elif next_month_button.collidepoint(event.pos):
-            displayed_month += 1
-            if displayed_month > 12:
-                displayed_month = 1
-                displayed_year += 1
+        # —— mode switching ——  
+        if day_mode_button.collidepoint(event.pos):
+            calendar_mode = "day"
+        elif week_mode_button.collidepoint(event.pos):
+            calendar_mode = "week"
+        elif month_mode_button.collidepoint(event.pos):
+            calendar_mode = "month"
+        elif year_mode_button.collidepoint(event.pos):
+            calendar_mode = "year"
+
+        # —— existing month nav ——  
+        if calendar_mode == "month":
+            if previous_month_button.collidepoint(event.pos):
+                displayed_month -= 1
+                if displayed_month < 1:
+                    displayed_month = 12
+                    displayed_year -= 1
+
+            elif next_month_button.collidepoint(event.pos):
+                displayed_month += 1
+                if displayed_month > 12:
+                    displayed_month = 1
+                    displayed_year += 1
+
     return displayed_month, displayed_year
