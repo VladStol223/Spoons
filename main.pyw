@@ -1,7 +1,7 @@
 #Vladislav Stolbennikov
 #8/7/2024
 #Spoons App
-#VS1.16
+#VS1.25
 
 '''
 Total pages:
@@ -45,7 +45,7 @@ To do:
 -Icons 
 -Icon names 
 -Spoon bucks 
--Show progress and rewards in Manage Tasks Hub 
+-Show progress and rewards in Manage Tasks Hub k
 -Badge System 
 -Unlock badges based on user actions (first task, streaks, spoons, etc.) 
 -Track and shop badges earned 
@@ -59,9 +59,9 @@ To do:
 
 5.) -Add the following to the shop page: 
 -Display available items (themes, icons, icon names, streak savers) 
--Show item previews and costs 
+-Show item previews and costs
 -Confirm purchase before deducting spoon bucks 
--Disable purchase if insufficient funds
+-Disable purchase if insufficient fundskk
 
 make the UI look like the stardew valley interface. 
 The top of the interface is going to be the inventory where the user will be able to see the their current spoons, spoonbucks, streak, and your little guy.
@@ -254,7 +254,7 @@ while running:
         
     elif page == "calendar":
         draw_border(screen, (0, 0, screen_width, screen_height), page, background_color)
-        draw_calendar(screen, spoon_name_input,
+        draw_calendar(screen, spoon_name_input, displayed_week_offset,
                   homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,
                   displayed_month, displayed_year, background_color,
                   homework_fol_color, chores_fol_color, work_fol_color, misc_fol_color,calendar_month_color, 
@@ -347,7 +347,7 @@ while running:
         elif page == "inventory":
             spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_inventory(event, tool_tips, spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         elif page == "calendar": 
-            displayed_month, displayed_year = logic_calendar(event, displayed_month, displayed_year)
+            displayed_week_offset, displayed_month, displayed_year = logic_calendar(event, displayed_week_offset, displayed_month, displayed_year)
         elif page == "shop":
             tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_shop(event, tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
             switch_theme(current_theme, globals())

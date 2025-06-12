@@ -182,7 +182,7 @@ def draw_border(screen, rect, page, background_color):
         left_border = 390
         right_border = 626
         r, g, b = background_color
-        lighter_background = (max(0, r + 20), max(0, g + 20), max(0, b + 20))
+        lighter_background = (min(r + 20, 255), min(g + 20, 255), min(b + 20, 255))
         pygame.draw.rect(screen, lighter_background, (left_border, 0, right_border - left_border + 18, 50))
 
         # ── draw the horizontal “edge” border between them ──

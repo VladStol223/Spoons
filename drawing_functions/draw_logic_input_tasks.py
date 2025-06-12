@@ -78,8 +78,9 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
     done_button_y_pos = 144 + 60 * folder_list.index(folder)
 
     # subtract 20 from each channel, but ensure you don't drop below 0
-    done_button_color = ( max(r - 20, 0),max(g - 20, 0),max(b - 20, 0))
-    due_date_infill_color = ( max(r + 20, 0),max(g + 20, 0),max(b + 20, 0))
+    done_button_color     = tuple(max(0,  c - 20) for c in (r, g, b))
+    due_date_infill_color = tuple(min(255, c + 20) for c in (r, g, b))
+
 
     # Task Input boxes
     task_input_box = pygame.Rect(250, y_pos["task_input_line"], 300, 50)

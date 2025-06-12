@@ -1,5 +1,5 @@
 {
-  "spoons": 5,
+  "spoons": 6,
   "homework_tasks_list": [{"task_name": "physics chap 1", "spoons_needed": 6, "done": 2, "days_till_due_date": -3, "due_date": "2025-06-08T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}, {"task_name": "Big Exam Sad!!", "spoons_needed": 2, "done": 0, "days_till_due_date": -1, "due_date": "2025-06-10T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}, {"task_name": "test", "spoons_needed": 1, "done": 0, "days_till_due_date": -1, "due_date": "2025-06-10T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}, {"task_name": "test", "spoons_needed": 1, "done": 0, "days_till_due_date": -1, "due_date": "2025-06-10T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}, {"task_name": "test1", "spoons_needed": 1, "done": 0, "days_till_due_date": 2, "due_date": "2025-06-13T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}],
   "chores_tasks_list": [{"task_name": "Dishwasher", "spoons_needed": 2, "done": 0, "days_till_due_date": -3, "due_date": "2025-06-08T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}, {"task_name": "teste", "spoons_needed": 2, "done": 0, "days_till_due_date": 2, "due_date": "2025-06-13T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}, {"task_name": "Holeh Moleh!", "spoons_needed": 0, "done": 0, "days_till_due_date": 0, "due_date": "2025-06-11T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}],
   "work_tasks_list": [{"task_name": "dishwasher", "spoons_needed": 8, "done": 7, "days_till_due_date": -3, "due_date": "2025-06-08T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}, {"task_name": "test", "spoons_needed": 3, "done": 0, "days_till_due_date": -3, "due_date": "2025-06-08T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}, {"task_name": "terster", "spoons_needed": 1, "done": 0, "days_till_due_date": 2, "due_date": "2025-06-13T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}],
@@ -8,7 +8,7 @@
   "projects_tasks_list": [{"task_name": "feed the cat", "spoons_needed": 1, "done": 0, "days_till_due_date": -1, "due_date": "2025-06-10T00:00:00", "start_time": [0, 0, 0, 0], "end_time": [0, 0, 0, 0]}],
   "daily_spoons": {"Mon": 11, "Tue": 10, "Wed": 13, "Thu": 12, "Fri": 10, "Sat": 15, "Sun": 15},
   "theme": "foresty",
-  "icon_image": "spoon.png",
+  "icon_image": "star.png",
   "spoon_name_input": "Stars",
   "folder_one": "Homework", "folder_two": "Chores",  "folder_three": "Whatevs!",  "folder_four": "Important",  "folder_five": "Work",  "folder_six": "Meow",
   "streak_dates": [["2025-05-07", "2025-05-07"], ["2025-05-19", "2025-05-19"], ["2025-05-31", "2025-06-02"]]

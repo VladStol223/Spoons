@@ -1,5 +1,5 @@
 import pygame
-from datetime import datetime
+from datetime import datetime, timedelta
 import calendar
 from config import *
 from drawing_functions.draw_rounded_button import draw_rounded_button
@@ -11,14 +11,14 @@ month_mode_button = pygame.Rect(665, 25,  120, 30)
 year_mode_button  = pygame.Rect(805, 25,  120, 30)
 
 def blend(c1, c2):
-    """Return the midpoint blend of two RGB colors."""
+    """Return the midpoint blend of two RGB colors ."""
     return (
         (c1[0] + c2[0]*3) // 4,
         (c1[1] + c2[1]*3) // 4,
         (c1[2] + c2[2]*3) // 4,)
 
 
-def draw_calendar(screen, spoon_name_input,
+def draw_calendar(screen, spoon_name_input, displayed_week_offset,
                   homework_tasks_list, chores_tasks_list, work_tasks_list,
                   misc_tasks_list, exams_tasks_list, projects_tasks_list,
                   displayed_month, displayed_year, background_color,
@@ -56,7 +56,7 @@ def draw_calendar(screen, spoon_name_input,
         draw_day_mode()
 
     elif calendar_mode == "week":
-        draw_week_mode(screen, font, bigger_font, smaller_font, 
+        draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offset,
                         homework_tasks_list, chores_tasks_list, work_tasks_list,
                         misc_tasks_list, exams_tasks_list, projects_tasks_list,
                         displayed_month, displayed_year, background_color,
@@ -64,7 +64,8 @@ def draw_calendar(screen, spoon_name_input,
                         calendar_current_day_header_color,
                         calendar_previous_day_color, calendar_current_day_color,
                         calendar_next_day_color, streak_dates,
-                        lighter_background, darker_background)
+                        lighter_background, darker_background,
+                        folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
 
     elif calendar_mode == "month":
         draw_month_mode(screen, font, bigger_font, smaller_font,
@@ -89,109 +90,109 @@ def draw_calendar(screen, spoon_name_input,
 def draw_day_mode():
     pass
 
-def draw_week_mode(screen, font, bigger_font, smaller_font,
+def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offset,
     homework_tasks_list, chores_tasks_list, work_tasks_list,
     misc_tasks_list, exams_tasks_list, projects_tasks_list,
     displayed_month, displayed_year, background_color,
     prev_hdr_col, next_hdr_col, curr_hdr_col,
     prev_col, curr_col, next_col, streak_dates,
-    lighter_background, darker_background):
+    lighter_background, darker_background,
+    folder_one, folder_two, folder_three, folder_four, folder_five, folder_six):
 
+    # calculate current week start/end based on offset
+    today = datetime.now().date()
+    mid = today + timedelta(weeks=displayed_week_offset)
+    days_from_sunday = (mid.weekday() + 1) % 7
+    week_start = mid - timedelta(days=days_from_sunday)
+    week_end = week_start + timedelta(days=6)
+
+    # draw navigation buttons and header
     draw_rounded_button(screen, previous_month_button, lighter_background, lighter_background, 0)
     draw_rounded_button(screen, next_month_button, lighter_background, lighter_background, 0)
     right_arrow = bigger_font.render(">", True, darker_background)
     left_arrow = pygame.transform.rotate(right_arrow, 180)
-    screen.blit(left_arrow, (419, 2))
-    screen.blit(right_arrow, (606, 5))
+    screen.blit(left_arrow, (414, 2))
+    screen.blit(right_arrow, (611, 5))
 
-    today = datetime.now()
-    # box dimensions & positions
-    day_box_width  = 105
-    day_box_height = 120
-    margin         = 0
-    start_x        = 160
-    start_y        = 74
+    # week-range header
+    week_str = f"{calendar.month_abbr[week_start.month]} {week_start.day}-{calendar.month_abbr[week_end.month]} {week_end.day}"
+    week_text = big_font.render(week_str, True, BLACK) #type: ignore
+    screen.blit(week_text, week_text.get_rect(midtop=(522, 7)))
 
-    # compute month boundaries
-    prev_month = displayed_month - 1 or 12
-    prev_year  = displayed_year - (1 if displayed_month == 1 else 0)
-    next_month = displayed_month + 1 if displayed_month < 12 else 1
-    next_year  = displayed_year + (1 if displayed_month == 12 else 0)
+    # layout
+    day_box_width, day_box_height = 105, 120
+    margin = 0
+    start_x, start_y = 160, 74
 
-    first_wd, num_days = calendar.monthrange(displayed_year, displayed_month)
-    first_wd = (first_wd + 1) % 7            # convert Mon=0 → Sun=0
-    _, prev_days      = calendar.monthrange(prev_year, prev_month)
-
-    # 1) Day‐of‐week headers
+    # day-of-week labels
     days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
     for i, d in enumerate(days):
-        hdr_txt = big_font.render(d, True, (0,0,0))
-        screen.blit(hdr_txt, (start_x + i*(day_box_width+margin) + 25, 67))
-    # 2) The single row of date‐boxes
-    y = start_y + font.get_height() + 5
-    for col in range(7):
-        x = start_x + col*(day_box_width + margin)
-        offset = col - first_wd + 1
+        hdr_txt = font.render(d, True, BLACK) #type: ignore
+        screen.blit(hdr_txt, (start_x + i*(day_box_width + margin) + 25, 67))
 
-        # pick which month/day
-        if offset < 1:
-            day   = prev_days + offset
-            slot  = datetime(prev_year, prev_month, day)
-            hdr_c = blend(prev_hdr_col, background_color)
-            box_c = blend(prev_col,      background_color)
-        elif offset > num_days:
-            day   = offset - num_days
-            slot  = datetime(next_year, next_month, day)
-            hdr_c = blend(next_hdr_col, background_color)
-            box_c = blend(next_col,     background_color)
+    # single row of date-boxes
+    body_y = start_y + font.get_height() + 5
+    for i in range(7):
+        current = week_start + timedelta(days=i)
+        x = start_x + i*(day_box_width + margin)
+        y = body_y
+
+        # choose colors
+        if current < today:
+            hdr_c, box_c = prev_hdr_col, prev_col
+        elif current > today:
+            hdr_c, box_c = next_hdr_col, next_col
         else:
-            day  = offset
-            slot = datetime(displayed_year, displayed_month, day)
-            if   slot.date() < today.date():  hdr_c, box_c = prev_hdr_col, prev_col
-            elif slot.date() > today.date():  hdr_c, box_c = next_hdr_col, next_col
-            else:                              hdr_c, box_c = curr_hdr_col, curr_col
+            hdr_c, box_c = curr_hdr_col, curr_col
 
-        # header rectangle
+        # header & body rects
         pygame.draw.rect(screen, hdr_c, (x, y, day_box_width, day_box_height//4))
-        pygame.draw.rect(screen, (0,0,0), (x, y, day_box_width, day_box_height//4), 1)
-        # body rectangle
-        body_y = y + day_box_height//4
-        pygame.draw.rect(screen, box_c, (x, body_y, day_box_width, day_box_height*3))
-        pygame.draw.rect(screen, (0,0,0), (x, body_y, day_box_width, day_box_height*3), 1)
+        pygame.draw.rect(screen, BLACK, (x, y, day_box_width, day_box_height//4), 1) #type: ignore
+        body_rect_y = y + day_box_height//4
+        pygame.draw.rect(screen, box_c, (x, body_rect_y, day_box_width, day_box_height*3))
+        pygame.draw.rect(screen, BLACK, (x, body_rect_y, day_box_width, day_box_height*3), 1) #type: ignore
 
         # day number
-        dn = font.render(str(day), True, (0,0,0))
+        dn = font.render(str(current.day), True, BLACK) #type: ignore
         screen.blit(dn, (x + day_box_width - 20, y + 2))
 
         # streak indicator
-        date_str = slot.strftime("%Y-%m-%d")
+        date_str = current.strftime("%Y-%m-%d")
         if any(start <= date_str <= end for start, end in streak_dates):
-            s = font.render("S", True, (0,0,0))
+            s = font.render("S", True, BLACK) #type: ignore
             screen.blit(s, (x + day_box_width - 35, y + 2))
 
-        # tasks due that day
-        tasks = []
-        for lst, col in [
-            (homework_tasks_list, (0,0,0)),
-            (chores_tasks_list,   (0,0,0)),
-            (work_tasks_list,     (0,0,0)),
-            (misc_tasks_list,     (0,0,0)),
-            (exams_tasks_list,    (0,0,0)),
-            (projects_tasks_list, (0,0,0)),
-        ]:
-            for t in lst:
-                if t[4] == slot:
-                    tasks.append((t[0], col))
-
-        ty = body_y + 5
-        # show up to 3 tasks, then “+N more”
-        for name, col in tasks[:3]:
-            surf = smaller_font.render(name, True, col)
-            screen.blit(surf, (x + 5, ty))
-            ty += smaller_font.get_height() - 2
-        if len(tasks) > 3:
-            more = smaller_font.render(f"+{len(tasks)-3} more", True, (0,0,0))
-            screen.blit(more, (x + 5, ty))
+        # tasks grouped by folder
+        line_height = smaller_font.get_height() - 2
+        ty = body_rect_y + 5
+        indent = 3
+        folder_map = [
+            (folder_one, homework_tasks_list),
+            (folder_two, chores_tasks_list),
+            (folder_three, work_tasks_list),
+            (folder_four, misc_tasks_list),
+            (folder_five, exams_tasks_list),
+            (folder_six, projects_tasks_list),
+        ]
+        for folder_label, lst in folder_map:
+            # filter tasks in this folder for the current day
+            day_tasks = [t[0] for t in lst if t[4].date() == current]
+            if not day_tasks:
+                continue
+            # render folder name
+            label_surf = smaller_font.render(f"{folder_label}:", True, BLACK) #type: ignore
+            label_pos = (x + indent, ty)
+            screen.blit(label_surf, label_pos)
+            # underline folder name
+            lw, lh = label_surf.get_width(), label_surf.get_height()
+            underline_y = ty + lh - 3
+            pygame.draw.line(screen, BLACK, (x + indent, underline_y), (x + indent + lw, underline_y), 1) #type: ignore
+            ty += lh + 2
+            # render each task
+            for name in day_tasks:
+                task_surf = smaller_font.render(f"  {name}", True, BLACK) #type: ignore
+                screen.blit(task_surf, (x + indent - 10, ty))
+                ty += smaller_font.get_height()
 
 def draw_month_mode(screen, font, bigger_font, smaller_font, darker_background, lighter_background,
                   homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,
@@ -206,7 +207,7 @@ def draw_month_mode(screen, font, bigger_font, smaller_font, darker_background, 
     start_y = 97
     top_padding = 30
     days_of_week = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-    today_date = datetime.now()
+    today = datetime.now().date()
 
     # Compute month boundaries
     prev_month = displayed_month - 1 or 12
@@ -227,15 +228,19 @@ def draw_month_mode(screen, font, bigger_font, smaller_font, darker_background, 
     draw_rounded_button(screen, next_month_button, lighter_background, lighter_background, 0)
     right_arrow = bigger_font.render(">", True, darker_background)
     left_arrow = pygame.transform.rotate(right_arrow, 180)
-    screen.blit(left_arrow, (419, 2))
-    screen.blit(right_arrow, (606, 5))
-    month_str = calendar.month_name[displayed_month]
-    month_text = big_font.render(month_str, True, BLACK) #type: ignore
-    screen.blit(month_text, month_text.get_rect(midtop=(522, 7)))
+    screen.blit(left_arrow, (414, 2))
+    screen.blit(right_arrow, (611, 5))
+    # Determine header string: full month if current year, else abbreviated + year
+    if displayed_year == today.year:
+        header_str = calendar.month_name[displayed_month]
+    else:
+        header_str = f"{calendar.month_abbr[displayed_month]} {displayed_year}"
+    header_text = bigger_font.render(header_str, True, BLACK) #type: ignore
+    screen.blit(header_text, header_text.get_rect(midtop=(522, 5)))
 
     # Day-of-week labels
     for i, day_name in enumerate(days_of_week):
-        day_text = big_font.render(day_name, True, BLACK) #type: ignore
+        day_text = font.render(day_name, True, BLACK) #type: ignore
         screen.blit(day_text, (start_x + i * (day_box_width + margin) + 25, start_y - top_padding))
 
     # Draw 6x7 grid of days
@@ -248,25 +253,23 @@ def draw_month_mode(screen, font, bigger_font, smaller_font, darker_background, 
         # Determine which day to display
         day_offset = idx - first_weekday + 1
         if day_offset < 1:
-            # previous month
             disp_day = prev_num_days + day_offset
             slot_date = datetime(prev_year, prev_month, disp_day)
             hdr_col = blend(calendar_previous_day_header_color, background_color)
             box_col = blend(calendar_previous_day_color, background_color)
         elif day_offset > num_days:
-            # next month
             disp_day = day_offset - num_days
             slot_date = datetime(next_year, next_month, disp_day)
             hdr_col = blend(calendar_next_day_header_color, background_color)
             box_col = blend(calendar_next_day_color, background_color)
         else:
-            # current month
             disp_day = day_offset
             slot_date = datetime(displayed_year, displayed_month, disp_day)
-            if slot_date < today_date:
+            slot_day = slot_date.date()
+            if slot_day < today:
                 hdr_col = calendar_previous_day_header_color
                 box_col = calendar_previous_day_color
-            elif slot_date > today_date:
+            elif slot_day > today:
                 hdr_col = calendar_next_day_header_color
                 box_col = calendar_next_day_color
             else:
@@ -294,45 +297,37 @@ def draw_month_mode(screen, font, bigger_font, smaller_font, darker_background, 
             s_text = smaller_font.render("S", True, BLACK) #type: ignore
             screen.blit(s_text, (x + day_box_width - 33, y + 1))
 
-                # — instead of folder rectangles, render up to 3 lines of text — 
-        line_height = smaller_font.get_height()
+        # Task listing
+        slice_top = slice_top
+        line_height = smaller_font.get_height() - 2
         text_y = slice_top + 2
-
-                # — build list of (task_list, display_color) in the order you want —
         folders = [
             (homework_tasks_list, BLACK), #type: ignore
-            (chores_tasks_list,   BLACK), #type: ignore
-            (work_tasks_list,     BLACK), #type: ignore
-            (misc_tasks_list,     BLACK), #type: ignore
-            (exams_tasks_list,    BLACK), #type: ignore
+            (chores_tasks_list, BLACK), #type: ignore
+            (work_tasks_list, BLACK), #type: ignore
+            (misc_tasks_list, BLACK), #type: ignore
+            (exams_tasks_list, BLACK), #type: ignore
             (projects_tasks_list, BLACK), #type: ignore
         ]
-
         all_due = []
         for lst, col in folders:
             for t in lst:
                 if t[4] == slot_date:
                     all_due.append((t[0], col))
-
         total = len(all_due)
-        text_y = slice_top + 2
-        line_h = smaller_font.get_height() - 2
-
         if total <= 3:
-            # show every single task (up to 3)
             for name, col in all_due:
                 surf = smaller_font.render(name, True, col)
                 screen.blit(surf, (x + 5, text_y))
-                text_y += line_h
+                text_y += line_height
         else:
-            # show first two tasks
             for name, col in all_due[:2]:
                 surf = smaller_font.render(name, True, col)
                 screen.blit(surf, (x + 5, text_y))
-                text_y += line_h
-            # then “+N” for the rest
+                text_y += line_height
             more = smaller_font.render(f"{total-2} other tasks", True, BLACK) #type: ignore
             screen.blit(more, (x + 5, text_y))
+
 
 def draw_year_mode(
     screen, font, smaller_font, bigger_font,
@@ -353,8 +348,8 @@ def draw_year_mode(
     draw_rounded_button(screen, next_month_button, lighter_background, lighter_background, 0)
     right_arrow = bigger_font.render(">", True, darker_background)
     left_arrow = pygame.transform.rotate(right_arrow, 180)
-    screen.blit(left_arrow, (419, 2))
-    screen.blit(right_arrow, (606, 5))
+    screen.blit(left_arrow, (414, 2))
+    screen.blit(right_arrow, (611, 5))
 
     # grid settings
     cols, rows = 4, 3
@@ -404,7 +399,7 @@ def draw_year_mode(
             dr = day_surf.get_rect(center=(cx + day_w/2, cy + day_h/2))
             screen.blit(day_surf, dr)
 
-def logic_calendar(event, displayed_month, displayed_year):
+def logic_calendar(event, displayed_week_offset, displayed_month, displayed_year):
     global calendar_mode
 
     if event.type == pygame.MOUSEBUTTONDOWN:
@@ -418,14 +413,19 @@ def logic_calendar(event, displayed_month, displayed_year):
         elif year_mode_button.collidepoint(event.pos):
             calendar_mode = "year"
 
-        # —— existing month nav ——  
+        # week navigation
+        if calendar_mode == "week":
+            if previous_month_button.collidepoint(event.pos):
+                displayed_week_offset -= 1
+            elif next_month_button.collidepoint(event.pos):
+                displayed_week_offset += 1
+
         if calendar_mode == "month":
             if previous_month_button.collidepoint(event.pos):
                 displayed_month -= 1
                 if displayed_month < 1:
                     displayed_month = 12
                     displayed_year -= 1
-
             elif next_month_button.collidepoint(event.pos):
                 displayed_month += 1
                 if displayed_month > 12:
@@ -439,4 +439,4 @@ def logic_calendar(event, displayed_month, displayed_year):
             elif next_month_button.collidepoint(event.pos):
                 displayed_year += 1
 
-    return displayed_month, displayed_year
+    return displayed_week_offset, displayed_month, displayed_year

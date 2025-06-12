@@ -24,6 +24,7 @@ spoon_image_outline = pygame.Rect(410,180,35,35)
 battery_image_outline = pygame.Rect(460,180,35,35)
 star_image_outline = pygame.Rect(510,180,35,35)
 potion_image_outline = pygame.Rect(560,180,35,35)
+yourdidit_image_outline = pygame.Rect(610,180,35,35)
 
 #themes
 aquatic_theme = pygame.Rect(300, 180, 40, 30)
@@ -54,6 +55,8 @@ def draw_shop(screen, tool_tips, spoon_name_input, icon_image, input_active, hub
     screen.blit(star_image, (510, 180))
     draw_rounded_button(screen,potion_image_outline,hub_background_color,GREEN if icon_image == potion_image else BLACK,2,2)# type: ignore
     screen.blit(potion_image, (560, 180))
+    draw_rounded_button(screen,yourdidit_image_outline,hub_background_color,GREEN if icon_image == yourdidit_image else BLACK,2,2)# type: ignore
+    screen.blit(yourdidit_image, (610, 180))
 
 
     Theme_text = font.render("Themes:", True, BLACK)# type: ignore
@@ -128,7 +131,8 @@ def logic_shop(event, tool_tips, spoon_name_input, input_active, current_theme, 
             icon_image = star_image
         elif potion_image_outline.collidepoint(event.pos):
             icon_image = potion_image
-
+        elif yourdidit_image_outline.collidepoint(event.pos):
+            icon_image = yourdidit_image
 
         if aquatic_theme.collidepoint(event.pos):
             try:

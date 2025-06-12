@@ -38,22 +38,23 @@ images_dir = os.path.join(base_dir, "images")
 image_files = {
     "spoons_logo": ["Spoons Logo 128p.png", (500, 80)],
     "spoon_image": ["spoon.png", (33, 33)],
-    "battery_image": ["green battery.png", (33, 33)],
+    "battery_image": ["greenBattery.png", (33, 33)],
     "star_image": ["star.png", (33, 33)],
     "potion_image": ["potion.png", (33, 33)],
+    "yourdidit_image": ["yourdidit.png", (33,33)],
     "spoon_bracket_image": ["spoon_bracket.png", (33, 33)],
     "color_wheel": ["color_wheel.png", (200, 200)],
     "light_academia_background": ["light_academia_background.png", (800, 600)],
     "edit_toggle_icon": ["pencil.png", (20, 20)],
     "complete_toggle_icon": ["checkmark.png", (25, 25)],
     "remove_toggle_icon": ["cross.png", (20, 20)],
-    "add_spoons_icon": ["addSpoonsIcon.png", (56, 56)],
-    "add_task_icon": ["addTasksIcon.png", (1024, 1024)],
-    "manage_task_icon": ["manageTasksIcon.png", (150, 83)],
-    "inventory_icon": ["inventoryIcon.png", (1024, 1024)],
-    "calendar_icon": ["calendarIcon.png", (1024, 1024)],
-    "shop_icon": ["shopIcon.png", (1024, 1024)],
-    "settings_icon": ["settingsIcon.png", (1024, 1024)],
+    "add_spoons_icon": ["addSpoonsIcon.png", (28, 28)],
+    "add_task_icon": ["addTasksIcon.png", (28, 28)],
+    "manage_task_icon": ["manageTasksIcon.png", (28, 28)],
+    "inventory_icon": ["inventoryIcon.png", (28, 28)],
+    "calendar_icon": ["calendarIcon.png", (42, 42)],
+    "shop_icon": ["shopIcon.png", (28, 28)],
+    "settings_icon": ["settingsIcon.png", (28, 28)],
     "corner": ["borderCorner.png", (12, 12)],
     "edge1": ["Border1.png", (6, 12)],
     "edge2": ["Border2.png", (6, 12)],
@@ -97,6 +98,7 @@ spoon_image = loaded_images.get("spoon_image")
 battery_image = loaded_images.get("battery_image")
 star_image = loaded_images.get("star_image")
 potion_image = loaded_images.get("potion_image")
+yourdidit_image = loaded_images.get("yourdidit_image")
 spoon_bracket_image = loaded_images.get("spoon_bracket_image")
 color_wheel = loaded_images.get("color_wheel")
 edit_toggle_icon = loaded_images.get("edit_toggle_icon")
@@ -360,5 +362,4 @@ coins = 7
 level = 2.66
 
 calendar_mode = "month"            # or "week"
-hovered_week_idx = None   # 0–5 for which row the mouse is over
-selected_week_idx = None  # when the magnifier is clicked
+displayed_week_offset = 0

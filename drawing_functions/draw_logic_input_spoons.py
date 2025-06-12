@@ -26,11 +26,15 @@ def set_opacity(image, alpha):
     return temp
 
 def tint_image(image, tint_color):
-    tinted = image.copy()
-    ts = pygame.Surface(image.get_size(), pygame.SRCALPHA)
-    ts.fill(tint_color)
-    tinted.blit(ts, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
-    return tinted
+    surf = image.copy().convert_alpha()
+    r, g, b = tint_color[:3]
+
+    mask = pygame.Surface(surf.get_size(), pygame.SRCALPHA)
+    mask.fill((r, g, b, 255))
+
+    surf.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+    return surf
+
 
 def get_pulse_alpha(t, min_alpha=128, max_alpha=255, speed=4.0):
     return int(min_alpha + (max_alpha - min_alpha) * 0.3 * (1 + math.sin(t * speed)))

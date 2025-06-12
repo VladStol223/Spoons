@@ -5,8 +5,8 @@ from datetime import datetime
 button_widths = {}  # no longer used, but left to avoid breaking interfaces
 
 # fonts: small for date, large for static labels
-_date_font  = pygame.font.SysFont("fonts/Stardew_Valley.ttf", 24, bold=True)
-_label_font = pygame.font.SysFont("fonts/Stardew_Valley.ttf", 30, bold=False)
+_label_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.06))
+calendar_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.05))
 
 def draw_hub_buttons(
     screen,
@@ -44,7 +44,7 @@ def draw_hub_buttons(
     y_spacing  = 10
     total_h    = cal_size + y_spacing + (len(icon_buttons)-1)*(icon_size + y_spacing)
     start_y    = (screen.get_height() - total_h) // 2
-    x_base     = 23
+    x_base     = 25
 
     button_rects = {}
     today = datetime.now().strftime("%m/%d")
@@ -56,7 +56,7 @@ def draw_hub_buttons(
     img = icon_buttons[0][1]
     if img:
         screen.blit(pygame.transform.scale(img, (cal_size, cal_size)), cal_rect)
-    draw_centered_text(screen, _date_font, today, cal_rect, BLACK) #type: ignore
+    draw_centered_text(screen, today, cal_rect, BLACK) #type: ignore
     button_rects["calendar"] = cal_rect
 
     # --- Other icons ---
@@ -122,8 +122,8 @@ def draw_icon_button(
     return rect
 
 
-def draw_centered_text(screen, font, text, rect, color):
-    surf = font.render(text, True, color)
+def draw_centered_text(screen,  text, rect, color):
+    surf = calendar_font.render(text, True, color)
     w, h = surf.get_size()
     x = rect.x + (rect.width - w)//2
     y = rect.y + 12 + (rect.height - h)//2
