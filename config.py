@@ -31,111 +31,245 @@ displayed_year = datetime.now().year
 # Spoon Name
 spoon_name = "Spoons"
 
-# Images
-base_dir = os.path.dirname(os.path.abspath(__file__))
-images_dir = os.path.join(base_dir, "images")
 
-image_files = {
-    "spoons_logo": ["Spoons Logo 128p.png", (500, 80)],
-    "spoon_image": ["spoon.png", (33, 33)],
-    "battery_image": ["greenBattery.png", (33, 33)],
-    "star_image": ["star.png", (33, 33)],
-    "potion_image": ["potion.png", (33, 33)],
-    "yourdidit_image": ["yourdidit.png", (33,33)],
-    "spoon_bracket_image": ["spoon_bracket.png", (33, 33)],
-    "color_wheel": ["color_wheel.png", (200, 200)],
-    "light_academia_background": ["light_academia_background.png", (800, 600)],
-    "edit_toggle_icon": ["pencil.png", (20, 20)],
-    "complete_toggle_icon": ["checkmark.png", (25, 25)],
-    "remove_toggle_icon": ["cross.png", (20, 20)],
-    "add_spoons_icon": ["addSpoonsIcon.png", (28, 28)],
-    "add_task_icon": ["addTasksIcon.png", (28, 28)],
-    "manage_task_icon": ["manageTasksIcon.png", (28, 28)],
-    "inventory_icon": ["inventoryIcon.png", (28, 28)],
-    "calendar_icon": ["calendarIcon.png", (42, 42)],
-    "shop_icon": ["shopIcon.png", (28, 28)],
-    "settings_icon": ["settingsIcon.png", (28, 28)],
-    "corner": ["borderCorner.png", (12, 12)],
-    "edge1": ["Border1.png", (6, 12)],
-    "edge2": ["Border2.png", (6, 12)],
-    "connector": ["borderConnector.png", (15, 15)],
-    "tcorner": ["borderTcorner.png", (14, 12)],
-    "calendar_border": ["borderCalendarLeft.png", (9, 24)],
-    "short_rest_icon": ["shortRestIcon.png", (790,790)],
-    "half_rest_icon": ["halfRestIcon.png", (864,864)],
-    "full_rest_icon": ["fullRestIcon.png", (820,820)],
-    "coin_image": ["coin.png", (15, 17)],
-    "xp_bar": ["xpBar.png", (155, 30)],
-    "manilla_folder": ["manillaFolder.png", (150, 62)],
-    "manilla_folder_open": ["manillaFolderOpen.png", (150, 62)],
-    "manilla_folder_tab": ["manillaFolderTab.png", (48, 7)],
-    "manilla_folder_full": ["manillaFolderFull.png", (150, 83)],
-    "task_spoons_border": ["taskSpoonsBorder.png", (750, 50)],
-    "progress_bar_spoon_siding": ["progressBarSpoonSiding.png", (6, 34)],
-    "progress_bar_spoon_top": ["progressBarSpoonTop.png", (10, 2)],
-    "scroll_bar_body": ["scrollBarBody.png", (20, 350)],
-    "scroll_bar_slider": ["scrollBarSlider.png", (10, 50)],
-    "remove_edit_icons": ["removeEditIcons.png", (20, 40)],
-    "magnifying_glass": ["magnifyingGlass.png", (20, 20)],
+import os
+import pygame
+
+# 0) Wherever you keep your images:
+images_dir = "images"
+
+# 1) Declare your categories exactly as you did before:
+image_categories = {
+    'border': {
+        'corner':          ('borderCorner.png',(12,12)),
+        'edge1':           ('Border1.png',(6,12)),
+        'edge2':           ('Border2.png',(6,12)),
+        'connector':       ('borderConnector.png',(15,15)),
+        'tcorner':         ('borderTcorner.png',(14,12)),
+        'calendar_border': ('borderCalendarLeft.png',(9,24)),
+    },
+    'hubIcons': {
+        'add_spoons_icon':  ('addSpoonsIcon.png',(28,28)),
+        'add_task_icon':    ('addTasksIcon.png',(28,28)),
+        'manage_task_icon': ('manageTasksIcon.png',(28,28)),
+        'inventory_icon':   ('inventoryIcon.png',(28,28)),
+        'calendar_icon':    ('calendarIcon.png',(42,42)),
+        'shop_icon':        ('shopIcon.png',(28,28)),
+        'settings_icon':    ('settingsIcon.png',(28,28)),
+    },
+    'spoonIcons': {
+        'spoon_image':        ('spoon.png',(33,33)),
+        'battery_image':      ('greenBattery.png',(33,33)),
+        'star_image':         ('star.png',(33,33)),
+        'potion_image':       ('potion.png',(33,33)),
+        'yourdidit_image':    ('yourdidit.png',(33,33)),
+    },
+    'restIcons': {
+        'short_rest_icon': ('shortRestIcon.png',(790,790)),
+        'half_rest_icon':  ('halfRestIcon.png',(864,864)),
+        'full_rest_icon':  ('fullRestIcon.png',(820,820)),
+    },
+    'hotbar': {
+        'coin_image': ('coin.png',(15,17)),
+        'xp_bar':     ('xpBar.png',(155,30)),
+    },
+    'manillaFolder': {
+        'manilla_folder':('manillaFolder.png',(150,62)),
+        'manilla_folder_open':('manillaFolderOpen.png',(150,62)),
+        'manilla_folder_tab': ('manillaFolderTab.png',(48,7)),
+        'manilla_folder_full':('manillaFolderFull.png',(150,83)),
+    },
+    'taskBorder': {
+        'task_spoons_border':      ('taskSpoonsBorder.png',(750,50)),
+        'progress_bar_spoon_siding':('progressBarSpoonSiding.png',(6,34)),
+        'progress_bar_spoon_top':    ('progressBarSpoonTop.png',(10,2)),
+        'remove_edit_icons':         ('removeEditIcons.png',(20,40)),
+    },
+    'scrollBar': {
+        'scroll_bar_body':   ('scrollBarBody.png',(20,350)),
+        'scroll_bar_slider': ('scrollBarSlider.png',(10,50)),
+    },
+    'calendarImages': {
+        'magnifying_glass': ('magnifyingGlass.png',(20,20)),
+    },
+    'themeBackgroundsImages': {
+        'background': ('background.png', (960, 520)),
+    },
+    'intro': {
+        'spoonsLogo': ('spoonsLogo.png', (800, 128))
+    }
 }
 
-# Load and transform images
+# 2) First load *all* images into a nested dict:
 loaded_images = {}
-for var_name, file_data in image_files.items():
-    try:
-        file_name, size = file_data
-        image_path = os.path.join(images_dir, file_name)
-        image = pygame.image.load(image_path)
-        image = pygame.transform.scale(image, size)
-        loaded_images[var_name] = image
-    except pygame.error as e:
-        print(f"Error loading {file_name}: {e}")
-        loaded_images[var_name] = None
+for category, files in image_categories.items():
+    cat_path = os.path.join(images_dir, category)
+    if not os.path.isdir(cat_path):
+        print(f"Warning: missing folder {cat_path}")
+        continue
 
-# Expose individual images for import
-spoons_logo = loaded_images.get("spoons_logo")
-spoon_image = loaded_images.get("spoon_image")
-battery_image = loaded_images.get("battery_image")
-star_image = loaded_images.get("star_image")
-potion_image = loaded_images.get("potion_image")
-yourdidit_image = loaded_images.get("yourdidit_image")
-spoon_bracket_image = loaded_images.get("spoon_bracket_image")
-color_wheel = loaded_images.get("color_wheel")
-edit_toggle_icon = loaded_images.get("edit_toggle_icon")
-complete_toggle_icon = loaded_images.get("complete_toggle_icon")
-remove_toggle_icon = loaded_images.get("remove_toggle_icon")
-add_spoons_icon = loaded_images.get("add_spoons_icon") # hub icons
-add_task_icon = loaded_images.get("add_task_icon")
-manage_task_icon = loaded_images.get("manage_task_icon")
-inventory_icon = loaded_images.get("inventory_icon")
-calendar_icon = loaded_images.get("calendar_icon")
-shop_icon = loaded_images.get("shop_icon")
-settings_icon = loaded_images.get("settings_icon")
-corner = loaded_images.get("corner")
-edge_one = loaded_images.get("edge1")
-edge_two = loaded_images.get("edge2")
-connector = loaded_images.get("connector")
-tcorner = loaded_images.get("tcorner")
-calendar_border = loaded_images.get("calendar_border")
-short_rest = loaded_images.get("short_rest_icon")
-half_rest = loaded_images.get("half_rest_icon")
-full_rest = loaded_images.get("full_rest_icon")
-coin_image = loaded_images.get("coin_image")
-xp_bar_image = loaded_images.get("xp_bar")
-manilla_folder = loaded_images.get("manilla_folder")
-manilla_folder_open = loaded_images.get("manilla_folder_open")
-manilla_folder_tab = loaded_images.get("manilla_folder_tab")
-manilla_folder_full = loaded_images.get("manilla_folder_full")
-task_spoons_border = loaded_images.get("task_spoons_border")
-progress_bar_spoon_siding = loaded_images.get("progress_bar_spoon_siding")
-progress_bar_spoon_top = loaded_images.get("progress_bar_spoon_top")
-scroll_bar = loaded_images.get("scroll_bar_body")
-scroll_bar_slider = loaded_images.get("scroll_bar_slider")
-remove_edit_icons = loaded_images.get("remove_edit_icons")
-magnifying_glass = loaded_images.get("magnifying_glass")
+    # detect subfolders
+    subs = [d for d in os.listdir(cat_path) if os.path.isdir(os.path.join(cat_path, d))]
+    if subs:
+        # multi-theme
+        loaded_images[category] = {}
+        for theme in subs:
+            theme_path = os.path.join(cat_path, theme)
+            loaded_images[category][theme] = {}
+            for var, (fname, size) in files.items():
+                fp = os.path.join(theme_path, fname)
+                try:
+                    img = pygame.image.load(fp)
+                    img = pygame.transform.scale(img, size)
+                except pygame.error as e:
+                    print(f"Error loading {fp}: {e}")
+                    img = None
+                loaded_images[category][theme][var] = img
+    else:
+        # single-theme
+        loaded_images[category] = {}
+        for var, (fname, size) in files.items():
+            fp = os.path.join(cat_path, fname)
+            try:
+                img = pygame.image.load(fp)
+                img = pygame.transform.scale(img, size)
+            except pygame.error as e:
+                print(f"Error loading {fp}: {e}")
+                img = None
+            loaded_images[category][var] = img
 
-#background images
-light_academia_background = loaded_images.get("light_academia_background")
+# 3) **Choose your themes** up front—variable names match the top-level folders:
+border   = "oakWood"   # selects images/border/metal/...
+border_name = "oakWood"
+hubIcons = "default"
+hubIcons_name = "default"
+spoonIcons = ""
+spoonIcons_name = ""
+restIcons = ""
+resIcons_name = ""
+hotbar = ""
+hotbar_name = ""
+manillaFolder = ""
+manillaFolder_name = ""
+taskBorder = ""
+taskBorder_name = ""
+scrollBar = ""
+scrollBar_name = ""
+calendarImages = ""
+calendarImages_name = ""
+themeBackgroundsImages = "light_academia"
+themeBackgroundsImages_name = "light_academia"
+intro = ""
+intro_name = ""
+
+# 4) Now overwrite each category name with the actual image dict you want to use:
+for category, data in loaded_images.items():
+    # multi-theme if every value in data is itself a dict
+    if data and all(isinstance(v, dict) for v in data.values()):
+        theme_name = globals().get(category)
+        if theme_name not in data:
+            raise ValueError(f"Invalid theme '{theme_name}' for category '{category}'")
+        globals()[category] = data[theme_name]
+    else:
+        # single-theme → just hand back the flat dict
+        globals()[category] = data
+
+
+oakWoodEdgeOne = loaded_images['border']['oakWood']['edge1']
+darkOakWoodEdgeOne = loaded_images['border']['darkOakWood']['edge1']
+metalEdgeOne   = loaded_images['border']['metal']['edge1']
+
+# — border pieces —
+corner          = border['corner']
+edge1           = border['edge1']
+edge2           = border['edge2']
+connector       = border['connector']
+tcorner         = border['tcorner']
+calendar_border = border['calendar_border']
+
+# — hub icons —
+add_spoons_icon   = hubIcons['add_spoons_icon']
+add_task_icon     = hubIcons['add_task_icon']
+manage_task_icon  = hubIcons['manage_task_icon']
+inventory_icon    = hubIcons['inventory_icon']
+calendar_icon     = hubIcons['calendar_icon']
+shop_icon         = hubIcons['shop_icon']
+settings_icon     = hubIcons['settings_icon']
+
+# — spoon icons —
+spoon_image           = spoonIcons['spoon_image']
+battery_image         = spoonIcons['battery_image']
+star_image            = spoonIcons['star_image']
+potion_image          = spoonIcons['potion_image']
+yourdidit_image       = spoonIcons['yourdidit_image']
+
+# — rest icons —
+short_rest = restIcons['short_rest_icon']
+half_rest  = restIcons['half_rest_icon']
+full_rest  = restIcons['full_rest_icon']
+
+# — hotbar icons —
+coin_image = hotbar['coin_image']
+xp_bar_image     = hotbar['xp_bar']
+
+# — manilla folder icons —
+manilla_folder = manillaFolder['manilla_folder']
+manilla_folder_open = manillaFolder['manilla_folder_open']
+manilla_folder_tab  = manillaFolder['manilla_folder_tab']
+manilla_folder_full = manillaFolder['manilla_folder_full']
+
+# — task border pieces —
+task_spoons_border       = taskBorder['task_spoons_border']
+progress_bar_spoon_siding = taskBorder['progress_bar_spoon_siding']
+progress_bar_spoon_top    = taskBorder['progress_bar_spoon_top']
+remove_edit_icons         = taskBorder['remove_edit_icons']
+
+# — scroll bar pieces —
+scroll_bar   = scrollBar['scroll_bar_body']
+scroll_bar_slider = scrollBar['scroll_bar_slider']
+
+# — calendar misc icon —
+magnifying_glass = calendarImages['magnifying_glass']
+
+#custom backgrounds
+light_academia_background = themeBackgroundsImages['background']
+
+#intro
+spoons_logo = intro['spoonsLogo']
+
+
+def set_image(category: str, theme_name: str):
+    """
+    Swaps the global dict for a multi-theme category, and remembers its name.
+    Example: set_image('border', 'metal')
+      • globals()['border']      → loaded_images['border']['metal']
+      • globals()['border_name'] → 'metal'
+    """
+    theme_name_new = theme_name
+    if category not in loaded_images:
+        raise KeyError(f"No such category {category!r}")
+    data = loaded_images[category]
+
+    # only multi‐theme categories need swapping
+    if not (data and all(isinstance(v, dict) for v in data.values())):
+        return
+
+    if theme_name not in data:
+        raise ValueError(f"Invalid theme {theme_name!r} for category {category!r}")
+
+    # overwrite the image dict
+    globals()[category] = data[theme_name]
+    # also store the name
+    globals()[f"{category}_name"] = theme_name
+
+    return data[theme_name], theme_name_new
+
+
+oakwood_preview_rect = pygame.Rect(370, 180, oakWoodEdgeOne.get_height()*3, oakWoodEdgeOne.get_width()*3)
+darkoakwood_preview_rect = pygame.Rect(370, 220, darkOakWoodEdgeOne.get_height()*3, oakWoodEdgeOne.get_width()*3)
+metal_preview_rect   = pygame.Rect(370, 260, metalEdgeOne.get_height()*3,   metalEdgeOne.get_width()*3)
+
+
 
 class_schedule = {
     "Monday": [

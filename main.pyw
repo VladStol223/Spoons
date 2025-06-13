@@ -112,11 +112,12 @@ def hub_buttons(event):
     for page, rect in button_actions.items():
         if rect.collidepoint(event.pos):
             save_data(
-                spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,
-                daily_spoons, current_theme, icon_image, spoon_name_input,
-                folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
-                streak_dates
-            )
+            spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
+            exams_tasks_list, projects_tasks_list, daily_spoons, theme, icon_image,
+            spoon_name_input, folder_one, folder_two, folder_three, folder_four,
+            folder_five, folder_six, streak_dates,
+            border_name, hubIcons_name, spoonIcons_name, resIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
+            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name)
             if page == "manage_tasks":
                 scroll_offset = 0
             return page
@@ -132,7 +133,7 @@ from drawing_functions.draw_logic_manage_tasks import draw_complete_tasks, logic
 from drawing_functions.draw_logic_remove_tasks import draw_remove_tasks, logic_remove_tasks
 from drawing_functions.draw_daily_schedule import draw_daily_schedule, logic_daily_schedule, get_available_time_blocks, allocate_tasks_to_time_blocks, sort_tasks_by_priority_and_due_date
 from drawing_functions.draw_logic_calendar import draw_calendar, logic_calendar
-from drawing_functions.draw_logic_shop import draw_shop, logic_shop
+from drawing_functions.draw_logic_shop import draw_shop, logic_shop, logic_change_image
 from drawing_functions.draw_intro_sequence import draw_intro_sequence
 from drawing_functions.draw_logic_task_toggle import draw_task_toggle, logic_task_toggle
 from drawing_functions.draw_logic_edit_tasks import draw_edit_tasks, logic_edit_tasks
@@ -146,9 +147,9 @@ from load_save import save_data, load_data
 from switch_themes import switch_theme
 from handle_scroll import handle_task_scroll
 
-draw_intro_sequence(screen, clock)
+#draw_intro_sequence(screen, clock)
 #loading save data
-spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image, spoon_name_input, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, streak_dates = load_data()
+spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image, spoon_name_input, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, streak_dates, border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro = load_data()
 current_theme = switch_theme(loaded_theme, globals())
 
 
@@ -186,7 +187,6 @@ while running:
         print(f"Date changed: {current_month}/{current_day}. Days left updated and spoons reset to {spoons}.")
 
     if background_color == (-1,-1,-1):
-        if current_theme == "light_academia":
             screen.blit(light_academia_background, (0,0))
     else:
         screen.fill(background_color)
@@ -253,7 +253,7 @@ while running:
         draw_inventory(screen, spoon_name, background_color, input_active, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         
     elif page == "calendar":
-        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color)
+        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border)
         draw_calendar(screen, spoon_name_input, displayed_week_offset,
                   homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,
                   displayed_month, displayed_year, background_color,
@@ -269,30 +269,34 @@ while running:
         
     elif page == "stats":
         draw_stats(screen, font, big_font, personal_stats, global_leaderboard)
-        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color)
+        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border)
 
     if page not in ("calendar", "stats"):
-        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color)
+        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border)
         draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page)
         
     for event in pygame.event.get():
         manager.process_events(event)
         if event.type == pygame.QUIT:
-            save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,
-              daily_spoons, current_theme, icon_image, spoon_name_input,
-              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
-              streak_dates)
+            save_data(
+            spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
+            exams_tasks_list, projects_tasks_list, daily_spoons, theme, icon_image,
+            spoon_name_input, folder_one, folder_two, folder_three, folder_four,
+            folder_five, folder_six, streak_dates,
+            border_name, hubIcons_name, spoonIcons_name, resIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
+            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name)
             running = False
         if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION):
             for page_key, icon_rect in hub_icon_rects.items():
                 if icon_rect.collidepoint(event.pos):
                     if event.type == pygame.MOUSEBUTTONDOWN:
                         save_data(
-                            spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,
-                            daily_spoons, current_theme, icon_image, spoon_name_input,
-                            folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
-                            streak_dates
-                        )
+                        spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
+                        exams_tasks_list, projects_tasks_list, daily_spoons, theme, icon_image,
+                        spoon_name_input, folder_one, folder_two, folder_three, folder_four,
+                        folder_five, folder_six, streak_dates,
+                        border_name, hubIcons_name, spoonIcons_name, resIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
+                        scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name)
                         if page_key == "manage_tasks":
                             scroll_offset = 0
                         page = page_key
@@ -350,6 +354,7 @@ while running:
             displayed_week_offset, displayed_month, displayed_year = logic_calendar(event, displayed_week_offset, displayed_month, displayed_year)
         elif page == "shop":
             tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_shop(event, tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+            border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, border_name, hubIcons_name, spoonIcons_name, resIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name = logic_change_image(event, border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, border_name, hubIcons_name, spoonIcons_name, resIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name)
             switch_theme(current_theme, globals())
         elif page == "stats":
             logic_stats(event)

@@ -53,11 +53,14 @@ Returns:
     No returns.
 """
 
-def save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,
-              daily_spoons, theme, icon_image, spoon_name_input,
-              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
-              streak_dates):
-
+def save_data(
+    spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
+    exams_tasks_list, projects_tasks_list, daily_spoons, theme, icon_image,
+    spoon_name_input, folder_one, folder_two, folder_three, folder_four,
+    folder_five, folder_six, streak_dates,
+    border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder,
+    taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro):
+    
     icon_image_name = None
     if icon_image == spoon_image:
         icon_image_name = "spoon.png"
@@ -67,35 +70,48 @@ def save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, m
         icon_image_name = "star.png"
     elif icon_image == potion_image:
         icon_image_name = "potion.png"
+    elif icon_image == yourdidit_image:
+        icon_image_name = "yourdidit.png"
+
     try:
         with open("data.json", "w") as f:
             f.write("{\n")
-            # Line 1: spoons
             f.write(f'  "spoons": {json.dumps(spoons)},\n')
-            # Line 2: homework_tasks_list
             f.write(f'  "homework_tasks_list": {json.dumps([task_to_serializable(t) for t in homework_tasks_list])},\n')
-            # Line 3: chores_tasks_list
             f.write(f'  "chores_tasks_list": {json.dumps([task_to_serializable(t) for t in chores_tasks_list])},\n')
-            # Line 4: work_tasks_list
             f.write(f'  "work_tasks_list": {json.dumps([task_to_serializable(t) for t in work_tasks_list])},\n')
-            # Line 5: misc_tasks_list
             f.write(f'  "misc_tasks_list": {json.dumps([task_to_serializable(t) for t in misc_tasks_list])},\n')
-            # Line 5: exams_tasks_list
             f.write(f'  "exams_tasks_list": {json.dumps([task_to_serializable(t) for t in exams_tasks_list])},\n')
-            # Line 5: projects_tasks_list
             f.write(f'  "projects_tasks_list": {json.dumps([task_to_serializable(t) for t in projects_tasks_list])},\n')
-            # Line 6: daily_spoons
             f.write(f'  "daily_spoons": {json.dumps(daily_spoons)},\n')
-            # Line 7: theme
             f.write(f'  "theme": {json.dumps(theme)},\n')
-            # Line 8: icon_image
             f.write(f'  "icon_image": {json.dumps(icon_image_name)},\n')
-            # Line 9: spoon_name_input
             f.write(f'  "spoon_name_input": {json.dumps(spoon_name_input)},\n')
-            # Line 10: folder names
-            f.write(f'  "folder_one": {json.dumps(folder_one)}, "folder_two": {json.dumps(folder_two)},  "folder_three": {json.dumps(folder_three)},  "folder_four": {json.dumps(folder_four)},  "folder_five": {json.dumps(folder_five)},  "folder_six": {json.dumps(folder_six)},\n')
-            # Line 11: streak_dates
-            f.write(f'  "streak_dates": {json.dumps(streak_dates)}\n')
+            f.write(
+                f'  "folder_one": {json.dumps(folder_one)}, "folder_two": {json.dumps(folder_two)}, '
+                f'"folder_three": {json.dumps(folder_three)}, "folder_four": {json.dumps(folder_four)}, '
+                f'"folder_five": {json.dumps(folder_five)}, "folder_six": {json.dumps(folder_six)},\n'
+            )
+            # streak_dates now with a trailing comma
+            f.write(f'  "streak_dates": {json.dumps(streak_dates)},\n')
+            # all the rest in one line under "assets"
+            f.write(
+                '  "assets": ' +
+                json.dumps({
+                    "border": border,
+                    "hubIcons": hubIcons,
+                    "spoonIcons": spoonIcons,
+                    "restIcons": restIcons,
+                    "hotbar": hotbar,
+                    "manillaFolder": manillaFolder,
+                    "taskBorder": taskBorder,
+                    "scrollBar": scrollBar,
+                    "calendarImages": calendarImages,
+                    "themeBackgrounds": themeBackgroundsImages,
+                    "intro": intro
+                }) +
+                "\n"
+            )
             f.write("}\n")
     except Exception as e:
         print(f"Error saving data: {e}")
@@ -141,57 +157,113 @@ Returns:
 """
 
 def load_data():
-    global spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, current_theme, daily_spoons, icon_image, streak_dates
+    global spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list
+    global exams_tasks_list, projects_tasks_list, current_theme, daily_spoons, icon_image
+    global spoon_name_input, folder_one, folder_two, folder_three, folder_four
+    global folder_five, folder_six, streak_dates
+    global border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder
+    global taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro
 
     try:
         with open("data.json", "r") as f:
             data = json.load(f)
 
-            # Task Lists
-            spoons = data.get("spoons", 0)
-            homework_tasks_list = [task_from_serializable(task) for task in data.get("homework_tasks_list", [])]
-            chores_tasks_list = [task_from_serializable(task) for task in data.get("chores_tasks_list", [])]
-            work_tasks_list = [task_from_serializable(task) for task in data.get("work_tasks_list", [])]
-            misc_tasks_list = [task_from_serializable(task) for task in data.get("misc_tasks_list", [])]
-            exams_tasks_list = [task_from_serializable(task) for task in data.get("exams_tasks_list", [])]
-            projects_tasks_list = [task_from_serializable(task) for task in data.get("projects_tasks_list", [])]
-            print("Tasks loaded successfully")
+        # — your existing field loading —
+        spoons = data.get("spoons", 0)
+        homework_tasks_list = [task_from_serializable(t) for t in data.get("homework_tasks_list", [])]
+        chores_tasks_list   = [task_from_serializable(t) for t in data.get("chores_tasks_list", [])]
+        work_tasks_list     = [task_from_serializable(t) for t in data.get("work_tasks_list", [])]
+        misc_tasks_list     = [task_from_serializable(t) for t in data.get("misc_tasks_list", [])]
+        exams_tasks_list    = [task_from_serializable(t) for t in data.get("exams_tasks_list", [])]
+        projects_tasks_list = [task_from_serializable(t) for t in data.get("projects_tasks_list", [])]
 
-            # Theme
-            loaded_theme = data.get("theme", "")
-            
-            # Load daily spoons data
-            daily_spoons = data.get("daily_spoons", {"Mon": 0, "Tue": 0, "Wed": 0, "Thu": 0, "Fri": 0, "Sat": 0, "Sun": 0}) 
+        daily_spoons = data.get("daily_spoons",
+                                {"Mon":0,"Tue":0,"Wed":0,"Thu":0,"Fri":0,"Sat":0,"Sun":0})
+        loaded_theme = data.get("theme", "")
 
-            # Load icon image from filename
-            icon_image_name = data.get("icon_image", "spoon.png")
-            if icon_image_name == "spoon.png":
-                icon_image = spoon_image
-            elif icon_image_name == "battery.png":
-                icon_image = battery_image 
-            elif icon_image_name == "star.png":
-                icon_image = star_image
-            elif icon_image_name == "potion.png":
-                icon_image = potion_image
-            else:
-                icon_image = spoon_image  # Default fallback
+        # icon_image mapping…
+        icon_image_name = data.get("icon_image","spoon.png")
+        if   icon_image_name=="spoon.png":  icon_image=spoon_image
+        elif icon_image_name=="battery.png": icon_image=battery_image
+        elif icon_image_name=="star.png":    icon_image=star_image
+        elif icon_image_name=="potion.png":  icon_image=potion_image
+        elif icon_image_name=="yourdidit.png": icon_image=yourdidit_image
+        else:                                icon_image=spoon_image
 
-            # Load spoon name input
-            spoon_name_input = data.get("spoon_name_input", "Spoons")
+        spoon_name_input = data.get("spoon_name_input","Spoons")
+        folder_one   = data.get("folder_one","Homework")
+        folder_two   = data.get("folder_two","Chores")
+        folder_three = data.get("folder_three","Work")
+        folder_four  = data.get("folder_four","Misc")
+        folder_five  = data.get("folder_five","Exams")
+        folder_six   = data.get("folder_six","Projects")
 
-            # Load folder names
-            folder_one = data.get("folder_one", "Homework")
-            folder_two = data.get("folder_two", "Chores")
-            folder_three = data.get("folder_three", "Work")
-            folder_four = data.get("folder_four", "Misc")
-            folder_five = data.get("folder_five", "Exams")
-            folder_six = data.get("folder_six", "Projects")
+        streak_dates = data.get("streak_dates", [])
 
-            #load streak data
-            streak_dates = data.get("streak_dates", [])
+        # now only overwrite your asset‐images if they exist in JSON
+        assets     = data.get("assets", {})
+        border_name = assets.get("border")
+        set_image('border', border_name)
+                # hub icons
+        hubIcons_name = assets.get("hubIcons")
+        if hubIcons_name:
+            set_image('hubIcons', hubIcons_name)
+
+        # spoon icons
+        spoonIcons_name = assets.get("spoonIcons")
+        if spoonIcons_name:
+            set_image('spoonIcons', spoonIcons_name)
+
+        # rest icons
+        restIcons_name = assets.get("restIcons")
+        if restIcons_name:
+            set_image('restIcons', restIcons_name)
+
+        # hotbar icons
+        hotbar_name = assets.get("hotbar")
+        if hotbar_name:
+            set_image('hotbar', hotbar_name)
+
+        # manilla folder icons
+        manillaFolder_name = assets.get("manillaFolder")
+        if manillaFolder_name:
+            set_image('manillaFolder', manillaFolder_name)
+
+        # task border pieces
+        taskBorder_name = assets.get("taskBorder")
+        if taskBorder_name:
+            set_image('taskBorder', taskBorder_name)
+
+        # scroll bar pieces
+        scrollBar_name = assets.get("scrollBar")
+        if scrollBar_name:
+            set_image('scrollBar', scrollBar_name)
+
+        # calendar misc icons
+        calendarImages_name = assets.get("calendarImages")
+        if calendarImages_name:
+            set_image('calendarImages', calendarImages_name)
+
+        # theme backgrounds
+        themeBackgroundsImages_name = assets.get("themeBackgroundsImages")
+        if themeBackgroundsImages_name:
+            set_image('themeBackgroundsImages', themeBackgroundsImages_name)
+
+        # intro/logo
+        intro_name = assets.get("intro")
+        if intro_name:
+            set_image('intro', intro_name)
+
 
 
     except Exception as e:
         print(f"Error loading data: {e}")
 
-    return spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image, spoon_name_input, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, streak_dates
+    return (
+        spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
+        exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image,
+        spoon_name_input, folder_one, folder_two, folder_three, folder_four,
+        folder_five, folder_six, streak_dates,
+        border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder,
+        taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro
+    )

@@ -11,13 +11,22 @@ base_sizes = {
     "calendar":   (9, 24),
 }
 
+# unpack your 6 pieces into names your function expects:
+
+
 scale = 3                # multiplier for pixel-art → screen pixels
 hub_border_offset = 100      # px from left edge; adjust as needed
 spoons_border_offset = 185  # px up from bottom for input_spoons horizontal border
 inventory_border_offset = 120  # px from top edge for inventory page
 avatar_border_offset = 250  # px from right edge for input_tasks vertical border
 
-def draw_border(screen, rect, page, background_color):
+def draw_border(screen, rect, page, background_color, border):
+    corner          = border['corner']
+    edge_one        = border['edge1']
+    edge_two        = border['edge2']
+    connector       = border['connector']
+    tcorner         = border['tcorner']
+    calendar_border = border['calendar_border']
     x, y, w, h = rect
     sw, sh = screen.get_size()
 

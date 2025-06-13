@@ -8,6 +8,25 @@ button_widths = {}  # no longer used, but left to avoid breaking interfaces
 _label_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.06))
 calendar_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.05))
 
+calendar_icon     = hubIcons['calendar_icon']
+add_spoons_icon   = hubIcons['add_spoons_icon']
+add_task_icon     = hubIcons['add_task_icon']
+manage_task_icon  = hubIcons['manage_task_icon']
+inventory_icon    = hubIcons['inventory_icon']
+shop_icon         = hubIcons['shop_icon']
+settings_icon     = hubIcons['settings_icon']
+
+# icon definitions
+icon_buttons = [
+    ("calendar",     calendar_icon,     "Calendar"),
+    ("input_spoons", add_spoons_icon,   "Add Spoons"),
+    ("input_tasks",  add_task_icon,     "Add Tasks"),
+    ("manage_tasks", manage_task_icon,  "Manage Tasks"),
+    ("inventory",    inventory_icon,    "Inventory"),
+    ("shop",         shop_icon,         "Shop"),
+    ("stats",        settings_icon,     "Statistics"),
+]
+
 def draw_hub_buttons(
     screen,
     page,
@@ -27,16 +46,7 @@ def draw_hub_buttons(
     global hub_buttons_showing, button_widths
     hub_buttons_showing = True
 
-    # icon definitions
-    icon_buttons = [
-        ("calendar",     loaded_images.get("calendar_icon"),     "Calendar"),
-        ("input_spoons", loaded_images.get("add_spoons_icon"),   "Add Spoons"),
-        ("input_tasks",  loaded_images.get("add_task_icon"),     "Add Tasks"),
-        ("manage_tasks", loaded_images.get("manage_task_icon"),  "Manage Tasks"),
-        ("inventory",        loaded_images.get("inventory_icon"),        "inventory"),
-        ("shop",        loaded_images.get("shop_icon"),        "shop"),
-        ("stats",        loaded_images.get("settings_icon"),     "Statistics")
-    ]
+
 
     # sizes and spacing
     icon_size  = 56

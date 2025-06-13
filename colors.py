@@ -58,7 +58,7 @@ COLORS = {
     "LIME_GREEN": (50, 205, 50),
     "MEDIUM_SEA_GREEN": (60, 179, 113),
     "OLIVE_DRAB": (107, 142, 35),
-    "DARK_OLIVE_GREEN": (85, 107, 47),
+    "DARK_OLIVE_GREEN": (54, 71, 24),
     "DARK_OLIVE": (85, 107, 47),
     "FOREST_GREEN": (34, 139, 34),
     "DEEP_GREEN": (0, 51, 0),

@@ -20,18 +20,18 @@ Returns:
 """
 
 #image outlines
-spoon_image_outline = pygame.Rect(410,180,35,35)
-battery_image_outline = pygame.Rect(460,180,35,35)
-star_image_outline = pygame.Rect(510,180,35,35)
-potion_image_outline = pygame.Rect(560,180,35,35)
-yourdidit_image_outline = pygame.Rect(610,180,35,35)
+spoon_image_outline = pygame.Rect(120,180,35,35)
+battery_image_outline = pygame.Rect(170,180,35,35)
+star_image_outline = pygame.Rect(120,230,35,35)
+potion_image_outline = pygame.Rect(170,230,35,35)
+yourdidit_image_outline = pygame.Rect(120,280,35,35)
 
 #themes
-aquatic_theme = pygame.Rect(300, 180, 40, 30)
-foresty_theme = pygame.Rect(300, 220, 40, 30)
-girly_pop_theme = pygame.Rect(300, 260, 40, 30)
-vampire_goth_theme = pygame.Rect(300, 300, 40, 30)
-sunset_glow_theme = pygame.Rect(300, 340, 40, 30)
+aquatic_theme = pygame.Rect(290, 180, 40, 30)
+foresty_theme = pygame.Rect(290, 220, 40, 30)
+girly_pop_theme = pygame.Rect(290, 260, 40, 30)
+vampire_goth_theme = pygame.Rect(290, 300, 40, 30)
+sunset_glow_theme = pygame.Rect(290, 340, 40, 30)
 #extra themes
 light_academia_theme = pygame.Rect(230, 180, 40, 30)
 retro_theme = pygame.Rect(230, 220, 40, 30)
@@ -42,28 +42,31 @@ tropical_oasis_theme = pygame.Rect(230, 380, 40, 30)
 pastel_dreams_theme = pygame.Rect(230, 420, 40, 30)
 steampunk_theme = pygame.Rect(230, 460, 40, 30)
 
+
 def draw_shop(screen, tool_tips, spoon_name_input, icon_image, input_active, hub_background_color,
                   folder_one, folder_two, folder_three, folder_four, folder_five, folder_six):
     mouse_pos = pygame.mouse.get_pos()
     global hub_buttons_showing
 
     draw_rounded_button(screen,spoon_image_outline,hub_background_color,GREEN if icon_image == spoon_image else BLACK,2,2)# type: ignore
-    screen.blit(spoon_image, (410, 180))
+    screen.blit(spoon_image, spoon_image_outline.topleft)
     draw_rounded_button(screen,battery_image_outline,hub_background_color,GREEN if icon_image == battery_image else BLACK,2,2)# type: ignore
-    screen.blit(battery_image, (460, 180))
+    screen.blit(battery_image, battery_image_outline.topleft)
     draw_rounded_button(screen,star_image_outline,hub_background_color,GREEN if icon_image == star_image else BLACK,2,2)# type: ignore
-    screen.blit(star_image, (510, 180))
+    screen.blit(star_image, star_image_outline.topleft)
     draw_rounded_button(screen,potion_image_outline,hub_background_color,GREEN if icon_image == potion_image else BLACK,2,2)# type: ignore
-    screen.blit(potion_image, (560, 180))
+    screen.blit(potion_image, potion_image_outline.topleft)
     draw_rounded_button(screen,yourdidit_image_outline,hub_background_color,GREEN if icon_image == yourdidit_image else BLACK,2,2)# type: ignore
-    screen.blit(yourdidit_image, (610, 180))
+    screen.blit(yourdidit_image, yourdidit_image_outline.topleft)
 
+    Theme_text = font.render("Icons:", True, BLACK)# type: ignore
+    screen.blit(Theme_text, (120,140))
 
     Theme_text = font.render("Themes:", True, BLACK)# type: ignore
     screen.blit(Theme_text, (230,140))
 
-    Theme_text = font.render("Icons:", True, BLACK)# type: ignore
-    screen.blit(Theme_text, (410,140))
+    Theme_text = font.render("Borders:", True, BLACK)# type: ignore
+    screen.blit(Theme_text, (370,140))
 
     draw_rounded_button(screen, aquatic_theme, (0,105,148), BLACK, 18)# type: ignore
     draw_rounded_button(screen, foresty_theme, (85,107,47), BLACK, 18)# type: ignore
@@ -79,6 +82,14 @@ def draw_shop(screen, tool_tips, spoon_name_input, icon_image, input_active, hub
     draw_rounded_button(screen, tropical_oasis_theme, (64, 224, 208), BLACK, 18)# type: ignore
     draw_rounded_button(screen, pastel_dreams_theme, (255, 182, 193), BLACK, 18) # type: ignore
     draw_rounded_button(screen, steampunk_theme, (181, 166, 66), BLACK, 18) # type: ignore
+
+    # draw your previews:
+    scaledOakWood = pygame.transform.rotate(pygame.transform.scale(oakWoodEdgeOne, (18, 36)), 90)
+    screen.blit(scaledOakWood, oakwood_preview_rect.topleft)
+    scaledDarkOakWood = pygame.transform.rotate(pygame.transform.scale(darkOakWoodEdgeOne, (18, 36)), 90)
+    screen.blit(scaledDarkOakWood, darkoakwood_preview_rect.topleft)
+    scaledMetal = pygame.transform.rotate(pygame.transform.scale(metalEdgeOne, (18, 36)), 90)
+    screen.blit(scaledMetal,   metal_preview_rect.topleft)
 
     if aquatic_theme.collidepoint(mouse_pos):
         hover_text = font.render("Aquatic", True, BLACK)# type: ignore
@@ -136,11 +147,13 @@ def logic_shop(event, tool_tips, spoon_name_input, input_active, current_theme, 
 
         if aquatic_theme.collidepoint(event.pos):
             try:
+                border = set_image('border', 'metal')
                 current_theme = switch_theme("aquatic", globals())
             except ValueError as e:
                 print(e)
         elif foresty_theme.collidepoint(event.pos):
             try:
+                border = set_image('border', 'oakWood')
                 current_theme = switch_theme("foresty", globals())
             except ValueError as e:
                 print(e)
@@ -248,3 +261,14 @@ def logic_shop(event, tool_tips, spoon_name_input, input_active, current_theme, 
                 folder_six += event.unicode
 
     return tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six
+
+def logic_change_image(event, border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, border_name, hubIcons_name, spoonIcons_name, resIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name):
+    if event.type == pygame.MOUSEBUTTONDOWN:
+        if oakwood_preview_rect.collidepoint(event.pos):
+            border, border_name = set_image('border', 'oakWood')
+        if darkoakwood_preview_rect.collidepoint(event.pos):
+            border, border_name = set_image('border', 'darkOakWood')
+        if metal_preview_rect.collidepoint(event.pos):
+            border, border_name = set_image('border', 'metal')
+
+    return border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, border_name, hubIcons_name, spoonIcons_name, resIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name
