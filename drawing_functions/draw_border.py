@@ -6,7 +6,6 @@ from config import *
 base_sizes = {
     "corner":    (12, 12),
     "edge":      (6,  12),
-    "connector": (8, 8),
     "t_corner":  (14, 12),
     "calendar":   (9, 24),
 }
@@ -25,7 +24,6 @@ def draw_border(screen, rect, page, background_color, border):
     corner          = border['corner']
     edge_one        = border['edge1']
     edge_two        = border['edge2']
-    connector       = border['connector']
     tcorner         = border['tcorner']
     calendar_border = border['calendar_border']
     x, y, w, h = rect
@@ -41,8 +39,6 @@ def draw_border(screen, rect, page, background_color, border):
     ew, eh = base_sizes["edge"]
     edge1_base    = pygame.transform.scale(edge_one,  (ew, eh))
     edge2_base    = pygame.transform.scale(edge_two,  (ew, eh))
-    cw, ch = base_sizes["connector"]
-    conn_base     = pygame.transform.scale(connector, (cw, ch))
     tcw, tch = base_sizes["t_corner"]
     tcorner_base  = pygame.transform.scale(tcorner,  (tcw, tch))
     cbw, cbh = base_sizes["calendar"]
@@ -51,14 +47,12 @@ def draw_border(screen, rect, page, background_color, border):
     # scale up by scale
     scw, sch   = bw * scale, bh * scale
     sew, seh   = ew * scale, eh * scale
-    scw2, sch2 = cw * scale, ch * scale
     stcw, stch = tcw * scale, tch * scale
     cbw, cbh = cbw * scale, cbh * scale
 
     corner_s    = pygame.transform.scale(corner_base,    (scw,  sch))
     edge1_s     = pygame.transform.scale(edge1_base,     (sew,  seh))
     edge2_s     = pygame.transform.scale(edge2_base,     (sew,  seh))
-    connector_s = pygame.transform.scale(conn_base,      (scw2, sch2))
     tcorner_s   = pygame.transform.scale(tcorner_base,   (stcw, stch))
     calendar_s  = pygame.transform.scale(calendar_base,  (cbw,  cbh))
 

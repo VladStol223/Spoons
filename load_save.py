@@ -72,6 +72,24 @@ def save_data(
         icon_image_name = "potion.png"
     elif icon_image == yourdidit_image:
         icon_image_name = "yourdidit.png"
+    elif icon_image == mike_image:
+        icon_image_name = "mike.png"
+    elif icon_image == lightningface_image:
+        icon_image_name = "lightningface.png"
+    elif icon_image == diamond_image:
+        icon_image_name = "diamond.png"
+    elif icon_image == starfruit_image:
+        icon_image_name = "starfruit.png"
+    elif icon_image == strawberry_image:
+        icon_image_name = "strawberry.png"
+    elif icon_image == terstar_image:
+        icon_image_name = "terstar.png"
+    elif icon_image == hcheart_image:
+        icon_image_name = "hcheart.png"
+    elif icon_image == beer_image:
+        icon_image_name = "beer.png"
+    elif icon_image == drpepper_image:
+        icon_image_name = "drpepper.png"
 
     try:
         with open("data.json", "w") as f:
@@ -188,6 +206,15 @@ def load_data():
         elif icon_image_name=="star.png":    icon_image=star_image
         elif icon_image_name=="potion.png":  icon_image=potion_image
         elif icon_image_name=="yourdidit.png": icon_image=yourdidit_image
+        elif icon_image_name=="mike.png":    icon_image=mike_image
+        elif icon_image_name=="lightningface.png":    icon_image=lightningface_image
+        elif icon_image_name=="diamond.png":    icon_image=diamond_image
+        elif icon_image_name=="starfruit.png":    icon_image=starfruit_image
+        elif icon_image_name=="strawberry.png":    icon_image=strawberry_image
+        elif icon_image_name=="terstar.png":    icon_image=terstar_image
+        elif icon_image_name=="hcheart.png":  icon_image=hcheart_image
+        elif icon_image_name=="beer.png": icon_image=beer_image
+        elif icon_image_name=="drpepper.png":    icon_image=drpepper_image
         else:                                icon_image=spoon_image
 
         spoon_name_input = data.get("spoon_name_input","Spoons")

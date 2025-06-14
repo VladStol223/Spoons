@@ -39,7 +39,7 @@ pastel_dreams_theme = pygame.Rect(230, 420, 40, 30)
 steampunk_theme = pygame.Rect(230, 460, 40, 30)
 
 #settings page
-spoon_name_input_box = pygame.Rect(800, 140, 100, 40)
+spoon_name_input_box = pygame.Rect(750, 140, 150, 40)
 
 def draw_inventory(
     screen,

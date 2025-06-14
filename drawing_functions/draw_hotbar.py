@@ -46,39 +46,38 @@ def draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coin
 
 def draw_spoons(screen, spoons, icon_image, spoon_name):
     # render the label
-    spoon_text = font.render(f"{spoon_name}: {spoons}", True, WHITE)  # type: ignore
+    spoon_text = font.render(f"{spoon_name}: {spoons}", True, WHITE) #type: ignore
     text_x, text_y = 115, 70
     screen.blit(spoon_text, (text_x, text_y))
 
-    # layout parameters
-    padding      = -10
-    start_x      = text_x + spoon_text.get_width() + 5
+    # layout params
+    padding      = -10     # unused now
     icon_y       = 68
     icon_w, _    = icon_image.get_size()
-    full_step    = icon_w + padding
-    overlap_step = int(icon_w * 0.75)
+    total_capacity = 20
 
-    # prepare a 30%-alpha “ghost” icon for missing spoons
+    # 30%-alpha “ghost” icon for empties
     ghost_icon = icon_image.copy()
     ghost_icon.set_alpha(int(255 * 0.3))
 
-    # total slots to show
-    total_capacity = 20
+    # 1) compute our capped region
+    total_icon_image_width = 600
+    # region is _after_ the text:
+    start_x = text_x + spoon_text.get_width() + 5
+    region_width = total_icon_image_width - spoon_text.get_width()
+    # never let it go smaller than one icon-wide
+    region_width = max(region_width, icon_w)
 
+    # 2) compute a uniform step so 20 icons span that region
+    if total_capacity > 1:
+        step = (region_width - icon_w) / (total_capacity - 1)
+    else:
+        step = 0
+
+    # 3) draw them in a line
     x = start_x
     for i in range(total_capacity):
-        if i < spoons:
-            # full-opacity spoon
-            screen.blit(icon_image, (x, icon_y))
-        else:
-            # ghosted spoon
-            screen.blit(ghost_icon,  (x, icon_y))
-        # advance by overlap for all after the first max_no_overlap
-        if i < max(spoons - 10, 0):
-            x += full_step
-        else:
-            x += overlap_step
-
-    # draw the numeric count at the right
-    #spoon_amount_text = font.render(f"{spoons}", True, WHITE)  # type: ignore
-    #screen.blit(spoon_amount_text, (680, 70))
+        # pick full or ghost
+        sprite = icon_image if i < spoons else ghost_icon
+        screen.blit(sprite, (int(x), icon_y))
+        x += step

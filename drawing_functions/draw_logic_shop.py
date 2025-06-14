@@ -25,6 +25,15 @@ battery_image_outline = pygame.Rect(170,180,35,35)
 star_image_outline = pygame.Rect(120,230,35,35)
 potion_image_outline = pygame.Rect(170,230,35,35)
 yourdidit_image_outline = pygame.Rect(120,280,35,35)
+mike_image_outline = pygame.Rect(170,280,35,35)
+lightningface_image_outline = pygame.Rect(120,330,35,35)
+diamond_image_outline = pygame.Rect(170,330,35,35)
+starfruit_image_outline = pygame.Rect(120,380,35,35)
+strawberry_image_outline = pygame.Rect(170,380,35,35)
+terstar_image_outline = pygame.Rect(120, 430,35,35)
+hcheart_image_outline = pygame.Rect(170,430,35,35)
+beer_image_outline = pygame.Rect(120,480,35,35)
+drpepper_image_outline = pygame.Rect(170,480,35,35)
 
 #themes
 aquatic_theme = pygame.Rect(290, 180, 40, 30)
@@ -58,6 +67,24 @@ def draw_shop(screen, tool_tips, spoon_name_input, icon_image, input_active, hub
     screen.blit(potion_image, potion_image_outline.topleft)
     draw_rounded_button(screen,yourdidit_image_outline,hub_background_color,GREEN if icon_image == yourdidit_image else BLACK,2,2)# type: ignore
     screen.blit(yourdidit_image, yourdidit_image_outline.topleft)
+    draw_rounded_button(screen,mike_image_outline,hub_background_color,GREEN if icon_image == mike_image else BLACK,2,2)# type: ignore
+    screen.blit(mike_image, mike_image_outline.topleft)
+    draw_rounded_button(screen,lightningface_image_outline,hub_background_color,GREEN if icon_image == lightningface_image else BLACK,2,2)# type: ignore
+    screen.blit(lightningface_image, lightningface_image_outline.topleft)
+    draw_rounded_button(screen,diamond_image_outline,hub_background_color,GREEN if icon_image == diamond_image else BLACK,2,2)# type: ignore
+    screen.blit(diamond_image, diamond_image_outline.topleft)
+    draw_rounded_button(screen,starfruit_image_outline,hub_background_color,GREEN if icon_image == starfruit_image else BLACK,2,2)# type: ignore
+    screen.blit(starfruit_image, starfruit_image_outline.topleft)
+    draw_rounded_button(screen,strawberry_image_outline,hub_background_color,GREEN if icon_image == strawberry_image else BLACK,2,2)# type: ignore
+    screen.blit(strawberry_image, strawberry_image_outline.topleft)
+    draw_rounded_button(screen,terstar_image_outline,hub_background_color,GREEN if icon_image == terstar_image else BLACK,2,2)# type: ignore
+    screen.blit(terstar_image, terstar_image_outline.topleft)
+    draw_rounded_button(screen,hcheart_image_outline,hub_background_color,GREEN if icon_image == hcheart_image else BLACK,2,2)# type: ignore
+    screen.blit(hcheart_image, hcheart_image_outline.topleft)
+    draw_rounded_button(screen,beer_image_outline,hub_background_color,GREEN if icon_image == beer_image else BLACK,2,2)# type: ignore
+    screen.blit(beer_image, beer_image_outline.topleft)
+    draw_rounded_button(screen,drpepper_image_outline,hub_background_color,GREEN if icon_image == drpepper_image else BLACK,2,2)# type: ignore
+    screen.blit(drpepper_image, drpepper_image_outline.topleft)
 
     Theme_text = font.render("Icons:", True, BLACK)# type: ignore
     screen.blit(Theme_text, (120,140))
@@ -90,6 +117,14 @@ def draw_shop(screen, tool_tips, spoon_name_input, icon_image, input_active, hub
     screen.blit(scaledDarkOakWood, darkoakwood_preview_rect.topleft)
     scaledMetal = pygame.transform.rotate(pygame.transform.scale(metalEdgeOne, (18, 36)), 90)
     screen.blit(scaledMetal,   metal_preview_rect.topleft)
+    scaledDefault = pygame.transform.rotate(pygame.transform.scale(defaultEdgeOne, (18, 36)), 90)
+    screen.blit(scaledDefault,   default_preview_rect.topleft)
+    scaledGrayWood = pygame.transform.rotate(pygame.transform.scale(grayWoodEdgeOne, (18, 36)), 90)
+    screen.blit(scaledGrayWood,   graywood_preview_rect.topleft)
+    scaledSpruceWood = pygame.transform.rotate(pygame.transform.scale(spruceWoodEdgeOne, (18, 36)), 90)
+    screen.blit(scaledSpruceWood,   sprucewood_preview_rect.topleft)
+    scaledBirchWood = pygame.transform.rotate(pygame.transform.scale(birchWoodEdgeOne, (18, 36)), 90)
+    screen.blit(scaledBirchWood,   birchwood_preview_rect.topleft)
 
     if aquatic_theme.collidepoint(mouse_pos):
         hover_text = font.render("Aquatic", True, BLACK)# type: ignore
@@ -144,16 +179,32 @@ def logic_shop(event, tool_tips, spoon_name_input, input_active, current_theme, 
             icon_image = potion_image
         elif yourdidit_image_outline.collidepoint(event.pos):
             icon_image = yourdidit_image
+        elif mike_image_outline.collidepoint(event.pos):
+            icon_image = mike_image
+        elif lightningface_image_outline.collidepoint(event.pos):
+            icon_image = lightningface_image
+        elif diamond_image_outline.collidepoint(event.pos):
+            icon_image = diamond_image
+        elif starfruit_image_outline.collidepoint(event.pos):
+            icon_image = starfruit_image
+        elif strawberry_image_outline.collidepoint(event.pos):
+            icon_image = strawberry_image
+        elif terstar_image_outline.collidepoint(event.pos):
+            icon_image = terstar_image
+        elif hcheart_image_outline.collidepoint(event.pos):
+            icon_image = hcheart_image
+        elif beer_image_outline.collidepoint(event.pos):
+            icon_image = beer_image
+        elif drpepper_image_outline.collidepoint(event.pos):
+            icon_image = drpepper_image
 
         if aquatic_theme.collidepoint(event.pos):
             try:
-                border = set_image('border', 'metal')
                 current_theme = switch_theme("aquatic", globals())
             except ValueError as e:
                 print(e)
         elif foresty_theme.collidepoint(event.pos):
             try:
-                border = set_image('border', 'oakWood')
                 current_theme = switch_theme("foresty", globals())
             except ValueError as e:
                 print(e)
@@ -270,5 +321,13 @@ def logic_change_image(event, border, hubIcons, spoonIcons, restIcons, hotbar, m
             border, border_name = set_image('border', 'darkOakWood')
         if metal_preview_rect.collidepoint(event.pos):
             border, border_name = set_image('border', 'metal')
+        if default_preview_rect.collidepoint(event.pos):
+            border, border_name = set_image('border', 'default')
+        if sprucewood_preview_rect.collidepoint(event.pos):
+            border, border_name = set_image('border', 'spruceWood')
+        if graywood_preview_rect.collidepoint(event.pos):
+            border, border_name = set_image('border', 'grayWood')
+        if birchwood_preview_rect.collidepoint(event.pos):
+            border, border_name = set_image('border', 'birchWood')
 
     return border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, border_name, hubIcons_name, spoonIcons_name, resIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name

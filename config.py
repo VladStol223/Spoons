@@ -45,7 +45,6 @@ image_categories = {
         'corner':          ('borderCorner.png',(12,12)),
         'edge1':           ('Border1.png',(6,12)),
         'edge2':           ('Border2.png',(6,12)),
-        'connector':       ('borderConnector.png',(15,15)),
         'tcorner':         ('borderTcorner.png',(14,12)),
         'calendar_border': ('borderCalendarLeft.png',(9,24)),
     },
@@ -64,6 +63,15 @@ image_categories = {
         'star_image':         ('star.png',(33,33)),
         'potion_image':       ('potion.png',(33,33)),
         'yourdidit_image':    ('yourdidit.png',(33,33)),
+        'mike_image':         ('mike.png', (33,33)),
+        'lightningface_image':('lightningface.png', (33,33)),
+        'diamond_image' :     ('diamond.png', (33,33)),
+        'starfruit_image':    ('starfruit.png', (33,33)),
+        'strawberry_image':   ('strawberry.png', (33,33)),
+        'terstar_image':      ('terstar.png', (33,33)),
+        'hcheart_image':            ('hcheart.png', (33, 33)),
+        'beer_image':               ('beer.png', (33,33)),
+        'drpepper_image':           ('drpepper.png', (33,33)), 
     },
     'restIcons': {
         'short_rest_icon': ('shortRestIcon.png',(790,790)),
@@ -147,8 +155,8 @@ for category, files in image_categories.items():
             loaded_images[category][var] = img
 
 # 3) **Choose your themes** up front—variable names match the top-level folders:
-border   = "oakWood"   # selects images/border/metal/...
-border_name = "oakWood"
+border   = "default"   # selects images/border/metal/...
+border_name = "default"
 hubIcons = "default"
 hubIcons_name = "default"
 spoonIcons = ""
@@ -185,15 +193,18 @@ for category, data in loaded_images.items():
         globals()[category] = data
 
 
-oakWoodEdgeOne = loaded_images['border']['oakWood']['edge1']
+defaultEdgeOne = loaded_images['border']['default']['edge1']
 darkOakWoodEdgeOne = loaded_images['border']['darkOakWood']['edge1']
+oakWoodEdgeOne = loaded_images['border']['oakWood']['edge1']
+birchWoodEdgeOne = loaded_images['border']['birchWood']['edge1']
 metalEdgeOne   = loaded_images['border']['metal']['edge1']
+grayWoodEdgeOne = loaded_images['border']['grayWood']['edge1']
+spruceWoodEdgeOne = loaded_images['border']['spruceWood']['edge1']
 
 # — border pieces —
 corner          = border['corner']
 edge1           = border['edge1']
 edge2           = border['edge2']
-connector       = border['connector']
 tcorner         = border['tcorner']
 calendar_border = border['calendar_border']
 
@@ -212,6 +223,15 @@ battery_image         = spoonIcons['battery_image']
 star_image            = spoonIcons['star_image']
 potion_image          = spoonIcons['potion_image']
 yourdidit_image       = spoonIcons['yourdidit_image']
+mike_image            = spoonIcons['mike_image']
+lightningface_image   = spoonIcons['lightningface_image']
+diamond_image         = spoonIcons['diamond_image']
+starfruit_image       = spoonIcons['starfruit_image']
+strawberry_image      = spoonIcons['strawberry_image']
+terstar_image            = spoonIcons['terstar_image']
+hcheart_image            = spoonIcons['hcheart_image']
+beer_image            = spoonIcons['beer_image']
+drpepper_image            = spoonIcons['drpepper_image']
 
 # — rest icons —
 short_rest = restIcons['short_rest_icon']
@@ -285,6 +305,10 @@ def set_image(category: str, theme_name: str):
 oakwood_preview_rect = pygame.Rect(370, 180, oakWoodEdgeOne.get_height()*3, oakWoodEdgeOne.get_width()*3)
 darkoakwood_preview_rect = pygame.Rect(370, 220, darkOakWoodEdgeOne.get_height()*3, oakWoodEdgeOne.get_width()*3)
 metal_preview_rect   = pygame.Rect(370, 260, metalEdgeOne.get_height()*3,   metalEdgeOne.get_width()*3)
+default_preview_rect   = pygame.Rect(370, 300, metalEdgeOne.get_height()*3,   metalEdgeOne.get_width()*3)
+birchwood_preview_rect   = pygame.Rect(370, 340, metalEdgeOne.get_height()*3,   metalEdgeOne.get_width()*3)
+sprucewood_preview_rect   = pygame.Rect(370, 380, metalEdgeOne.get_height()*3,   metalEdgeOne.get_width()*3)
+graywood_preview_rect   = pygame.Rect(370, 420, metalEdgeOne.get_height()*3,   metalEdgeOne.get_width()*3)
 
 
 
