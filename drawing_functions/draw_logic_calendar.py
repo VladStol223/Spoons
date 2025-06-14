@@ -10,6 +10,15 @@ week_mode_button  = pygame.Rect(260, 25,  120, 30)
 month_mode_button = pygame.Rect(665, 25,  120, 30)
 year_mode_button  = pygame.Rect(805, 25,  120, 30)
 
+# the discrete steps you want to cycle through
+day_ranges = [
+    ("Day",   1), ("Day",   2), ("Day",   3),
+    ("Day",   4), ("Day",   5), ("Day",   6),
+    ("Week",  1), ("Week",  2), ("Week",  3),
+    ("Month", 1), ("Month", 2), ("Month", 4),
+    ("Month", 6), ("Month", 9), ("Year",  1)
+]
+
 def blend(c1, c2):
     """Return the midpoint blend of two RGB colors ."""
     return (
@@ -18,7 +27,7 @@ def blend(c1, c2):
         (c1[2] + c2[2]*3) // 4,)
 
 
-def draw_calendar(screen, spoon_name_input, displayed_week_offset,
+def draw_calendar(screen, spoon_name_input, displayed_week_offset, day_range_index, 
                   homework_tasks_list, chores_tasks_list, work_tasks_list,
                   misc_tasks_list, exams_tasks_list, projects_tasks_list,
                   displayed_month, displayed_year, background_color,
@@ -42,20 +51,23 @@ def draw_calendar(screen, spoon_name_input, displayed_week_offset,
 
     # —— draw your mode buttons ——  
     for btn, label in [
-        (day_mode_button,   "day"),
-        (week_mode_button,  "week"),
-        (month_mode_button, "month"),
-        (year_mode_button,  "year"),
+        (day_mode_button,   "Range"),
+        (week_mode_button,  "Week"),
+        (month_mode_button, "Month"),
+        (year_mode_button,  "Year"),
     ]:
         pygame.draw.rect(screen, darker_background, btn)      # button bg
         txt = font.render(label, True, BLACK) #type: ignore
         txt_rect = txt.get_rect(center=btn.center)
         screen.blit(txt, txt_rect)
 
-    if calendar_mode == "day":
-        draw_day_mode()
+    if calendar_mode == "Range":
+        draw_range_mode(screen, font, bigger_font, smaller_font, day_range_index,
+                        homework_tasks_list, chores_tasks_list, work_tasks_list,
+                        misc_tasks_list, exams_tasks_list, projects_tasks_list,
+                        lighter_background, darker_background)
 
-    elif calendar_mode == "week":
+    elif calendar_mode == "Week":
         draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offset,
                         homework_tasks_list, chores_tasks_list, work_tasks_list,
                         misc_tasks_list, exams_tasks_list, projects_tasks_list,
@@ -67,7 +79,7 @@ def draw_calendar(screen, spoon_name_input, displayed_week_offset,
                         lighter_background, darker_background,
                         folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
 
-    elif calendar_mode == "month":
+    elif calendar_mode == "Month":
         draw_month_mode(screen, font, bigger_font, smaller_font,
                         darker_background, lighter_background,
                         homework_tasks_list, chores_tasks_list,
@@ -82,13 +94,123 @@ def draw_calendar(screen, spoon_name_input, displayed_week_offset,
                         calendar_next_day_color,
                         streak_dates)
 
-    elif calendar_mode == "year":
+    elif calendar_mode == "Year":
         draw_year_mode(screen, font, smaller_font, bigger_font,
                         darker_background, lighter_background,
                         displayed_year, background_color)
 
-def draw_day_mode():
-    pass
+def draw_range_mode(
+    screen, font, bigger_font, smaller_font, day_range_index,
+    homework_tasks_list, chores_tasks_list, work_tasks_list,
+    misc_tasks_list, exams_tasks_list, projects_tasks_list,
+    lighter_background, darker_background):
+
+    sw, sh = screen.get_size()
+    today = datetime.now().date()
+
+    # figure out which unit & count we're on (after the initial list, keep increasing years)
+    if day_range_index < len(day_ranges):
+        unit, count = day_ranges[day_range_index]
+    else:
+        unit   = "Year"
+        count  = day_range_index - len(day_ranges) + 1
+
+    # convert that into a timedelta (approximate months as 30 days)
+    if   unit == "Day":   delta = timedelta(days=count)
+    elif unit == "Week":  delta = timedelta(weeks=count)
+    elif unit == "Month": delta = timedelta(days=30*count)
+    else:                 delta = timedelta(days=365*count)
+
+    # ----- HEADER: draw “–”, “X Unit(s)”, “+” -----
+    # draw navigation buttons and header
+    draw_rounded_button(screen, previous_month_button, lighter_background, lighter_background, 0)
+    draw_rounded_button(screen, next_month_button, lighter_background, lighter_background, 0)
+    right_arrow = bigger_font.render(">", True, darker_background)
+    left_arrow = pygame.transform.rotate(right_arrow, 180)
+    screen.blit(left_arrow, (414, 2))
+    screen.blit(right_arrow, (611, 5))
+
+    # week-range header
+    range_str = f"{count} {unit}{'s' if count>1 else ''}"
+    range_text = big_font.render(range_str, True, BLACK) #type: ignore
+    screen.blit(range_text, range_text.get_rect(midtop=(530, 7)))
+
+        # — after you blit your range_text —
+    txt_rect = range_text.get_rect(midtop=(530, 7))
+
+    # compute a x/y for the control glyph (left of the text)
+    control_x = txt_rect.left - 20
+    # size of the “arms” of the plus/minus
+    arm = 6
+    # vertical center of the plus
+    mid_y = txt_rect.top + txt_rect.height // 2 - 10
+
+    # 1) PLUS sign (horizontal + vertical)
+    pygame.draw.line(screen, BLACK, #type: ignore
+                     (control_x - arm, mid_y),
+                     (control_x + arm, mid_y), 3)
+    pygame.draw.line(screen, BLACK, #type: ignore
+                     (control_x, mid_y - arm),
+                     (control_x, mid_y + arm), 3)
+
+    # 2) LONG dash (the “range” line)  
+    dash_y = mid_y + arm + 5
+    pygame.draw.line(screen, BLACK, #type: ignore
+                     (control_x - arm*2, dash_y + 2),
+                     (control_x + arm*2, dash_y - 2), 3)
+
+    # 3) SHORT dash (the “minus”)
+    minus_y = dash_y + arm + 2
+    pygame.draw.line(screen, BLACK, #type: ignore
+                     (control_x - arm, minus_y),
+                     (control_x + arm, minus_y), 3)
+
+
+    # ----- COLUMN HEADERS -----
+    col_w = (sw - 100) / 3
+    start_y =  bigger_font.get_height() + 25
+    columns = ["Overdue", "To-Do", "Completed"]
+    for i, title in enumerate(columns):
+        hsurf = bigger_font.render(title, True, BLACK) #type: ignore
+        hrect = hsurf.get_rect(midtop=(col_w*i + col_w/2 + 40, start_y))
+        screen.blit(hsurf, hrect)
+        pygame.draw.line(screen, BLACK, #type: ignore
+                     (hrect.left, hrect.bottom - 3),
+                     (hrect.right, hrect.bottom - 3), 3)
+
+    # ----- GATHER + FILTER TASKS -----
+    start_date = today - delta
+    end_date   = today + delta
+
+    all_tasks = []
+    for lst in (homework_tasks_list, chores_tasks_list, work_tasks_list,
+                misc_tasks_list, exams_tasks_list, projects_tasks_list):
+        all_tasks.extend(lst)
+
+    buckets = {"Overdue": [], "To-Do": [], "Completed": []}
+    for name, spoons, done, _, due_date, *_ in all_tasks:
+        d = due_date.date() if isinstance(due_date, datetime) else due_date
+        if not (start_date <= d <= end_date):
+            continue
+        if done:
+            buckets["Completed"].append(name)
+        else:
+            if d < today:
+                buckets["Overdue"].append(name)
+            else:
+                buckets["To-Do"].append(name)
+
+    # ----- RENDER TASK NAMES IN EACH COLUMN -----
+    text_y = start_y + font.get_height() + 30
+    line_h = smaller_font.get_height() + 4
+    for i, title in enumerate(columns):
+        x0 = col_w*i + 130
+        y0 = text_y
+        for task_name in buckets[title]:
+            tsurf = smaller_font.render(task_name, True, BLACK) #type: ignore
+            screen.blit(tsurf, (x0, y0))
+            y0 += line_h
+
 
 def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offset,
     homework_tasks_list, chores_tasks_list, work_tasks_list,
@@ -399,28 +521,33 @@ def draw_year_mode(
             dr = day_surf.get_rect(center=(cx + day_w/2, cy + day_h/2))
             screen.blit(day_surf, dr)
 
-def logic_calendar(event, displayed_week_offset, displayed_month, displayed_year):
+def logic_calendar(event, day_range_index, displayed_week_offset, displayed_month, displayed_year):
     global calendar_mode
 
     if event.type == pygame.MOUSEBUTTONDOWN:
         # —— mode switching ——  
         if day_mode_button.collidepoint(event.pos):
-            calendar_mode = "day"
+            calendar_mode = "Range"
         elif week_mode_button.collidepoint(event.pos):
-            calendar_mode = "week"
+            calendar_mode = "Week"
         elif month_mode_button.collidepoint(event.pos):
-            calendar_mode = "month"
+            calendar_mode = "Month"
         elif year_mode_button.collidepoint(event.pos):
-            calendar_mode = "year"
+            calendar_mode = "Year"
 
-        # week navigation
-        if calendar_mode == "week":
+        if calendar_mode == "Range":
+            if previous_month_button.collidepoint(event.pos):
+                day_range_index = max(0, day_range_index - 1)
+            elif next_month_button.collidepoint(event.pos):
+                day_range_index += 1
+
+        if calendar_mode == "Week":
             if previous_month_button.collidepoint(event.pos):
                 displayed_week_offset -= 1
             elif next_month_button.collidepoint(event.pos):
                 displayed_week_offset += 1
 
-        if calendar_mode == "month":
+        if calendar_mode == "Month":
             if previous_month_button.collidepoint(event.pos):
                 displayed_month -= 1
                 if displayed_month < 1:
@@ -432,11 +559,11 @@ def logic_calendar(event, displayed_week_offset, displayed_month, displayed_year
                     displayed_month = 1
                     displayed_year += 1
 
-        if calendar_mode == "year":
+        if calendar_mode == "Year":
             if previous_month_button.collidepoint(event.pos):
                 displayed_year -= 1
 
             elif next_month_button.collidepoint(event.pos):
                 displayed_year += 1
 
-    return displayed_week_offset, displayed_month, displayed_year
+    return day_range_index, displayed_week_offset, displayed_month, displayed_year

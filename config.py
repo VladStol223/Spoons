@@ -16,6 +16,7 @@ frame_buttons = []
 
 font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.06))
 big_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.067))
+bigger_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.075))
 small_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.047))
 smaller_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.033))
 
@@ -97,7 +98,14 @@ image_categories = {
     },
     'intro': {
         'spoonsLogo': ('spoonsLogo.png', (800, 128))
-    }
+    },
+    'inventoryIcons': {
+        'icons': ('icons.png', (24, 24)),
+        'folders': ('folders.png', (24, 24)),
+        'themes': ('themes.png', (24, 24)),
+        'borders': ('borders.png', (24, 24)),
+        'extras': ('extras.png', (24, 24)),
+    },
 }
 
 # 2) First load *all* images into a nested dict:
@@ -161,6 +169,8 @@ themeBackgroundsImages = "light_academia"
 themeBackgroundsImages_name = "light_academia"
 intro = ""
 intro_name = ""
+inventoryIcons = "default"
+inventoryIcons_name = "default"
 
 # 4) Now overwrite each category name with the actual image dict you want to use:
 for category, data in loaded_images.items():
@@ -236,6 +246,13 @@ light_academia_background = themeBackgroundsImages['background']
 
 #intro
 spoons_logo = intro['spoonsLogo']
+
+#inventory
+inventory_icons_icons = inventoryIcons['icons']
+inventory_icons_folders = inventoryIcons['folders']
+inventory_icons_themes = inventoryIcons['themes']
+inventory_icons_borders = inventoryIcons['borders']
+inventory_icons_extras = inventoryIcons['extras']
 
 
 def set_image(category: str, theme_name: str):
@@ -495,5 +512,9 @@ streak_task_completed = False
 coins = 7
 level = 2.66
 
-calendar_mode = "month"            # or "week"
+calendar_mode = "Month"            # or "week"
 displayed_week_offset = 0
+
+inventory_tab = "Icons"
+
+day_range_index = 0

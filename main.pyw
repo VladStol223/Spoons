@@ -250,11 +250,11 @@ while running:
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         
     elif page == "inventory":
-        draw_inventory(screen, spoon_name, background_color, input_active, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        draw_inventory(screen, spoon_name_input, inventory_tab, background_color, input_active, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         
     elif page == "calendar":
         draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border)
-        draw_calendar(screen, spoon_name_input, displayed_week_offset,
+        draw_calendar(screen, spoon_name_input, displayed_week_offset, day_range_index, 
                   homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,
                   displayed_month, displayed_year, background_color,
                   homework_fol_color, chores_fol_color, work_fol_color, misc_fol_color,calendar_month_color, 
@@ -349,9 +349,9 @@ while running:
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             task_completed, spoons, confetti_particles, streak_dates = logic_complete_tasks(projects_tasks_list, task_buttons_projects, event, spoons, streak_dates, streak_task_completed)
         elif page == "inventory":
-            spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_inventory(event, tool_tips, spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+            inventory_tab, spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_inventory(event, tool_tips, inventory_tab, spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         elif page == "calendar": 
-            displayed_week_offset, displayed_month, displayed_year = logic_calendar(event, displayed_week_offset, displayed_month, displayed_year)
+            day_range_index, displayed_week_offset, displayed_month, displayed_year = logic_calendar(event, day_range_index, displayed_week_offset, displayed_month, displayed_year)
         elif page == "shop":
             tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_shop(event, tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
             border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, border_name, hubIcons_name, spoonIcons_name, resIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name = logic_change_image(event, border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, border_name, hubIcons_name, spoonIcons_name, resIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name)

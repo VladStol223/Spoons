@@ -44,7 +44,7 @@ COLORS = {
     "STARFIRE_YELLOW": (255, 204, 0),
     "GOLDEN_COG": (215, 147, 41),
     "VINTAGE_GOLD": (204, 153, 0),
-    # GREEN|
+    # GREEN
     "SAGE_GREEN": (207, 223, 197),
     "SEAFOAM_GREEN": (159, 226, 191),
     "PALE_MINT": (189, 255, 195),

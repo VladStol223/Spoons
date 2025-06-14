@@ -17,8 +17,9 @@ base_sizes = {
 scale = 3                # multiplier for pixel-art → screen pixels
 hub_border_offset = 100      # px from left edge; adjust as needed
 spoons_border_offset = 185  # px up from bottom for input_spoons horizontal border
-inventory_border_offset = 120  # px from top edge for inventory page
+hotbar_border_offset = 120  # px from top edge for inventory page
 avatar_border_offset = 250  # px from right edge for input_tasks vertical border
+inventory_border_offset = 170  # px from left edge;
 
 def draw_border(screen, rect, page, background_color, border):
     corner          = border['corner']
@@ -113,7 +114,7 @@ def draw_border(screen, rect, page, background_color, border):
 
     if page not in ("calendar", "stats"):
         # y position of that border
-        y_horiz = inventory_border_offset
+        y_horiz = hotbar_border_offset
 
         # rotate & mirror your T-corners so their “stem” points down
         left_tc  = pygame.transform.rotate(tcorner_s,  -90)
@@ -154,7 +155,7 @@ def draw_border(screen, rect, page, background_color, border):
         # 5a-2) vertical slice at 150px from the right
         right_x = sw - avatar_border_offset
         y_start = tc_h//2 + edge_h//2              # same “hub” top
-        y_end   = inventory_border_offset - edge_h//2
+        y_end   = hotbar_border_offset - edge_h//2
         yv3 = y_start
         while yv3 < y_end:
             edge_tile = rng.choice([edge1_s, edge2_s])
@@ -173,7 +174,7 @@ def draw_border(screen, rect, page, background_color, border):
         
     if page == "input_tasks" or page == "input_spoons":
         # y start just below inventory border
-        y_start2 = inventory_border_offset + edge_h//2
+        y_start2 = hotbar_border_offset + edge_h//2
         # y end matches hub bottom
         y_end2   = sh - (tc_h//2 + edge_h//2)
         yv4      = y_start2
@@ -183,7 +184,7 @@ def draw_border(screen, rect, page, background_color, border):
             yv4 += edge_tile.get_height()
         # top T-corner (stem pointing down) at inventory border
         top_tc = pygame.transform.flip(tcorner_s,False,True)
-        screen.blit(top_tc,(right_x,inventory_border_offset + edge_h//4))
+        screen.blit(top_tc,(right_x,hotbar_border_offset + edge_h//4))
         # bottom T-corner at hub bottom
         screen.blit(tcorner_s,(right_x,sh-tc_h-edge_h//2))
 
@@ -213,3 +214,20 @@ def draw_border(screen, rect, page, background_color, border):
         calendar_s_right = pygame.transform.flip(calendar_s, True,  False)
         screen.blit(calendar_s, (left_border, -9))
         screen.blit(calendar_s_right, (right_border, -9))
+
+    if page == "inventory":
+        left_x = inventory_border_offset
+        # y start just below inventory border
+        y_start2 = hotbar_border_offset + edge_h//2
+        # y end matches hub bottom
+        y_end2   = sh - (tc_h//2 + edge_h//2)
+        yv4      = y_start2
+        while yv4 < y_end2:
+            edge_tile = rng.choice([edge1_s,edge2_s])
+            screen.blit(edge_tile,(left_x+edge_tile.get_width()//2 + 3,yv4))
+            yv4 += edge_tile.get_height()
+        # top T-corner (stem pointing down) at inventory border
+        top_tc = pygame.transform.flip(tcorner_s,False,True)
+        screen.blit(top_tc,(left_x,hotbar_border_offset + edge_h//4))
+        # bottom T-corner at hub bottom
+        screen.blit(tcorner_s,(left_x,sh-tc_h-edge_h//2))
