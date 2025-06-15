@@ -14,6 +14,9 @@ folder_four_name_input_box = pygame.Rect(folder_input_box_x, folder_input_box_y 
 folder_five_name_input_box = pygame.Rect(folder_input_box_x + 160, folder_input_box_y + 50, 140, 40)
 folder_six_name_input_box = pygame.Rect(folder_input_box_x + 320, folder_input_box_y + 50, 140, 40)
 
+folder_dropdown_rect   = pygame.Rect(folder_input_box_x, 145, 200, 40)
+folders_dropdown_open  = False    # new state flag
+
 icons_x = 120
 
 icon_tab_box = pygame.Rect(icons_x, 145, 48, 48)
@@ -41,6 +44,25 @@ steampunk_theme = pygame.Rect(230, 460, 40, 30)
 #settings page
 spoon_name_input_box = pygame.Rect(750, 140, 150, 40)
 
+
+
+icon_surfaces = [
+    spoon_image,
+    battery_image,
+    star_image,
+    potion_image,
+    yourdidit_image,
+    mike_image,
+    lightningface_image,
+    diamond_image,
+    starfruit_image,
+    strawberry_image,
+    terstar_image,
+    hcheart_image,
+    beer_image,
+    drpepper_image,
+]
+
 def draw_inventory(
     screen,
     spoon_name_input,
@@ -52,7 +74,7 @@ def draw_inventory(
     folder_three,
     folder_four,
     folder_five,
-    folder_six
+    folder_six, folders_dropdown_open
 ):
     r, g, b = background_color
     darker_background   = (max(r - 40, 0), max(g - 40, 0), max(b - 40, 0))
@@ -87,7 +109,7 @@ def draw_inventory(
     for i in range(7):
         for j in range(3):
             pygame.draw.rect(screen, lighter_background, (220 + 100 * i, 190 + 100 * j, square_width, square_width))
-            pygame.draw.rect(screen, darker_background, (220 + 100 * i, 190 + 100 * j, square_width, square_width), 5)
+            pygame.draw.rect(screen, darker_background, (220 + 100 * i, 190 + 100 * j, square_width, square_width), 4)
 
     for name, rect, surf in tabs:
         center = rect.center
@@ -99,7 +121,7 @@ def draw_inventory(
             pygame.draw.circle(screen, lighter_background, center, radius)
 
         # pick tint
-        tint = background_color if is_sel else lighter_background
+        tint = darker_background if is_sel else lighter_background
 
         # tint the white icon, preserve per-pixel alpha
         icon_t = surf.copy()
@@ -110,6 +132,8 @@ def draw_inventory(
 
 
     if inventory_tab == "Icons":
+        inventory_icon_buttons.clear()
+
         draw_input_box(screen, spoon_name_input_box, input_active == "spoon_name", spoon_name_input, LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light", 5)#type: ignore
         icon_prompt = bigger_font.render("ICONS", True, BLACK)# type: ignore
         screen.blit(icon_prompt, (folder_input_box_x, 145))
@@ -117,47 +141,62 @@ def draw_inventory(
         icon_name_prompt = font.render("Icon Name:", True, BLACK)# type: ignore
         screen.blit(icon_name_prompt, (spoon_name_input_box.left - icon_name_prompt.get_width() - 5, 145))
         
-        # your list of icon surfaces
-        icon_surfaces = [
-            spoon_image,
-            battery_image,
-            star_image,
-            potion_image,
-            yourdidit_image
-        ]
 
         icon_width = square_width - 15
 
-        # place each icon into the next cell, row-major
         for idx, icon in enumerate(icon_surfaces):
             col = idx % 7
             row = idx // 7
             if row >= 3:
-                break   # we only have 3 rows
+                break
 
             cell_x = 220 + 100 * col
             cell_y = 190 + 100 * row
+            outline = pygame.Rect(cell_x, cell_y, square_width, square_width)
 
-            # scale the icon to exactly fill the square
+            # store for the click logic
+            inventory_icon_buttons.append((outline, icon))
+
+            # draw the button
+            draw_rounded_button(
+                screen,
+                outline,
+                lighter_background,
+                darker_background, #type: ignore
+                1, 2
+            )
+
+            # scale & blit the icon
             scaled_icon = pygame.transform.scale(icon, (icon_width, icon_width))
-
-            # center it in the box
-            dest = scaled_icon.get_rect(center=(
-                cell_x + square_width/2 ,
-                cell_y + square_width/2
-            ))
-            screen.blit(scaled_icon, dest)
+            icon_rect   = scaled_icon.get_rect(center=outline.center)
+            screen.blit(scaled_icon, icon_rect)
 
     elif inventory_tab == "Folders":
-        rename_folders_text = bigger_font.render("FOLDERS", True, BLACK)# type: ignore
-        screen.blit(rename_folders_text, (folder_input_box_x,145))
+        # draw the dropdown header
+        header_bg = lighter_background
+        header_border = darker_background
+        draw_rounded_button(
+            screen,
+            folder_dropdown_rect,
+            header_bg,
+            header_border,
+            1, 2
+        )
+        # header text: either placeholder or first folder name
+        header_txt = folder_one if folders_dropdown_open else " Select Folder"
+        txt_surf = bigger_font.render(header_txt, True, BLACK) #type:ignore
+        txt_pos  = (folder_dropdown_rect.x + 10,
+                    folder_dropdown_rect.y + (folder_dropdown_rect.height - txt_surf.get_height())//2)
+        screen.blit(txt_surf, txt_pos)
 
-        draw_input_box(screen, folder_one_name_input_box, input_active == "folder_one", folder_one, LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light", 5)#type: ignore
-        draw_input_box(screen, folder_two_name_input_box, input_active == "folder_two", folder_two, LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light", 5)#type: ignore
-        draw_input_box(screen, folder_three_name_input_box, input_active == "folder_three", folder_three, LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light", 5)#type: ignore
-        draw_input_box(screen, folder_four_name_input_box, input_active == "folder_four", folder_four, LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light", 5)#type: ignore
-        draw_input_box(screen, folder_five_name_input_box, input_active == "folder_five", folder_five, LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light", 5)#type: ignore
-        draw_input_box(screen, folder_six_name_input_box, input_active == "folder_six", folder_six, LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light", 5)#type: ignore
+        # if open, draw the six input boxes underneath
+        if folders_dropdown_open:
+            draw_input_box(screen, folder_one_name_input_box, input_active == "folder_one", folder_one, LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light", 5)#type: ignore
+            draw_input_box(screen, folder_two_name_input_box, input_active == "folder_two", folder_two, LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light", 5)#type: ignore
+            draw_input_box(screen, folder_three_name_input_box, input_active == "folder_three", folder_three, LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light", 5)#type: ignore
+            draw_input_box(screen, folder_four_name_input_box, input_active == "folder_four", folder_four, LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light", 5)#type: ignore
+            draw_input_box(screen, folder_five_name_input_box, input_active == "folder_five", folder_five, LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light", 5)#type: ignore
+            draw_input_box(screen, folder_six_name_input_box, input_active == "folder_six", folder_six, LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light", 5)#type: ignore
 
     elif inventory_tab == "Themes":
         rename_folders_text = bigger_font.render("THEMES", True, BLACK)# type: ignore
@@ -190,25 +229,33 @@ def draw_inventory(
         screen.blit(scaledMetal,   metal_preview_rect.topleft)
 
 
-def logic_inventory(event, tool_tips, inventory_tab, spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six):
+def logic_inventory(event, tool_tips, inventory_tab, spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open):
     if event.type == pygame.MOUSEBUTTONDOWN:
         if spoon_name_input_box.collidepoint(event.pos):
             input_active = "spoon_name"
-        elif folder_one_name_input_box.collidepoint(event.pos):
-            input_active = "folder_one"
-        elif folder_two_name_input_box.collidepoint(event.pos):
-            input_active = "folder_two"
-        elif folder_three_name_input_box.collidepoint(event.pos):
-            input_active = "folder_three"
-        elif folder_four_name_input_box.collidepoint(event.pos):
-            input_active = "folder_four"
-        elif folder_five_name_input_box.collidepoint(event.pos):
-            input_active = "folder_five"
-        elif folder_six_name_input_box.collidepoint(event.pos):
-            input_active = "folder_six"
         else:
             input_active = ""
-    
+        if inventory_tab == "Folders" and folder_dropdown_rect.collidepoint(event.pos):
+            folders_dropdown_open = not folders_dropdown_open
+            if folder_one_name_input_box.collidepoint(event.pos):
+                input_active = "folder_one"
+            elif folder_two_name_input_box.collidepoint(event.pos):
+                input_active = "folder_two"
+            elif folder_three_name_input_box.collidepoint(event.pos):
+                input_active = "folder_three"
+            elif folder_four_name_input_box.collidepoint(event.pos):
+                input_active = "folder_four"
+            elif folder_five_name_input_box.collidepoint(event.pos):
+                input_active = "folder_five"
+            elif folder_six_name_input_box.collidepoint(event.pos):
+                input_active = "folder_six"
+            else:
+                input_active = ""
+
+        for outline, icon in inventory_icon_buttons:
+            if outline.collidepoint(event.pos):
+                icon_image = icon
+                break
 
         mx, my = event.pos
         if icon_tab_box.collidepoint(mx, my):
@@ -275,4 +322,4 @@ def logic_inventory(event, tool_tips, inventory_tab, spoon_name_input, input_act
             else:
                 folder_six += event.unicode
 
-    return inventory_tab, spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six
+    return inventory_tab, spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open

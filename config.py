@@ -41,6 +41,11 @@ images_dir = "images"
 
 # 1) Declare your categories exactly as you did before:
 image_categories = {
+    'avatarBackgrounds': {
+        'background_image':        ('background.png', (210, 105)),
+        'window_image':            ('window.png', (26, 31)),
+        'light_image':             ('light.png', (80,80)),
+    },
     'border': {
         'corner':          ('borderCorner.png',(12,12)),
         'edge1':           ('Border1.png',(6,12)),
@@ -155,6 +160,8 @@ for category, files in image_categories.items():
             loaded_images[category][var] = img
 
 # 3) **Choose your themes** up front—variable names match the top-level folders:
+avatarBackgrounds = "default"
+avatarBackgrounds_name = "default"
 border   = "default"   # selects images/border/metal/...
 border_name = "default"
 hubIcons = "default"
@@ -200,6 +207,11 @@ birchWoodEdgeOne = loaded_images['border']['birchWood']['edge1']
 metalEdgeOne   = loaded_images['border']['metal']['edge1']
 grayWoodEdgeOne = loaded_images['border']['grayWood']['edge1']
 spruceWoodEdgeOne = loaded_images['border']['spruceWood']['edge1']
+
+# avatar background
+avatar_background = avatarBackgrounds['background_image']
+avatar_window = avatarBackgrounds['window_image']
+avatar_light = avatarBackgrounds['light_image']
 
 # — border pieces —
 corner          = border['corner']
@@ -542,3 +554,8 @@ displayed_week_offset = 0
 inventory_tab = "Icons"
 
 day_range_index = 0
+
+
+# will hold (outline_rect, icon_surface) for the “Icons” tab
+inventory_icon_buttons = []
+folders_dropdown_open = False

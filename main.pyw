@@ -250,7 +250,7 @@ while running:
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         
     elif page == "inventory":
-        draw_inventory(screen, spoon_name_input, inventory_tab, background_color, input_active, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        draw_inventory(screen, spoon_name_input, inventory_tab, background_color, input_active, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open)
         
     elif page == "calendar":
         draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border)
@@ -272,8 +272,8 @@ while running:
         draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border)
 
     if page not in ("calendar", "stats"):
-        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border)
         draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page)
+        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border)
         
     for event in pygame.event.get():
         manager.process_events(event)
@@ -349,7 +349,7 @@ while running:
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             task_completed, spoons, confetti_particles, streak_dates = logic_complete_tasks(projects_tasks_list, task_buttons_projects, event, spoons, streak_dates, streak_task_completed)
         elif page == "inventory":
-            inventory_tab, spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_inventory(event, tool_tips, inventory_tab, spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+            inventory_tab, spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open = logic_inventory(event, tool_tips, inventory_tab, spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open)
         elif page == "calendar": 
             day_range_index, displayed_week_offset, displayed_month, displayed_year = logic_calendar(event, day_range_index, displayed_week_offset, displayed_month, displayed_year)
         elif page == "shop":
