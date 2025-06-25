@@ -4,20 +4,24 @@ from datetime import timedelta
 from drawing_functions.draw_rounded_button import draw_rounded_button
 from drawing_functions.draw_input_box import draw_input_box
 
-folder_input_box_x = 220
-folder_input_box_y = 200
+select_folder_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.055))
 
-folder_one_name_input_box = pygame.Rect(folder_input_box_x, folder_input_box_y, 140, 40)
-folder_two_name_input_box = pygame.Rect(folder_input_box_x + 160, folder_input_box_y, 140, 40)
-folder_three_name_input_box = pygame.Rect(folder_input_box_x + 320, folder_input_box_y, 140, 40)
-folder_four_name_input_box = pygame.Rect(folder_input_box_x, folder_input_box_y + 50, 140, 40)
-folder_five_name_input_box = pygame.Rect(folder_input_box_x + 160, folder_input_box_y + 50, 140, 40)
-folder_six_name_input_box = pygame.Rect(folder_input_box_x + 320, folder_input_box_y + 50, 140, 40)
+folder_input_box_x = 750
+folder_input_box_y = 145
+folder_padding = 40
 
-folder_dropdown_rect   = pygame.Rect(folder_input_box_x, 145, 200, 40)
+folder_one_name_input_box = pygame.Rect(folder_input_box_x, folder_input_box_y + folder_padding, 150, 40)
+folder_two_name_input_box = pygame.Rect(folder_input_box_x , folder_input_box_y + folder_padding * 2, 150, 40)
+folder_three_name_input_box = pygame.Rect(folder_input_box_x, folder_input_box_y + folder_padding * 3, 150, 40)
+folder_four_name_input_box = pygame.Rect(folder_input_box_x, folder_input_box_y + folder_padding * 4, 150, 40)
+folder_five_name_input_box = pygame.Rect(folder_input_box_x, folder_input_box_y + folder_padding * 5, 150, 40)
+folder_six_name_input_box = pygame.Rect(folder_input_box_x, folder_input_box_y + folder_padding * 6, 150, 40)
+
+folder_dropdown_rect   = pygame.Rect(folder_input_box_x, 145, 150, 40)
 folders_dropdown_open  = False    # new state flag
 
 icons_x = 120
+inventory_tab_x = 210
 
 icon_tab_box = pygame.Rect(icons_x, 145, 48, 48)
 folder_tab_box = pygame.Rect(icons_x, 215, 48, 48)
@@ -136,7 +140,7 @@ def draw_inventory(
 
         draw_input_box(screen, spoon_name_input_box, input_active == "spoon_name", spoon_name_input, LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light", 5)#type: ignore
         icon_prompt = bigger_font.render("ICONS", True, BLACK)# type: ignore
-        screen.blit(icon_prompt, (folder_input_box_x, 145))
+        screen.blit(icon_prompt, (inventory_tab_x, 145))
 
         icon_name_prompt = font.render("Icon Name:", True, BLACK)# type: ignore
         screen.blit(icon_name_prompt, (spoon_name_input_box.left - icon_name_prompt.get_width() - 5, 145))
@@ -172,6 +176,8 @@ def draw_inventory(
             screen.blit(scaled_icon, icon_rect)
 
     elif inventory_tab == "Folders":
+        rename_folders_text = bigger_font.render("FOLDERS", True, BLACK)# type: ignore
+        screen.blit(rename_folders_text, (inventory_tab_x,145))
         # draw the dropdown header
         header_bg = lighter_background
         header_border = darker_background
@@ -182,10 +188,14 @@ def draw_inventory(
             header_border,
             1, 2
         )
+
+        folder_name_prompt = font.render("Folder Names:", True, BLACK)# type: ignore
+        screen.blit(folder_name_prompt, (folder_dropdown_rect.left - folder_name_prompt.get_width() - 5, 145))
+
         # header text: either placeholder or first folder name
-        header_txt = folder_one if folders_dropdown_open else " Select Folder"
-        txt_surf = bigger_font.render(header_txt, True, BLACK) #type:ignore
-        txt_pos  = (folder_dropdown_rect.x + 10,
+        header_txt = "Select Folder"
+        txt_surf = select_folder_font.render(header_txt, True, BLACK) #type:ignore
+        txt_pos  = (folder_dropdown_rect.x + 7,
                     folder_dropdown_rect.y + (folder_dropdown_rect.height - txt_surf.get_height())//2)
         screen.blit(txt_surf, txt_pos)
 
@@ -200,7 +210,7 @@ def draw_inventory(
 
     elif inventory_tab == "Themes":
         rename_folders_text = bigger_font.render("THEMES", True, BLACK)# type: ignore
-        screen.blit(rename_folders_text, (folder_input_box_x,145))
+        screen.blit(rename_folders_text, (inventory_tab_x,145))
 
         draw_rounded_button(screen, aquatic_theme, (0,105,148), BLACK, 18)# type: ignore
         draw_rounded_button(screen, foresty_theme, (85,107,47), BLACK, 18)# type: ignore
@@ -219,7 +229,7 @@ def draw_inventory(
 
     elif inventory_tab == "Borders":
         rename_folders_text = bigger_font.render("BORDERS", True, BLACK)# type: ignore
-        screen.blit(rename_folders_text, (folder_input_box_x,145))
+        screen.blit(rename_folders_text, (inventory_tab_x,145))
 
         scaledOakWood = pygame.transform.rotate(pygame.transform.scale(oakWoodEdgeOne, (18, 36)), 90)
         screen.blit(scaledOakWood, oakwood_preview_rect.topleft)
@@ -229,34 +239,29 @@ def draw_inventory(
         screen.blit(scaledMetal,   metal_preview_rect.topleft)
 
 
-def logic_inventory(event, tool_tips, inventory_tab, spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open):
+def logic_inventory(event,
+                    tool_tips,
+                    inventory_tab,
+                    spoon_name_input,
+                    input_active,
+                    icon_image,
+                    folder_one,
+                    folder_two,
+                    folder_three,
+                    folder_four,
+                    folder_five,
+                    folder_six,
+                    folders_dropdown_open):
     if event.type == pygame.MOUSEBUTTONDOWN:
+
+        # — spoon name field (Icons tab)
         if spoon_name_input_box.collidepoint(event.pos):
             input_active = "spoon_name"
         else:
+            # if you click anywhere else, deactivate text entry
             input_active = ""
-        if inventory_tab == "Folders" and folder_dropdown_rect.collidepoint(event.pos):
-            folders_dropdown_open = not folders_dropdown_open
-            if folder_one_name_input_box.collidepoint(event.pos):
-                input_active = "folder_one"
-            elif folder_two_name_input_box.collidepoint(event.pos):
-                input_active = "folder_two"
-            elif folder_three_name_input_box.collidepoint(event.pos):
-                input_active = "folder_three"
-            elif folder_four_name_input_box.collidepoint(event.pos):
-                input_active = "folder_four"
-            elif folder_five_name_input_box.collidepoint(event.pos):
-                input_active = "folder_five"
-            elif folder_six_name_input_box.collidepoint(event.pos):
-                input_active = "folder_six"
-            else:
-                input_active = ""
 
-        for outline, icon in inventory_icon_buttons:
-            if outline.collidepoint(event.pos):
-                icon_image = icon
-                break
-
+        # — switch tabs
         mx, my = event.pos
         if icon_tab_box.collidepoint(mx, my):
             inventory_tab = "Icons"
@@ -269,23 +274,48 @@ def logic_inventory(event, tool_tips, inventory_tab, spoon_name_input, input_act
         elif extra_tab_box.collidepoint(mx, my):
             inventory_tab = "Extras"
 
+        # — Icons tab selection
+        if inventory_tab == "Icons":
+            for outline, icon in inventory_icon_buttons:
+                if outline.collidepoint(event.pos):
+                    icon_image = icon
+                    break
+
+        # — Folders tab interactions
+        if inventory_tab == "Folders":
+            # 1) Click on header toggles dropdown
+            if folder_dropdown_rect.collidepoint(event.pos):
+                folders_dropdown_open = not folders_dropdown_open
+
+            # 2) If the dropdown is open, clicking on any input-box should activate it
+            if folders_dropdown_open:
+                if folder_one_name_input_box.collidepoint(event.pos):
+                    input_active = "folder_one"
+                elif folder_two_name_input_box.collidepoint(event.pos):
+                    input_active = "folder_two"
+                elif folder_three_name_input_box.collidepoint(event.pos):
+                    input_active = "folder_three"
+                elif folder_four_name_input_box.collidepoint(event.pos):
+                    input_active = "folder_four"
+                elif folder_five_name_input_box.collidepoint(event.pos):
+                    input_active = "folder_five"
+                elif folder_six_name_input_box.collidepoint(event.pos):
+                    input_active = "folder_six"
 
     elif event.type == pygame.KEYDOWN:
+        # — spoon name typing
         if input_active == "spoon_name":
             if event.key == pygame.K_RETURN:
                 input_active = False
             elif event.key == pygame.K_BACKSPACE:
                 spoon_name_input = spoon_name_input[:-1]
             else:
-                # Propose the new text
                 new_text = spoon_name_input + event.unicode
-                # Measure its width
                 text_width, _ = font.size(new_text)
-                # Leave 10px padding on each side
-                max_width = spoon_name_input_box.width - 10
-                if text_width <= max_width:
+                if text_width <= spoon_name_input_box.width - 10:
                     spoon_name_input = new_text
 
+        # — folder name typing
         elif input_active == "folder_one":
             if event.key == pygame.K_BACKSPACE:
                 folder_one = folder_one[:-1]
@@ -322,4 +352,14 @@ def logic_inventory(event, tool_tips, inventory_tab, spoon_name_input, input_act
             else:
                 folder_six += event.unicode
 
-    return inventory_tab, spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open
+    return (inventory_tab,
+            spoon_name_input,
+            input_active,
+            icon_image,
+            folder_one,
+            folder_two,
+            folder_three,
+            folder_four,
+            folder_five,
+            folder_six,
+            folders_dropdown_open)

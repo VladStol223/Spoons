@@ -1,6 +1,5 @@
 import json
 import datetime
-from switch_themes import switch_theme
 from config import *
 
 """
@@ -61,7 +60,7 @@ def save_data(
     border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder,
     taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro):
     
-    icon_image_name = None
+    global icon_image_name
     if icon_image == spoon_image:
         icon_image_name = "spoon.png"
     elif icon_image == battery_image:
@@ -181,6 +180,10 @@ def load_data():
     global folder_five, folder_six, streak_dates
     global border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder
     global taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro
+    # globals for asset names
+    global border_name, hubIcons_name, spoonIcons_name, restIcons_name
+    global hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name
+    global calendarImages_name, themeBackgroundsImages_name, intro_name
 
     try:
         with open("data.json", "r") as f:
@@ -195,27 +198,26 @@ def load_data():
         exams_tasks_list    = [task_from_serializable(t) for t in data.get("exams_tasks_list", [])]
         projects_tasks_list = [task_from_serializable(t) for t in data.get("projects_tasks_list", [])]
 
-        daily_spoons = data.get("daily_spoons",
-                                {"Mon":0,"Tue":0,"Wed":0,"Thu":0,"Fri":0,"Sat":0,"Sun":0})
+        daily_spoons = data.get("daily_spoons", {"Mon":0,"Tue":0,"Wed":0,"Thu":0,"Fri":0,"Sat":0,"Sun":0})
         loaded_theme = data.get("theme", "")
 
         # icon_image mapping…
         icon_image_name = data.get("icon_image","spoon.png")
-        if   icon_image_name=="spoon.png":  icon_image=spoon_image
-        elif icon_image_name=="battery.png": icon_image=battery_image
-        elif icon_image_name=="star.png":    icon_image=star_image
-        elif icon_image_name=="potion.png":  icon_image=potion_image
-        elif icon_image_name=="yourdidit.png": icon_image=yourdidit_image
-        elif icon_image_name=="mike.png":    icon_image=mike_image
-        elif icon_image_name=="lightningface.png":    icon_image=lightningface_image
-        elif icon_image_name=="diamond.png":    icon_image=diamond_image
-        elif icon_image_name=="starfruit.png":    icon_image=starfruit_image
-        elif icon_image_name=="strawberry.png":    icon_image=strawberry_image
-        elif icon_image_name=="terstar.png":    icon_image=terstar_image
-        elif icon_image_name=="hcheart.png":  icon_image=hcheart_image
-        elif icon_image_name=="beer.png": icon_image=beer_image
+        if   icon_image_name=="spoon.png":       icon_image=spoon_image
+        elif icon_image_name=="battery.png":     icon_image=battery_image
+        elif icon_image_name=="star.png":        icon_image=star_image
+        elif icon_image_name=="potion.png":      icon_image=potion_image
+        elif icon_image_name=="yourdidit.png":   icon_image=yourdidit_image
+        elif icon_image_name=="mike.png":        icon_image=mike_image
+        elif icon_image_name=="lightningface.png": icon_image=lightningface_image
+        elif icon_image_name=="diamond.png":     icon_image=diamond_image
+        elif icon_image_name=="starfruit.png":   icon_image=starfruit_image
+        elif icon_image_name=="strawberry.png":  icon_image=strawberry_image
+        elif icon_image_name=="terstar.png":     icon_image=terstar_image
+        elif icon_image_name=="hcheart.png":     icon_image=hcheart_image
+        elif icon_image_name=="beer.png":        icon_image=beer_image
         elif icon_image_name=="drpepper.png":    icon_image=drpepper_image
-        else:                                icon_image=spoon_image
+        else:                                    icon_image=spoon_image
 
         spoon_name_input = data.get("spoon_name_input","Spoons")
         folder_one   = data.get("folder_one","Homework")
@@ -228,60 +230,62 @@ def load_data():
         streak_dates = data.get("streak_dates", [])
 
         # now only overwrite your asset‐images if they exist in JSON
-        assets     = data.get("assets", {})
+        assets = data.get("assets", {})
+
+        # — border
         border_name = assets.get("border")
-        set_image('border', border_name)
-                # hub icons
+        if border_name:
+            border, border_name = set_image('border', border_name)
+
+        # — hub icons
         hubIcons_name = assets.get("hubIcons")
         if hubIcons_name:
-            set_image('hubIcons', hubIcons_name)
+            hubIcons, hubIcons_name = set_image('hubIcons', hubIcons_name)
 
-        # spoon icons
+        # — spoon icons
         spoonIcons_name = assets.get("spoonIcons")
         if spoonIcons_name:
-            set_image('spoonIcons', spoonIcons_name)
+            spoonIcons, spoonIcons_name = set_image('spoonIcons', spoonIcons_name)
 
-        # rest icons
+        # — rest icons
         restIcons_name = assets.get("restIcons")
         if restIcons_name:
-            set_image('restIcons', restIcons_name)
+            restIcons, restIcons_name = set_image('restIcons', restIcons_name)
 
-        # hotbar icons
+        # — hotbar icons
         hotbar_name = assets.get("hotbar")
         if hotbar_name:
-            set_image('hotbar', hotbar_name)
+            hotbar, hotbar_name = set_image('hotbar', hotbar_name)
 
-        # manilla folder icons
+        # — manilla folder icons
         manillaFolder_name = assets.get("manillaFolder")
         if manillaFolder_name:
-            set_image('manillaFolder', manillaFolder_name)
+            manillaFolder, manillaFolder_name = set_image('manillaFolder', manillaFolder_name)
 
-        # task border pieces
+        # — task border pieces
         taskBorder_name = assets.get("taskBorder")
         if taskBorder_name:
-            set_image('taskBorder', taskBorder_name)
+            taskBorder, taskBorder_name = set_image('taskBorder', taskBorder_name)
 
-        # scroll bar pieces
+        # — scroll bar pieces
         scrollBar_name = assets.get("scrollBar")
         if scrollBar_name:
-            set_image('scrollBar', scrollBar_name)
+            scrollBar, scrollBar_name = set_image('scrollBar', scrollBar_name)
 
-        # calendar misc icons
+        # — calendar misc icons
         calendarImages_name = assets.get("calendarImages")
         if calendarImages_name:
-            set_image('calendarImages', calendarImages_name)
+            calendarImages, calendarImages_name = set_image('calendarImages', calendarImages_name)
 
-        # theme backgrounds
+        # — theme backgrounds
         themeBackgroundsImages_name = assets.get("themeBackgroundsImages")
         if themeBackgroundsImages_name:
-            set_image('themeBackgroundsImages', themeBackgroundsImages_name)
+            themeBackgroundsImages, themeBackgroundsImages_name = set_image('themeBackgroundsImages', themeBackgroundsImages_name)
 
-        # intro/logo
+        # — intro/logo
         intro_name = assets.get("intro")
         if intro_name:
-            set_image('intro', intro_name)
-
-
+            intro, intro_name = set_image('intro', intro_name)
 
     except Exception as e:
         print(f"Error loading data: {e}")
@@ -292,5 +296,8 @@ def load_data():
         spoon_name_input, folder_one, folder_two, folder_three, folder_four,
         folder_five, folder_six, streak_dates,
         border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder,
-        taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro
+        taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro,
+        border_name, hubIcons_name, spoonIcons_name, restIcons_name,
+        hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
+        calendarImages_name, themeBackgroundsImages_name, intro_name
     )

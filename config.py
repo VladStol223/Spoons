@@ -43,8 +43,14 @@ images_dir = "images"
 image_categories = {
     'avatarBackgrounds': {
         'background_image':        ('background.png', (210, 105)),
-        'window_image':            ('window.png', (26, 31)),
+        'dark_background_image':   ('dark_background.png', (210, 105)),
+        'window_one_image':        ('window1.png', (26, 31)),
+        'window_flower_one_image': ('windowFlower1.png', (26, 31)),
         'light_image':             ('light.png', (80,80)),
+        'bookshelf_image':         ('bookshelf.png', (45, 47)),
+        'lamp_image':              ('lamp.png', (22,27)),
+        'round_table_one_image':   ('roundTable1.png', (38,36)),
+        'vlad_avatar_image':       ('vladavatar.png', (18, 43)),
     },
     'border': {
         'corner':          ('borderCorner.png',(12,12)),
@@ -169,11 +175,11 @@ hubIcons_name = "default"
 spoonIcons = ""
 spoonIcons_name = ""
 restIcons = ""
-resIcons_name = ""
+restIcons_name = ""
 hotbar = ""
 hotbar_name = ""
-manillaFolder = ""
-manillaFolder_name = ""
+manillaFolder = "default"
+manillaFolder_name = "default"
 taskBorder = ""
 taskBorder_name = ""
 scrollBar = ""
@@ -210,8 +216,14 @@ spruceWoodEdgeOne = loaded_images['border']['spruceWood']['edge1']
 
 # avatar background
 avatar_background = avatarBackgrounds['background_image']
-avatar_window = avatarBackgrounds['window_image']
+dark_avatar_background = avatarBackgrounds['dark_background_image']
+avatar_window = avatarBackgrounds['window_one_image']
+avatar_window_flower = avatarBackgrounds['window_flower_one_image']
 avatar_light = avatarBackgrounds['light_image']
+avatar_bookshelf = avatarBackgrounds['bookshelf_image']
+avatar_lamp = avatarBackgrounds['lamp_image']
+round_table_one = avatarBackgrounds['round_table_one_image']
+vlavatar = avatarBackgrounds['vlad_avatar_image']
 
 # — border pieces —
 corner          = border['corner']

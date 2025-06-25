@@ -112,12 +112,37 @@ def hub_buttons(event):
     for page, rect in button_actions.items():
         if rect.collidepoint(event.pos):
             save_data(
-            spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
-            exams_tasks_list, projects_tasks_list, daily_spoons, theme, icon_image,
-            spoon_name_input, folder_one, folder_two, folder_three, folder_four,
-            folder_five, folder_six, streak_dates,
-            border_name, hubIcons_name, spoonIcons_name, resIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
-            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name)
+    spoons,
+    homework_tasks_list,
+    chores_tasks_list,
+    work_tasks_list,
+    misc_tasks_list,
+    exams_tasks_list,
+    projects_tasks_list,
+    daily_spoons,
+    loaded_theme,           # your theme string
+    spoonIcons_name,        # the icon filename string, e.g. "darkoakwood.png"
+    spoon_name_input,
+    folder_one,
+    folder_two,
+    folder_three,
+    folder_four,
+    folder_five,
+    folder_six,
+    streak_dates,
+    border_name,                    # e.g. "darkOakWood"
+    hubIcons_name,
+    spoonIcons_name,
+    restIcons_name,
+    hotbar_name,
+    manillaFolder_name,
+    taskBorder_name,
+    scrollBar_name,
+    calendarImages_name,
+    themeBackgroundsImages_name,
+    intro_name
+)
+
             if page == "manage_tasks":
                 scroll_offset = 0
             return page
@@ -149,7 +174,16 @@ from handle_scroll import handle_task_scroll
 
 #draw_intro_sequence(screen, clock)
 #loading save data
-spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image, spoon_name_input, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, streak_dates, border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro = load_data()
+(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
+exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image,
+spoon_name_input, folder_one, folder_two, folder_three, folder_four,
+folder_five, folder_six, streak_dates,
+border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder,
+taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro,
+border_name, hubIcons_name, spoonIcons_name, restIcons_name,
+hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
+calendarImages_name, themeBackgroundsImages_name, intro_name
+) = load_data()
 current_theme = switch_theme(loaded_theme, globals())
 
 
@@ -279,12 +313,37 @@ while running:
         manager.process_events(event)
         if event.type == pygame.QUIT:
             save_data(
-            spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
-            exams_tasks_list, projects_tasks_list, daily_spoons, theme, icon_image,
-            spoon_name_input, folder_one, folder_two, folder_three, folder_four,
-            folder_five, folder_six, streak_dates,
-            border_name, hubIcons_name, spoonIcons_name, resIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
-            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name)
+    spoons,
+    homework_tasks_list,
+    chores_tasks_list,
+    work_tasks_list,
+    misc_tasks_list,
+    exams_tasks_list,
+    projects_tasks_list,
+    daily_spoons,
+    loaded_theme,           # your theme string
+    spoonIcons_name,        # the icon filename string, e.g. "darkoakwood.png"
+    spoon_name_input,
+    folder_one,
+    folder_two,
+    folder_three,
+    folder_four,
+    folder_five,
+    folder_six,
+    streak_dates,
+    border_name,                    # e.g. "darkOakWood"
+    hubIcons_name,
+    spoonIcons_name,
+    restIcons_name,
+    hotbar_name,
+    manillaFolder_name,
+    taskBorder_name,
+    scrollBar_name,
+    calendarImages_name,
+    themeBackgroundsImages_name,
+    intro_name
+)
+
             running = False
         if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION):
             for page_key, icon_rect in hub_icon_rects.items():
@@ -295,7 +354,7 @@ while running:
                         exams_tasks_list, projects_tasks_list, daily_spoons, theme, icon_image,
                         spoon_name_input, folder_one, folder_two, folder_three, folder_four,
                         folder_five, folder_six, streak_dates,
-                        border_name, hubIcons_name, spoonIcons_name, resIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
+                        border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
                         scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name)
                         if page_key == "manage_tasks":
                             scroll_offset = 0
@@ -354,7 +413,7 @@ while running:
             day_range_index, displayed_week_offset, displayed_month, displayed_year = logic_calendar(event, day_range_index, displayed_week_offset, displayed_month, displayed_year)
         elif page == "shop":
             tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_shop(event, tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-            border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, border_name, hubIcons_name, spoonIcons_name, resIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name = logic_change_image(event, border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, border_name, hubIcons_name, spoonIcons_name, resIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name)
+            border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name = logic_change_image(event, border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name)
             switch_theme(current_theme, globals())
         elif page == "stats":
             logic_stats(event)
