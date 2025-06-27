@@ -61,7 +61,7 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
                      icon_image, spoon_name_input, task_how_often, task_how_long,
                      task_repetitions_amount, folder_one, folder_two,
                      folder_three, folder_four, folder_five, folder_six
-                     , homework_tasks_list,chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list):
+                     , homework_tasks_list,chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, manillaFolder):
     
     if isinstance(current_spoons, int):
         # if it’s the initial int‐0, show nothing; any other int would become a string
@@ -124,7 +124,7 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
     day_down_button_recurring_shifted = pygame.Rect(375, int(y_pos["due_date_input_line"] + 25), 15, 15)
 
     # Draw folder selector & spoons
-    draw_complete_tasks_folders(screen,folder,folder_one,folder_two,folder_three,folder_four,folder_five,folder_six, homework_tasks_list,chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list)
+    draw_complete_tasks_folders(screen,folder,folder_one,folder_two,folder_three,folder_four,folder_five,folder_six, homework_tasks_list,chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, manillaFolder)
     
 
     # Text‐inputs

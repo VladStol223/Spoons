@@ -3,6 +3,8 @@ import pygame
 from datetime import timedelta
 from drawing_functions.draw_rounded_button import draw_rounded_button
 from drawing_functions.draw_input_box import draw_input_box
+from themes import THEMES
+from switch_themes import switch_theme
 
 select_folder_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.055))
 
@@ -66,6 +68,67 @@ icon_surfaces = [
     beer_image,
     drpepper_image,
 ]
+
+theme_colors = [
+    "aquatic",
+    "foresty",
+    "girly_pop",
+    "vampire_goth",
+    "sunset_glow",
+    "light_academia",
+    "retro",
+    "minimalist",
+    "cosmic",
+    "autumn_harvest",
+    "tropical_oasis",
+    "pastel_dreams",
+    "steampunk"
+]
+
+border_surfaces = [
+    [defaultEdgeOne, 'default'],
+    [oakWoodEdgeOne, 'oakWood'],
+    [darkOakWoodEdgeOne, 'darkOakWood'],
+    [metalEdgeOne, 'metal'],
+    [birchWoodEdgeOne, 'birchWood'],
+    [spruceWoodEdgeOne, 'spruceWood'],
+    [grayWoodEdgeOne, 'grayWood'],
+]
+
+folder_surfaces = [
+    [defaultManillaFolder, 'default'],
+    [darkManillaFolder, 'dark'],
+    [lightManillaFolder, 'light'],
+    [blueManillaFolder, 'blue'],
+    [greenManillaFolder, 'green'],
+    [pinkManillaFolder, 'pink'],
+]
+
+def to_color(val):
+    # 1) A tuple/list of ints?
+    if isinstance(val, (list, tuple)):
+        # if it’s the placeholder (negative or >255), treat as transparent
+        if any((not isinstance(c, int) or c < 0 or c > 255) for c in val):
+            return pygame.Color(0, 0, 0, 0)
+        # otherwise it’s a valid RGB or RGBA
+        if len(val) in (3, 4):
+            return tuple(val)
+
+    # 2) A string matching one of your named COLORS?
+    if isinstance(val, str) and val in COLORS:
+        return COLORS[val]
+
+    # 3) A raw hex/CSS name or pygame.Color
+    if isinstance(val, str):
+        try:
+            return pygame.Color(val)
+        except Exception:
+            raise ValueError(f"Cannot convert '{val}' to a color")
+
+    if isinstance(val, pygame.Color):
+        return val
+
+    raise TypeError(f"Unsupported color format: {val!r}")
 
 def draw_inventory(
     screen,
@@ -176,6 +239,7 @@ def draw_inventory(
             screen.blit(scaled_icon, icon_rect)
 
     elif inventory_tab == "Folders":
+        inventory_folder_buttons.clear()
         rename_folders_text = bigger_font.render("FOLDERS", True, BLACK)# type: ignore
         screen.blit(rename_folders_text, (inventory_tab_x,145))
         # draw the dropdown header
@@ -188,6 +252,22 @@ def draw_inventory(
             header_border,
             1, 2
         )
+
+        icon_width = square_width - 15
+
+        for idx, (surface, name) in enumerate(folder_surfaces):
+            col = idx % 7
+            row = idx // 7
+            if row >= 3:
+                break
+            cell_x = 220 + 100 * col
+            cell_y = 190 + 100 * row
+            outline = pygame.Rect(cell_x, cell_y, square_width, square_width)
+            inventory_folder_buttons.append((outline, surface, name))
+            draw_rounded_button(screen, outline, lighter_background, darker_background, 1, 2)
+            scaled  = pygame.transform.scale(surface, (icon_width, (icon_width//5)*3))
+            rect    = scaled.get_rect(center=outline.center)
+            screen.blit(scaled, rect)
 
         folder_name_prompt = font.render("Folder Names:", True, BLACK)# type: ignore
         screen.blit(folder_name_prompt, (folder_dropdown_rect.left - folder_name_prompt.get_width() - 5, 145))
@@ -209,34 +289,77 @@ def draw_inventory(
             draw_input_box(screen, folder_six_name_input_box, input_active == "folder_six", folder_six, LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light", 5)#type: ignore
 
     elif inventory_tab == "Themes":
+        inventory_themes_buttons.clear()
         rename_folders_text = bigger_font.render("THEMES", True, BLACK)# type: ignore
         screen.blit(rename_folders_text, (inventory_tab_x,145))
 
-        draw_rounded_button(screen, aquatic_theme, (0,105,148), BLACK, 18)# type: ignore
-        draw_rounded_button(screen, foresty_theme, (85,107,47), BLACK, 18)# type: ignore
-        draw_rounded_button(screen, girly_pop_theme, (255,182,193), BLACK, 18)# type: ignore
-        draw_rounded_button(screen, vampire_goth_theme, (120,0,0), BLACK, 18)# type: ignore
-        draw_rounded_button(screen, sunset_glow_theme, (255,140,0), BLACK, 18)# type: ignore
+        for idx, theme_key in enumerate(theme_colors):
+            col = idx % 7
+            row = idx // 7
+            # stop after two rows of 7 (you have 13 themes)
+            if row >= 2:
+                break
 
-        draw_rounded_button(screen, light_academia_theme, (245, 240, 230), BLACK, 18)# type: ignore
-        draw_rounded_button(screen, retro_theme, (204, 122, 46), BLACK, 18) # type: ignore
-        draw_rounded_button(screen, minimalist_theme, (255, 255, 255), BLACK, 18) # type: ignore
-        draw_rounded_button(screen, cosmic_theme, (85, 0, 128), BLACK, 18) # type: ignore
-        draw_rounded_button(screen, autumn_harvest_theme, (183, 65, 14), BLACK, 18)# type: ignore
-        draw_rounded_button(screen, tropical_oasis_theme, (64, 224, 208), BLACK, 18)# type: ignore
-        draw_rounded_button(screen, pastel_dreams_theme, (255, 182, 193), BLACK, 18) # type: ignore
-        draw_rounded_button(screen, steampunk_theme, (181, 166, 66), BLACK, 18) # type: ignore
+            cell_x = 220 + 100 * col
+            cell_y = 190 + 100 * row
+            cell_rect = pygame.Rect(cell_x, cell_y, square_width, square_width)
+            inventory_themes_buttons.append((cell_rect, theme_key))
+
+        # — In your draw pass, render each theme-swatch
+        for cell_rect, theme_key in inventory_themes_buttons:
+            # draw the outline/frame
+            draw_rounded_button(
+                screen,
+                cell_rect,
+                lighter_background,
+                darker_background,  # type: ignore
+                1, 2
+            )
+
+            # grab the four quarter-colors from your THEMES dict
+            theme_dict = THEMES[theme_key]
+            tl = to_color(theme_dict["background_color"])
+            tr = to_color(theme_dict["calendar_current_day_color"])
+            bl = to_color(theme_dict["calendar_previous_day_color"])
+            br = to_color(theme_dict["calendar_next_day_color"])
+
+            # compute halves
+            padding = 8
+            hw = cell_rect.width // 2 - (padding * 2)
+            hh = cell_rect.height // 2 - (padding * 2)
+            
+
+            # top-left quarter
+            pygame.draw.rect(screen, tl, pygame.Rect(cell_rect.x + (padding*2),         cell_rect.y + (padding*2),          hw, hh))
+            # top-right quarter
+            pygame.draw.rect(screen, tr, pygame.Rect(cell_rect.x + hw + (padding*2),    cell_rect.y + (padding*2),          hw, hh))
+            # bottom-left quarter
+            pygame.draw.rect(screen, bl, pygame.Rect(cell_rect.x + (padding*2),         cell_rect.y + hh + (padding*2),     hw, hh))
+            # bottom-right quarter
+            pygame.draw.rect(screen, br, pygame.Rect(cell_rect.x + hw + (padding*2),    cell_rect.y + hh + (padding*2),     hw, hh))
+
 
     elif inventory_tab == "Borders":
+        inventory_border_buttons.clear()
         rename_folders_text = bigger_font.render("BORDERS", True, BLACK)# type: ignore
         screen.blit(rename_folders_text, (inventory_tab_x,145))
 
-        scaledOakWood = pygame.transform.rotate(pygame.transform.scale(oakWoodEdgeOne, (18, 36)), 90)
-        screen.blit(scaledOakWood, oakwood_preview_rect.topleft)
-        scaledDarkOakWood = pygame.transform.rotate(pygame.transform.scale(darkOakWoodEdgeOne, (18, 36)), 90)
-        screen.blit(scaledDarkOakWood, darkoakwood_preview_rect.topleft)
-        scaledMetal = pygame.transform.rotate(pygame.transform.scale(metalEdgeOne, (18, 36)), 90)
-        screen.blit(scaledMetal,   metal_preview_rect.topleft)
+        icon_width = square_width - 15
+
+        for idx, (surface, name) in enumerate(border_surfaces):
+            col = idx % 7
+            row = idx // 7
+            if row >= 3:
+                break
+            cell_x = 220 + 100 * col
+            cell_y = 190 + 100 * row
+            outline = pygame.Rect(cell_x, cell_y, square_width, square_width)
+            inventory_border_buttons.append((outline, surface, name))
+            draw_rounded_button(screen, outline, lighter_background, darker_background, 1, 2)
+            rotated = pygame.transform.rotate(surface, 90)
+            scaled  = pygame.transform.scale(rotated, (icon_width, icon_width//3))
+            rect    = scaled.get_rect(center=outline.center)
+            screen.blit(scaled, rect)
 
 
 def logic_inventory(event,
@@ -251,7 +374,11 @@ def logic_inventory(event,
                     folder_four,
                     folder_five,
                     folder_six,
-                    folders_dropdown_open):
+                    folders_dropdown_open,
+                    border, border_name,
+                    manillaFolder, manillaFolder_name,
+                    current_theme):
+
     if event.type == pygame.MOUSEBUTTONDOWN:
 
         # — spoon name field (Icons tab)
@@ -279,6 +406,24 @@ def logic_inventory(event,
             for outline, icon in inventory_icon_buttons:
                 if outline.collidepoint(event.pos):
                     icon_image = icon
+                    break
+
+        if inventory_tab == "Folders" and not folders_dropdown_open:
+            for outline, surface, name in inventory_folder_buttons:
+                if outline.collidepoint(event.pos):
+                    manillaFolder, manillaFolder_name = set_image('manillaFolder', name)
+                    break
+
+        if inventory_tab == "Themes":
+            for cell_rect, theme_key in inventory_themes_buttons:
+                if cell_rect.collidepoint(event.pos):
+                    current_theme = switch_theme(theme_key, globals())
+                    break
+
+        if inventory_tab == "Borders":
+            for outline, surface, name in inventory_border_buttons:
+                if outline.collidepoint(event.pos):
+                    border, border_name = set_image('border', name)
                     break
 
         # — Folders tab interactions
@@ -362,4 +507,7 @@ def logic_inventory(event,
             folder_four,
             folder_five,
             folder_six,
-            folders_dropdown_open)
+            folders_dropdown_open,
+            border, border_name,
+            manillaFolder, manillaFolder_name,
+            current_theme)

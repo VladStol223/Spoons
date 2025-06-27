@@ -245,13 +245,13 @@ while running:
                          done_button_color, background_color, add_tasks_choose_folder_color, add_tasks_chosen_folder_color, icon_image, spoon_name_input,
                          task_how_often, task_how_long, task_repetitions_amount,
                          folder_one, folder_two, folder_three, folder_four, folder_five, folder_six
-                         , homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list)
+                         , homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, manillaFolder)
         
     elif page == "manage_tasks":
         folder_rects = draw_manage_tasks_hub(screen, spoons,
                             homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,exams_tasks_list, projects_tasks_list,
                             complete_tasks_hub_folder_color, icon_image, spoon_name_input,
-                            folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+                            folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, manillaFolder)
         
     elif page == "complete_homework_tasks":
         scroll_offset, total_content_height = draw_complete_tasks(screen, "Homework", homework_tasks_list, task_buttons_homework, spoons,  scroll_offset,
@@ -321,7 +321,7 @@ while running:
     exams_tasks_list,
     projects_tasks_list,
     daily_spoons,
-    loaded_theme,           # your theme string
+    current_theme,           # your theme string
     spoonIcons_name,        # the icon filename string, e.g. "darkoakwood.png"
     spoon_name_input,
     folder_one,
@@ -341,8 +341,7 @@ while running:
     scrollBar_name,
     calendarImages_name,
     themeBackgroundsImages_name,
-    intro_name
-)
+    intro_name)
 
             running = False
         if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION):
@@ -408,7 +407,11 @@ while running:
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             task_completed, spoons, confetti_particles, streak_dates = logic_complete_tasks(projects_tasks_list, task_buttons_projects, event, spoons, streak_dates, streak_task_completed)
         elif page == "inventory":
-            inventory_tab, spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open = logic_inventory(event, tool_tips, inventory_tab, spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open)
+            (inventory_tab, spoon_name_input, input_active, icon_image, 
+             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open,
+            border, border_name, manillaFolder, manillaFolder_name, current_theme) = logic_inventory(event, tool_tips, inventory_tab, spoon_name_input, input_active, icon_image, 
+                                                   folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open, border, border_name, manillaFolder, manillaFolder_name, current_theme)
+            switch_theme(current_theme, globals())
         elif page == "calendar": 
             day_range_index, displayed_week_offset, displayed_month, displayed_year = logic_calendar(event, day_range_index, displayed_week_offset, displayed_month, displayed_year)
         elif page == "shop":

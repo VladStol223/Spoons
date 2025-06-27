@@ -178,8 +178,8 @@ restIcons = ""
 restIcons_name = ""
 hotbar = ""
 hotbar_name = ""
-manillaFolder = "default"
-manillaFolder_name = "default"
+manillaFolder = "dark"
+manillaFolder_name = "dark"
 taskBorder = ""
 taskBorder_name = ""
 scrollBar = ""
@@ -205,7 +205,7 @@ for category, data in loaded_images.items():
         # single-theme → just hand back the flat dict
         globals()[category] = data
 
-
+#border previews
 defaultEdgeOne = loaded_images['border']['default']['edge1']
 darkOakWoodEdgeOne = loaded_images['border']['darkOakWood']['edge1']
 oakWoodEdgeOne = loaded_images['border']['oakWood']['edge1']
@@ -213,6 +213,14 @@ birchWoodEdgeOne = loaded_images['border']['birchWood']['edge1']
 metalEdgeOne   = loaded_images['border']['metal']['edge1']
 grayWoodEdgeOne = loaded_images['border']['grayWood']['edge1']
 spruceWoodEdgeOne = loaded_images['border']['spruceWood']['edge1']
+
+#manilla folder previews
+defaultManillaFolder = loaded_images['manillaFolder']['default']['manilla_folder_full']
+darkManillaFolder = loaded_images['manillaFolder']['dark']['manilla_folder_full']
+lightManillaFolder = loaded_images['manillaFolder']['light']['manilla_folder_full']
+pinkManillaFolder = loaded_images['manillaFolder']['pink']['manilla_folder_full']
+greenManillaFolder = loaded_images['manillaFolder']['green']['manilla_folder_full']
+blueManillaFolder = loaded_images['manillaFolder']['blue']['manilla_folder_full']
 
 # avatar background
 avatar_background = avatarBackgrounds['background_image']
@@ -570,4 +578,7 @@ day_range_index = 0
 
 # will hold (outline_rect, icon_surface) for the “Icons” tab
 inventory_icon_buttons = []
+inventory_folder_buttons = []
+inventory_border_buttons = []
+inventory_themes_buttons = []
 folders_dropdown_open = False

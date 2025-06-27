@@ -1,4 +1,4 @@
-from themes import THEMES, DROPDOWN_LISTS
+from themes import THEMES
 
 def switch_theme(theme_name, globals_dict):
     global current_theme

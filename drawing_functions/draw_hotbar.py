@@ -274,7 +274,7 @@ def draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coin
 
     # ---------- daylight overlay (sunlight coming in) -----------------------------
     light_alpha = get_alpha("day")
-    if light_alpha > 0:
+    if light_alpha > 1:
         avatar_lit = avatar_light.copy()         # don’t mutate original
         avatar_lit.set_alpha(light_alpha)
 

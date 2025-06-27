@@ -19,7 +19,8 @@ def draw_manage_tasks_hub(
     folder_three,
     folder_four,
     folder_five,
-    folder_six
+    folder_six,
+    manillaFolder
 ):
     # --- 1) Recompute "days left" and resort each list ---
     for lst in (homework_tasks_list, chores_tasks_list,
@@ -55,6 +56,8 @@ def draw_manage_tasks_hub(
 
     big_font   = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen.get_height() * 0.06))
     small_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen.get_height() * 0.04))
+
+    manilla_folder_full = manillaFolder['manilla_folder_full']
 
     full_img = pygame.transform.scale(manilla_folder_full, (folder_w, folder_h))
 
