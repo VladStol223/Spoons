@@ -112,36 +112,12 @@ def hub_buttons(event):
     for page, rect in button_actions.items():
         if rect.collidepoint(event.pos):
             save_data(
-    spoons,
-    homework_tasks_list,
-    chores_tasks_list,
-    work_tasks_list,
-    misc_tasks_list,
-    exams_tasks_list,
-    projects_tasks_list,
-    daily_spoons,
-    loaded_theme,           # your theme string
-    spoonIcons_name,        # the icon filename string, e.g. "darkoakwood.png"
-    spoon_name_input,
-    folder_one,
-    folder_two,
-    folder_three,
-    folder_four,
-    folder_five,
-    folder_six,
-    streak_dates,
-    border_name,                    # e.g. "darkOakWood"
-    hubIcons_name,
-    spoonIcons_name,
-    restIcons_name,
-    hotbar_name,
-    manillaFolder_name,
-    taskBorder_name,
-    scrollBar_name,
-    calendarImages_name,
-    themeBackgroundsImages_name,
-    intro_name
-)
+            spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
+            exams_tasks_list, projects_tasks_list, daily_spoons, theme, icon_image,
+            spoon_name_input, folder_one, folder_two, folder_three, folder_four,
+            folder_five, folder_six, streak_dates,
+            border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
+            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, level, coins)
 
             if page == "manage_tasks":
                 scroll_offset = 0
@@ -182,7 +158,8 @@ border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder,
 taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro,
 border_name, hubIcons_name, spoonIcons_name, restIcons_name,
 hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
-calendarImages_name, themeBackgroundsImages_name, intro_name
+calendarImages_name, themeBackgroundsImages_name, intro_name,
+level, coins
 ) = load_data()
 current_theme = switch_theme(loaded_theme, globals())
 
@@ -313,35 +290,12 @@ while running:
         manager.process_events(event)
         if event.type == pygame.QUIT:
             save_data(
-    spoons,
-    homework_tasks_list,
-    chores_tasks_list,
-    work_tasks_list,
-    misc_tasks_list,
-    exams_tasks_list,
-    projects_tasks_list,
-    daily_spoons,
-    current_theme,           # your theme string
-    spoonIcons_name,        # the icon filename string, e.g. "darkoakwood.png"
-    spoon_name_input,
-    folder_one,
-    folder_two,
-    folder_three,
-    folder_four,
-    folder_five,
-    folder_six,
-    streak_dates,
-    border_name,                    # e.g. "darkOakWood"
-    hubIcons_name,
-    spoonIcons_name,
-    restIcons_name,
-    hotbar_name,
-    manillaFolder_name,
-    taskBorder_name,
-    scrollBar_name,
-    calendarImages_name,
-    themeBackgroundsImages_name,
-    intro_name)
+            spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
+            exams_tasks_list, projects_tasks_list, daily_spoons, theme, icon_image,
+            spoon_name_input, folder_one, folder_two, folder_three, folder_four,
+            folder_five, folder_six, streak_dates,
+            border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
+            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, level, coins)
 
             running = False
         if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION):
@@ -354,7 +308,7 @@ while running:
                         spoon_name_input, folder_one, folder_two, folder_three, folder_four,
                         folder_five, folder_six, streak_dates,
                         border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
-                        scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name)
+                        scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, level, coins)
                         if page_key == "manage_tasks":
                             scroll_offset = 0
                         page = page_key
@@ -385,27 +339,27 @@ while running:
             page = logic_manage_tasks_hub(event, page, folder_rects)
         elif page == "complete_homework_tasks":
             scroll_offset = handle_task_scroll(event, scroll_offset, total_content_height, scroll_multiplier=17)
-            task_completed, spoons, confetti_particles, streak_dates = logic_complete_tasks(homework_tasks_list, task_buttons_homework, event, spoons, streak_dates, streak_task_completed)
+            task_completed, spoons, confetti_particles, streak_dates, level = logic_complete_tasks(homework_tasks_list, task_buttons_homework, event, spoons, streak_dates, streak_task_completed, level)
         elif page == "complete_chores_tasks":
             scroll_limit = max(0, len(chores_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            task_completed, spoons, confetti_particles, streak_dates = logic_complete_tasks(chores_tasks_list, task_buttons_chores, event, spoons, streak_dates, streak_task_completed)
+            task_completed, spoons, confetti_particles, streak_dates, level = logic_complete_tasks(chores_tasks_list, task_buttons_chores, event, spoons, streak_dates, streak_task_completed, level)
         elif page == "complete_work_tasks":
             scroll_limit = max(0, len(work_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            task_completed, spoons, confetti_particles, streak_dates = logic_complete_tasks(work_tasks_list, task_buttons_work, event, spoons, streak_dates, streak_task_completed)
+            task_completed, spoons, confetti_particles, streak_dates, level = logic_complete_tasks(work_tasks_list, task_buttons_work, event, spoons, streak_dates, streak_task_completed, level)
         elif page == "complete_misc_tasks":
             scroll_limit = max(0, len(misc_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            task_completed, spoons, confetti_particles, streak_dates = logic_complete_tasks(misc_tasks_list, task_buttons_misc, event, spoons, streak_dates, streak_task_completed)
+            task_completed, spoons, confetti_particles, streak_dates, level = logic_complete_tasks(misc_tasks_list, task_buttons_misc, event, spoons, streak_dates, streak_task_completed, level)
         elif page == "complete_exams_tasks":
             scroll_limit = max(0, len(exams_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            task_completed, spoons, confetti_particles, streak_dates = logic_complete_tasks(exams_tasks_list, task_buttons_exams, event, spoons, streak_dates, streak_task_completed)
+            task_completed, spoons, confetti_particles, streak_dates, level = logic_complete_tasks(exams_tasks_list, task_buttons_exams, event, spoons, streak_dates, streak_task_completed, level)
         elif page == "complete_projects_tasks":
             scroll_limit = max(0, len(projects_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            task_completed, spoons, confetti_particles, streak_dates = logic_complete_tasks(projects_tasks_list, task_buttons_projects, event, spoons, streak_dates, streak_task_completed)
+            task_completed, spoons, confetti_particles, streak_dates, level = logic_complete_tasks(projects_tasks_list, task_buttons_projects, event, spoons, streak_dates, streak_task_completed, level)
         elif page == "inventory":
             (inventory_tab, spoon_name_input, input_active, icon_image, 
              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open,

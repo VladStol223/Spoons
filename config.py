@@ -565,8 +565,8 @@ global_leaderboard = [
 #streaks stuff
 streak_dates = []
 streak_task_completed = False
-coins = 7
-level = 2.66
+coins = 0
+level = 0
 
 calendar_mode = "Month"            # or "week"
 displayed_week_offset = 0

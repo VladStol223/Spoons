@@ -58,7 +58,8 @@ def save_data(
     spoon_name_input, folder_one, folder_two, folder_three, folder_four,
     folder_five, folder_six, streak_dates,
     border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder,
-    taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro):
+    taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro,
+    level, coins):
     
     global icon_image_name
     if icon_image == spoon_image:
@@ -127,9 +128,12 @@ def save_data(
                     "themeBackgrounds": themeBackgroundsImages,
                     "intro": intro
                 }) +
-                "\n"
+                ",\n"
             )
+            f.write(f'  "level": {json.dumps(level)},\n')
+            f.write(f'  "coins": {json.dumps(coins)}\n')
             f.write("}\n")
+
     except Exception as e:
         print(f"Error saving data: {e}")
 
@@ -184,6 +188,7 @@ def load_data():
     global border_name, hubIcons_name, spoonIcons_name, restIcons_name
     global hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name
     global calendarImages_name, themeBackgroundsImages_name, intro_name
+    global level, coins
 
     try:
         with open("data.json", "r") as f:
@@ -228,6 +233,9 @@ def load_data():
         folder_six   = data.get("folder_six","Projects")
 
         streak_dates = data.get("streak_dates", [])
+
+        level = data.get("level", 0)
+        coins = data.get("coins", 0)
 
         # now only overwrite your asset‐images if they exist in JSON
         assets = data.get("assets", {})
@@ -299,5 +307,6 @@ def load_data():
         taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro,
         border_name, hubIcons_name, spoonIcons_name, restIcons_name,
         hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
-        calendarImages_name, themeBackgroundsImages_name, intro_name
+        calendarImages_name, themeBackgroundsImages_name, intro_name,
+        level, coins
     )

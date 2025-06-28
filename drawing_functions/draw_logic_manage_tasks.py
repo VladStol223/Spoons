@@ -22,6 +22,8 @@ done_button_rect   = None
 currently_editing = None  # index of the task being edited
 edit_state = {}
 
+spoons_xp = 0
+
 # Scrolling layout constants
 CONTENT_TOP     = 148   # Where content starts
 VIEWPORT_HEIGHT = 350   # Visible content height
@@ -419,11 +421,12 @@ def handle_task_scroll(event, scroll_offset_px, total_content_height):
     return max(0, min(scroll_offset_px, max_scroll))
 
 
-def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confetti_particles):
+def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confetti_particles, level):
     """
     Handles clicks and key events for both list and edit form.
     """
     global currently_editing, edit_state, input_active, cancel_button_rect, done_button_rect
+    global spoons_xp
 
     # --- Edit mode ---
     if currently_editing is not None:
@@ -433,7 +436,7 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
             if cancel_button_rect and cancel_button_rect.collidepoint(event.pos):
                 currently_editing = None
                 input_active = None
-                return False, spoons, confetti_particles, streak_dates
+                return False, spoons, confetti_particles, streak_dates, level
 
             # Save edits
             if done_button_rect and done_button_rect.collidepoint(event.pos):
@@ -457,7 +460,7 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
 
                 currently_editing = None
                 input_active = None
-                return False, spoons, confetti_particles, streak_dates
+                return False, spoons, confetti_particles, streak_dates, level
 
             # Clicked on a field or arrow
             for rect, key in edit_buttons:
@@ -496,7 +499,7 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
             elif input_active in ("cost", "done") and event.unicode.isdigit():
                 edit_state[input_active] = edit_state.get(input_active, "") + event.unicode
 
-        return False, spoons, confetti_particles, streak_dates
+        return False, spoons, confetti_particles, streak_dates, level
 
     # --- List mode: handle remove/edit icon and spoon-frame clicks ---
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -518,7 +521,7 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
                         "day":   str(date.day)
                     }
                     currently_editing = idx
-                return False, spoons, confetti_particles, streak_dates
+                return False, spoons, confetti_particles, streak_dates, level
 
         # Spoon-frame clicks
         for rect, idx, frame_i in frame_buttons:
@@ -529,6 +532,13 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
                 if to_fill > 0 and spoons >= to_fill:
                     task_list[idx][2] = min(cost, new_done)
                     spoons -= to_fill
+
+                    # Fractional level-up: each spoon gives 1/threshold
+                    for _ in range(to_fill):
+                        base_lvl = int(level)             # e.g. 0, 1, 2, ...
+                        threshold = 10 + 2 * base_lvl     # 10, 12, 14, ...
+                        level += 1.0 / threshold
+
                 break
 
-    return False, spoons, confetti_particles, streak_dates
+    return False, spoons, confetti_particles, streak_dates, level

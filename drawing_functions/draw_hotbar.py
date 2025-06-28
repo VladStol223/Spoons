@@ -248,8 +248,8 @@ def draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coin
     pygame.draw.rect(screen, (20, 150, 20), (text_x + level_surf.get_width() + 10, text_y, (xp_bar.get_width() - 10) * (level - math.floor(level)), xp_bar.get_height() - 10))  # experience
     screen.blit(xp_bar, (text_x + level_surf.get_width() + 5, text_y - 5))
 
-    screen.blit(coins_surf,  (395 + xp_bar.get_width(), text_y))
-    screen.blit(coin, (400 + xp_bar.get_width() + coins_surf.get_width(), text_y))
+    screen.blit(coins_surf,  (420 + xp_bar.get_width() - coins_surf.get_width(), text_y))
+    screen.blit(coin, (425 + xp_bar.get_width(), text_y))
 
     # ------------------------------------------------------------------------------
     # Draw the avatar background, furniture, windows, etc.
