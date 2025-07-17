@@ -1,26 +1,16 @@
+#draw_border.py
 import pygame
 import random
 from config import *
 
 # === CONFIGURATION ===
 base_sizes = {
-    "corner":    (12, 12),
-    "edge":      (6,  12),
-    "t_corner":  (14, 12),
-    "calendar":   (9, 24),
-}
+        "corner":    (12, 12),
+        "edge":      (6,  12),
+        "t_corner":  (14, 12),
+        "calendar":   (9, 24),}
 
-# unpack your 6 pieces into names your function expects:
-
-
-scale = 3                # multiplier for pixel-art → screen pixels
-hub_border_offset = 100      # px from left edge; adjust as needed
-spoons_border_offset = 185  # px up from bottom for input_spoons horizontal border
-hotbar_border_offset = 120  # px from top edge for inventory page
-avatar_border_offset = 250  # px from right edge for input_tasks vertical border
-inventory_border_offset = 170  # px from left edge;
-
-def draw_border(screen, rect, page, background_color, border):
+def draw_border(screen, rect, page, background_color, border, is_maximized, scale_factor):
     corner          = border['corner']
     edge_one        = border['edge1']
     edge_two        = border['edge2']
@@ -29,6 +19,14 @@ def draw_border(screen, rect, page, background_color, border):
     x, y, w, h = rect
     sw, sh = screen.get_size()
 
+    # choose your base scale
+    scale = max(3, (6 / scale_factor)) if is_maximized else 3
+
+    hub_border_offset = 82 + (82 * is_maximized) + (scale * 6)      # px from left edge; adjust as needed
+    hotbar_border_offset = 102 + (102 * is_maximized) + (scale * 6)  # px from top edge for inventory page
+    avatar_border_offset = 214 + (214 * is_maximized) + (scale * 12)  # px from right edge for input_tasks vertical border
+    inventory_border_offset = 134 + (134 * is_maximized) + (scale * 12) # px from left edge;
+    
     # deterministic RNG per border
     seed = x + (y << 8) + (w << 16) + (h << 24)
     rng = random.Random(seed)

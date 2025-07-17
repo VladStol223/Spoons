@@ -8,7 +8,7 @@ for name, value in COLORS.items():
 # Initialize pygame font
 pygame.font.init()
 
-screen_height = 520
+screen_height = 540
 screen_width = 960
 
 total_content_height = 0
@@ -582,3 +582,9 @@ inventory_folder_buttons = []
 inventory_border_buttons = []
 inventory_themes_buttons = []
 folders_dropdown_open = False
+
+#fullscreen modes
+is_maximized = False
+WINDOWED_SIZE   = (960,  540)
+last_windowed = WINDOWED_SIZE
+FULLSCREEN_SIZE = (1536, 817)

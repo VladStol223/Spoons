@@ -67,6 +67,7 @@ make the UI look like the stardew valley interface.
 The top of the interface is going to be the inventory where the user will be able to see the their current spoons, spoonbucks, streak, and your little guy.
 '''
 
+import ctypes
 from os import name
 from datetime import datetime
 
@@ -80,17 +81,41 @@ import pygame_gui
 import sys
 import calendar
 
+ctypes.windll.user32.SetProcessDpiAwarenessContext(ctypes.c_void_p(-4))
+
 pygame.init()
 
-screen_height = 520
-screen_width = 960
-manager = pygame_gui.UIManager((screen_width, screen_height), "themes/default.json")
 button_widths = {}
 hub_closing = False
 UI_elements_initialized = False
 clock = pygame.time.Clock()
-screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
+screen = pygame.display.set_mode(WINDOWED_SIZE)
 pygame.display.set_caption("Spoons")
+
+SWP_NOSIZE   = 0x0001
+SWP_NOZORDER = 0x0004
+HWND_TOP     = 0
+
+def move_window(x: int, y: int):
+    """Move the Pygame window to (x, y) screen coordinates without resizing."""
+    hwnd = pygame.display.get_wm_info()["window"]
+    ctypes.windll.user32.SetWindowPos(hwnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER)
+
+user32 = ctypes.windll.user32
+def get_true_screen_size():
+    return ( user32.GetSystemMetrics(0),
+             user32.GetSystemMetrics(1) )
+
+# Constant for “pixels per logical inch” on X-axis
+LOGPIXELSX = 88
+
+def get_scale_factor() -> float:
+    hwnd = pygame.display.get_wm_info()["window"]
+    # Get the DPI that *this window* is on:
+    dpi = ctypes.windll.user32.GetDpiForWindow(hwnd)
+    return dpi / 96.0
+
+scale_factor = get_scale_factor()
 
 ####################################################################################################################################
 def hub_buttons(event):
@@ -168,6 +193,13 @@ current_theme = switch_theme(loaded_theme, globals())
 # Main loop
 # ----------------------------------------------------------------------------------------------------
 while running:
+    screen_width, screen_height = screen.get_size()
+    manager = pygame_gui.UIManager((screen_width, screen_height), "themes/default.json")
+    font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.06))
+    big_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.067))
+    bigger_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.075))
+    small_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.047))
+    smaller_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.033))
     delta_time = clock.tick(60) / 1000.0
     max_days = calendar.monthrange(datetime.now().year, task_month)[1]
     mouse_pos = pygame.mouse.get_pos()
@@ -264,7 +296,7 @@ while running:
         draw_inventory(screen, spoon_name_input, inventory_tab, background_color, input_active, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open)
         
     elif page == "calendar":
-        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border)
+        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
         draw_calendar(screen, spoon_name_input, displayed_week_offset, day_range_index, 
                   homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,
                   displayed_month, displayed_year, background_color,
@@ -280,11 +312,11 @@ while running:
         
     elif page == "stats":
         draw_stats(screen, font, big_font, personal_stats, global_leaderboard)
-        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border)
+        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
 
     if page not in ("calendar", "stats"):
         draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page)
-        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border)
+        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
         
     for event in pygame.event.get():
         manager.process_events(event)
@@ -298,6 +330,7 @@ while running:
             scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, level, coins)
 
             running = False
+                
         if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION):
             for page_key, icon_rect in hub_icon_rects.items():
                 if icon_rect.collidepoint(event.pos):
@@ -314,18 +347,23 @@ while running:
                         page = page_key
                     break
 
-        new_page = hub_buttons(event)
-        if event.type == pygame.VIDEORESIZE:
-            screen_width, screen_height = event.w, event.h
-            screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
-            manager.set_window_resolution((screen_width, screen_height))
-            
-            font = pygame.font.Font(None, int(screen_height * 0.06))
-            big_font = pygame.font.Font(None, int(screen_height * 0.067))
-            small_font = pygame.font.Font(None, int(screen_height * 0.047))
-            smaller_font = pygame.font.Font(None, int(screen_height * 0.033))
-
+        elif event.type == pygame.KEYDOWN and event.key == pygame.K_F11:
+            scale_factor = get_scale_factor()
+            if not is_maximized:
+                # grow to 1920×1080 window
+                screen = pygame.display.set_mode(get_true_screen_size(), pygame.NOFRAME)
+                move_window(0, 0)  
+                is_maximized = True
+            else:
+                # shrink back to 960×540
+                screen = pygame.display.set_mode(WINDOWED_SIZE)
+                move_window(0, 5)  
+                is_maximized = False
             UI_elements_initialized = False
+            scale = max(3, (6 / scale_factor)) if is_maximized else 3
+            print(f"Scale factor: {scale_factor} - Border scale: {scale} - Maximized: {is_maximized}")
+
+        new_page = hub_buttons(event)
 
         page = logic_task_toggle(event, page) #handle clicks with task toggles
 

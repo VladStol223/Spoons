@@ -280,7 +280,7 @@ def draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coin
 
     day_color = get_day_color()
 
-    screen.blit(avatar_background, (735, 9))
+    screen.blit(avatar_background, (735, 12))
 
 
     draw_window(window1_x)
