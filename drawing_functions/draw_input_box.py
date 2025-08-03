@@ -26,6 +26,7 @@ def draw_input_box(
         background_color=None,
         infill=None,
         pullUp = 0,
+        fontsize = 0.06
     ):
     """
     Draws a text input box with an optional infill color.
@@ -43,6 +44,9 @@ def draw_input_box(
         infill (str): One of {"light", "lighter", "dark", "darker"} indicating how to adjust
                       the background_color for the fill. If None, no fill is drawn.
     """
+    sw, sh = screen.get_size()
+    font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(sh * fontsize))
+
     # 1) Determine border color and render text
     if active == "small_font":
         text_surface = small_font.render(str(text), True, BLACK)  # type: ignore

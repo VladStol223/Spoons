@@ -1,3 +1,4 @@
+# Spoons/config.py
 import pygame
 import os
 from datetime import datetime
@@ -588,3 +589,23 @@ is_maximized = False
 WINDOWED_SIZE   = (960,  540)
 last_windowed = WINDOWED_SIZE
 FULLSCREEN_SIZE = (1536, 817)
+
+
+
+# — sound setup — 
+pygame.mixer.init()  # initialize the sound system
+
+# load sounds from your Spoons/sounds folder
+SOUNDS_DIR = os.path.join(os.path.dirname(__file__), "sounds", "hubButtons")
+
+def load_sfx(name, ext="mp3"):
+    path = os.path.join(SOUNDS_DIR, f"{name}.{ext}")
+    try:
+        return pygame.mixer.Sound(path)
+    except pygame.error as e:
+        print(f"Failed loading sound {path}: {e}")
+        return None
+
+# now load all your effects:
+settings_button_click_sfx = load_sfx("settingsClick")
+

@@ -41,7 +41,9 @@ def draw_hub_buttons(
     stats_color,
     button_widths_dict,
     hub_closing,
-    delta_time
+    delta_time,
+    is_maximized,
+    scale_factor
 ):
     global hub_buttons_showing, button_widths
     hub_buttons_showing = True
@@ -49,18 +51,18 @@ def draw_hub_buttons(
 
 
     # sizes and spacing
-    icon_size  = 56
+    icon_size  = 112 if is_maximized else 56
     cal_size   = int(icon_size * 1.5)
-    y_spacing  = 10
+    y_spacing  = 20 if is_maximized else 10
     total_h    = cal_size + y_spacing + (len(icon_buttons)-1)*(icon_size + y_spacing)
     start_y    = (screen.get_height() - total_h) // 2
-    x_base     = 25
+    x_base     = 50 if is_maximized else 25
 
     button_rects = {}
     today = datetime.now().strftime("%m/%d")
 
     # --- Calendar icon + date ---
-    cal_x = x_base - 13
+    cal_x = x_base - 25 if is_maximized else x_base - 13
     cal_y = start_y + 5
     cal_rect = pygame.Rect(cal_x, cal_y, cal_size, cal_size)
     img = icon_buttons[0][1]

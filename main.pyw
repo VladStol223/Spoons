@@ -26,45 +26,13 @@ Total pages:
 19.) Statistics
 
 To do:
-3.) -Add the following to the Calendar: 
--Visual streak tracking (e.g., fire symbol next to date) 
--Hover or click shows current streak length 
--Streak data shopd and updated daily
+- Add the following sound effects:
+    * Add spoons page:
+        - hub button: spoon hitting floor
+        - Add spoon sound effect
+        - remove spoon sound effect
 
-4.) -Add the following core systems: 
--Streak System 
--Track daily completions by folder 
--shop current and longest streaks 
--Reset streak if no task is completed that day 
--Integrate "streak saver" item that prevents reset once 
--Goal System with Random Rewards 
--Allow users to define personal goals (e.g., 5 tasks/week) k
--Track goal progress 
--Upon completion, randomly award: 
--Themes 
--Icons 
--Icon names 
--Spoon bucks 
--Show progress and rewards in Manage Tasks Hub k
--Badge System 
--Unlock badges based on user actions (first task, streaks, spoons, etc.) 
--Track and shop badges earned 
--Display badges in the Statistics page 
--Optional tiering system (bronze, silver, gold) 
--Spoon Bucks System 
--Track spoon buck balance 
--Award spoon bucks for task completions and goal rewards 
--Deduct spoon bucks in shop upon purchase 
--Display current balance consistently on UI
-
-5.) -Add the following to the shop page: 
--Display available items (themes, icons, icon names, streak savers) 
--Show item previews and costs
--Confirm purchase before deducting spoon bucks 
--Disable purchase if insufficient fundskk
-
-make the UI look like the stardew valley interface. 
-The top of the interface is going to be the inventory where the user will be able to see the their current spoons, spoonbucks, streak, and your little guy.
+    - Task completed sound effect 
 '''
 
 import ctypes
@@ -77,7 +45,7 @@ for name, value in COLORS.items():
     globals()[name] = value
 
 import pygame
-import pygame_gui
+import pygame_gui   
 import sys
 import calendar
 
@@ -117,6 +85,9 @@ def get_scale_factor() -> float:
 
 scale_factor = get_scale_factor()
 
+print("Looking for sounds in:", SOUNDS_DIR)
+print("Contents:", os.listdir(SOUNDS_DIR))
+
 ####################################################################################################################################
 def hub_buttons(event):
     global scroll_offset
@@ -126,12 +97,12 @@ def hub_buttons(event):
 
     button_actions = {
         "input_spoons": hub_add_spoons,
-        "input_tasks": hub_add_task,
+        "input_tasks":  hub_add_task,
         "manage_tasks": hub_manage_task,
-        "inventory": hub_inventory,
-        "calendar": hub_calendar,
-        "shop": hub_shop,
-        "stats": hub_stats,
+        "inventory":    hub_inventory,
+        "calendar":     hub_calendar,
+        "shop":         hub_shop,
+        "stats":        hub_stats,
     }
 
     for page, rect in button_actions.items():
@@ -238,15 +209,15 @@ while running:
     hub_icon_rects = draw_hub_buttons(screen, page, tool_tips, background_color,
                                   add_spoons_color, add_tasks_color,
                                   manage_tasks_color, inventory_color, calendar_color,
-                                  shop_color, stats_color, button_widths, hub_closing, delta_time)
+                                  shop_color, stats_color, button_widths, hub_closing, delta_time, is_maximized, scale_factor)
 
 
     if page == "input_spoons":
         if not UI_elements_initialized:
-            draw_input_spoons(screen, manager, False, daily_spoons, spoons, delta_time, icon_image)
+            draw_input_spoons(screen, daily_spoons, spoons, delta_time, icon_image, input_active, background_color, x_offset=40)
             UI_elements_initialized = True
         else:
-            draw_input_spoons(screen, manager, True, daily_spoons, spoons, delta_time, icon_image)
+            draw_input_spoons(screen, daily_spoons, spoons, delta_time, icon_image, input_active, background_color, x_offset=40)
         
     elif page == "input_tasks":
         draw_input_tasks(screen, spoons, current_task, current_spoons, input_active, 
@@ -335,6 +306,9 @@ while running:
             for page_key, icon_rect in hub_icon_rects.items():
                 if icon_rect.collidepoint(event.pos):
                     if event.type == pygame.MOUSEBUTTONDOWN:
+                        if page_key == "stats" and page != "stats" and settings_button_click_sfx: #####play the hub sounds
+                            settings_button_click_sfx.play()
+
                         save_data(
                         spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
                         exams_tasks_list, projects_tasks_list, daily_spoons, theme, icon_image,
@@ -368,8 +342,7 @@ while running:
         page = logic_task_toggle(event, page) #handle clicks with task toggles
 
         if page == "input_spoons" and UI_elements_initialized:
-            spoons, daily_spoons, page = logic_input_spoons(event, manager, short_rest_amount, half_rest_amount, full_rest_amount, 
-                                                           daily_spoons, spoons)
+            spoons, daily_spoons, page, input_active = logic_input_spoons(event, daily_spoons, spoons, input_active)
             
         elif page == "input_tasks":
             input_active,page,folder,recurring_toggle_on,current_task,current_spoons,task_month,task_day,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list,task_how_often,task_how_long,task_repetitions_amount = logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month,task_day,task_how_often,task_how_long,task_repetitions_amount,recurring_toggle_on,max_days,input_active,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list)
