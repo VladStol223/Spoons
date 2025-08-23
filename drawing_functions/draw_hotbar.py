@@ -264,7 +264,7 @@ def draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coin
         if dark_alpha > 0:
             avatar_dark_flowers = avatar_window_flower.copy()
             avatar_dark_flowers.set_alpha(dark_alpha)
-        screen.blit(avatar_dark_flowers, (x, window_y))
+            screen.blit(avatar_dark_flowers, (x, window_y))
 
     window1_x = 785
     window_y   = 20
@@ -312,19 +312,21 @@ def draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coin
         # blit the overlay
         screen.blit(dark_overlay, (735, 9))
 
-
 def draw_spoons(screen, spoons, icon_image, spoon_name):
-    # 1) render the label
+    # 1) label
     spoon_text = font.render(f"{spoon_name}: {spoons}", True, WHITE)  # type: ignore
     text_x, text_y = 115, 70
     screen.blit(spoon_text, (text_x, text_y))
 
-    # 2) prep your icons
-    ghost_icon = icon_image.copy()
-    ghost_icon.set_alpha(int(255 * 0.3))
+    # 2) prep icons
+    icon_image = icon_image.convert_alpha()
+    icon_w, icon_h = icon_image.get_size()
+    ghost_scale = 0.85  # slightly smaller
+    ghost_w, ghost_h = int(icon_w * ghost_scale), int(icon_h * ghost_scale)
+    ghost_icon = pygame.transform.smoothscale(icon_image, (ghost_w, ghost_h))
+    ghost_icon.set_alpha(int(255 * 0.35))  # a bit lighter
 
     total_capacity = 20
-    icon_w, icon_h = icon_image.get_size()
 
     # 3) total region you want to occupy
     total_icon_image_width = 600
@@ -332,35 +334,29 @@ def draw_spoons(screen, spoons, icon_image, spoon_name):
     region_width = total_icon_image_width - spoon_text.get_width()
     region_width = max(region_width, icon_w)
 
-    # 4) choose how much tighter (or looser) ghosts should space
-    #    1.0 = same as full icons, <1 = more overlap, >1 = more spread
+    # 4) spacing factors
     ghost_spacing_factor = 0.8
 
-    # 5) compute how many "gaps" of each type:
-    full_gaps  = max(spoons - 1, 0)
+    # 5) gaps math
+    full_gaps = max(spoons - 1, 0)
     ghost_count = total_capacity - spoons
-
-    # 6) solve (full_gaps * full_step + ghost_count * ghost_step) + icon_w == region_width
-    #    with ghost_step = full_step * ghost_spacing_factor
     denom = full_gaps + ghost_count * ghost_spacing_factor
-    if denom > 0:
-        full_step  = (region_width - icon_w) / denom
-    else:
-        full_step = 0
+    full_step = (region_width - icon_w) / denom if denom > 0 else 0.0
     ghost_step = full_step * ghost_spacing_factor
 
-    # 7) draw all 20
+    # 6) draw all 20 (ghosts are vertically centered to the full icon height)
     x = start_x
     for i in range(total_capacity):
-        sprite = icon_image if i < spoons else ghost_icon
-        screen.blit(sprite, (int(x), text_y))  # adjust Y as you like
-
-        # advance by the appropriate step
-        if i < spoons - 1:
-            x += full_step
+        use_ghost = i >= spoons
+        surf = ghost_icon if use_ghost else icon_image
+        sw, sh = (ghost_w, ghost_h) if use_ghost else (icon_w, icon_h)
+        if use_ghost:
+            # ghost icons are centered vertically
+            y = text_y + (icon_h - sh*0.85) // 2
         else:
-            x += ghost_step
-
+            y = text_y + (icon_h - sh) // 2
+        screen.blit(surf, (int(x), int(y)))
+        x += full_step if i < spoons - 1 else ghost_step
 
 def handle_movement():
     global avatar_x, avatar_y

@@ -52,6 +52,7 @@ import calendar
 ctypes.windll.user32.SetProcessDpiAwarenessContext(ctypes.c_void_p(-4))
 
 pygame.init()
+pygame.key.set_repeat(450, 50) 
 
 button_widths = {}
 hub_closing = False
@@ -127,13 +128,9 @@ from drawing_functions.draw_logic_input_spoons import draw_input_spoons, logic_i
 from drawing_functions.draw_logic_input_tasks import draw_input_tasks, logic_input_tasks
 from drawing_functions.draw_logic_manage_tasks_hub import draw_manage_tasks_hub, logic_manage_tasks_hub
 from drawing_functions.draw_logic_manage_tasks import draw_complete_tasks, logic_complete_tasks
-from drawing_functions.draw_logic_remove_tasks import draw_remove_tasks, logic_remove_tasks
-from drawing_functions.draw_daily_schedule import draw_daily_schedule, logic_daily_schedule, get_available_time_blocks, allocate_tasks_to_time_blocks, sort_tasks_by_priority_and_due_date
 from drawing_functions.draw_logic_calendar import draw_calendar, logic_calendar
 from drawing_functions.draw_logic_shop import draw_shop, logic_shop, logic_change_image
-from drawing_functions.draw_intro_sequence import draw_intro_sequence
-from drawing_functions.draw_logic_task_toggle import draw_task_toggle, logic_task_toggle
-from drawing_functions.draw_logic_edit_tasks import draw_edit_tasks, logic_edit_tasks
+from drawing_functions.logic_task_toggle import logic_task_toggle
 from drawing_functions.draw_logic_inventory import draw_inventory, logic_inventory
 from drawing_functions.draw_logic_stats import draw_stats, logic_stats
 from drawing_functions.draw_border import draw_border
@@ -146,7 +143,7 @@ from handle_scroll import handle_task_scroll
 
 #draw_intro_sequence(screen, clock)
 #loading save data
-(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
+(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,  
 exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image,
 spoon_name_input, folder_one, folder_two, folder_three, folder_four,
 folder_five, folder_six, streak_dates,
@@ -155,8 +152,7 @@ taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro,
 border_name, hubIcons_name, spoonIcons_name, restIcons_name,
 hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
 calendarImages_name, themeBackgroundsImages_name, intro_name,
-level, coins
-) = load_data()
+level, coins) = load_data()
 current_theme = switch_theme(loaded_theme, globals())
 
 

@@ -13,6 +13,10 @@ from datetime import datetime, timedelta
 
 current_spoons = ""
 
+# [name, spoons, completed, days_left, due_date, start_time, end_time, labels]
+IDX_NAME = 0; IDX_SPOONS = 1; IDX_COMPLETED = 2; IDX_DAYS_LEFT = 3; IDX_DUE_DATE = 4; IDX_START_TIME = 5; IDX_END_TIME = 6; IDX_LABELS = 7
+
+
 """
 Summary:
     Draws the task input interface on the given screen, including task name, spoons needed, due date, and time options.
@@ -37,7 +41,10 @@ Returns:
     No returns.
 """
 
-# somewhere at module top:
+# Max width equals the width of the reference string using the same font as your task input
+TASK_NAME_REF = "thisisthecharacterlim"
+MAX_TASK_PIXEL_WIDTH = font.size(TASK_NAME_REF)[0]  # uses your existing `font`
+
 layout_heights = {
     "task_label":                  0.28,    # “Enter task name:”
     "task_input_line":             0.35,   # y=195/600
@@ -384,7 +391,8 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
                             actual_date,
                             # no time fields
                             [0,0,0,0],
-                            [0,0,0,0]
+                            [0,0,0,0],
+                            ["test label"]  # placeholder for labels
                         ]
                         if folder == "homework":
                             homework_tasks_list.append(entry)
@@ -406,7 +414,8 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
                         days_till_due,
                         task_date,
                         [0,0,0,0],
-                        [0,0,0,0]
+                        [0,0,0,0],
+                        ["test label"]  # placeholder for labels
                     ]
                     if folder == "homework":
                         homework_tasks_list.append(entry)
@@ -441,7 +450,11 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
             elif event.key == pygame.K_BACKSPACE:
                 current_task = current_task[:-1]
             else:
-                current_task += event.unicode
+                ch = event.unicode
+                if ch:  # only consider printable input
+                    candidate = current_task + ch
+                    if font.size(candidate)[0] <= MAX_TASK_PIXEL_WIDTH:
+                        current_task = candidate
         elif input_active == "spoons":
         # if for some reason current_spoons is still an int, make it an empty string first:
             if isinstance(current_spoons, int):

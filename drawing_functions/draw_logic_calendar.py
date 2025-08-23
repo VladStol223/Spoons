@@ -221,6 +221,50 @@ def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offse
     lighter_background, darker_background,
     folder_one, folder_two, folder_three, folder_four, folder_five, folder_six):
 
+    def wrap_text(text, font, max_width):
+        words = text.split()
+        lines = []
+        current_line = []
+        current_width = 0
+
+        space_width = font.size(' ')[0]
+        for word in words:
+            word_width = font.size(word)[0]
+            # Start new line if current word doesn't fit
+            if current_width + word_width > max_width and current_line:
+                lines.append(' '.join(current_line))
+                current_line = [word]
+                current_width = word_width
+            # Break word if it's too long for a new line
+            elif word_width > max_width:
+                # Break word into characters
+                chars = list(word)
+                part = ""
+                for char in chars:
+                    char_width = font.size(char)[0]
+                    if current_width + char_width > max_width:
+                        if part:
+                            current_line.append(part)
+                        lines.append(' '.join(current_line))
+                        current_line = []
+                        current_width = 0
+                        part = char
+                    else:
+                        part += char
+                        current_width += char_width
+                if part:
+                    current_line.append(part)
+            else:
+                # Add word to current line
+                if current_line:
+                    current_width += space_width
+                current_line.append(word)
+                current_width += word_width
+        
+        if current_line:
+            lines.append(' '.join(current_line))
+        return lines
+
     # calculate current week start/end based on offset
     today = datetime.now().date()
     mid = today + timedelta(weeks=displayed_week_offset)
@@ -286,7 +330,7 @@ def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offse
 
         # tasks grouped by folder
         line_height = smaller_font.get_height() - 2
-        ty = body_rect_y + 5
+        ty = body_rect_y + 2
         indent = 3
         folder_map = [
             (folder_one, homework_tasks_list),
@@ -297,24 +341,76 @@ def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offse
             (folder_six, projects_tasks_list),
         ]
         for folder_label, lst in folder_map:
-            # filter tasks in this folder for the current day
-            day_tasks = [t[0] for t in lst if t[4].date() == current]
+            # Filter tasks for current day - handle both dict and list formats
+            day_tasks = []
+            for t in lst:
+                try:
+                    # Try dictionary access first
+                    due_date = t['due_date'] if isinstance(t, dict) else t[4]
+                    if isinstance(due_date, str):
+                        if due_date[:10] == current.strftime("%Y-%m-%d"):
+                            day_tasks.append(t)
+                    elif hasattr(due_date, 'date'):  # Handle datetime objects
+                        if due_date.date() == current:
+                            day_tasks.append(t)
+                except (TypeError, IndexError, KeyError):
+                    continue
+
             if not day_tasks:
                 continue
-            # render folder name
-            label_surf = smaller_font.render(f"{folder_label}:", True, BLACK) #type: ignore
+                
+            # Render folder name
+            label_surf = smaller_font.render(f"{folder_label}:", True, BLACK)#type: ignore
             label_pos = (x + indent, ty)
             screen.blit(label_surf, label_pos)
-            # underline folder name
+            
+            # Underline folder name
             lw, lh = label_surf.get_width(), label_surf.get_height()
             underline_y = ty + lh - 3
-            pygame.draw.line(screen, BLACK, (x + indent, underline_y), (x + indent + lw, underline_y), 1) #type: ignore
+            pygame.draw.line(screen, BLACK, (x + indent, underline_y), (x + indent + lw, underline_y), 1)#type: ignore
             ty += lh + 2
-            # render each task
-            for name in day_tasks:
-                task_surf = smaller_font.render(f"  {name}", True, BLACK) #type: ignore
-                screen.blit(task_surf, (x + indent - 10, ty))
-                ty += smaller_font.get_height()
+            
+            # Render each task with line wrapping
+            max_width = day_box_width - 15  # Allow padding on both sides
+            for task in day_tasks:
+                # Get task name and completion status - handle both formats
+                try:
+                    if isinstance(task, dict):
+                        name = task['task_name']
+                        is_complete = task['done'] >= task['spoons_needed']
+                    else:  # Assume list/tuple format
+                        name = task[0]
+                        is_complete = task[2] >= task[1]  # done >= spoons_needed
+                except (TypeError, IndexError, KeyError):
+                    continue
+                
+                # Wrap long task names
+                wrapped_lines = wrap_text(name, smaller_font, max_width)
+                for line in wrapped_lines:
+                    if ty + line_height > body_rect_y + day_box_height * 3 - 5:
+                        break  # Stop if we run out of vertical space
+                    
+                    # Render task text
+                    text_color = BLACK  #type: ignore
+                    task_surf = smaller_font.render(line, True, text_color)#type: ignore
+                    screen.blit(task_surf, (x + indent, ty))
+                    
+                    # Add strikethrough for completed tasks
+                    if is_complete:
+                        # Get width of rendered text
+                        line_width = task_surf.get_width()
+                        # Calculate vertical position for strikethrough (middle of text height)
+                        strike_y = ty + line_height // 2
+                        # Draw slightly crooked line (start 2px higher, end 2px lower)
+                        pygame.draw.line(
+                            screen, 
+                            text_color, 
+                            (x + indent, strike_y - 2), 
+                            (x + indent + line_width, strike_y + 2), 
+                            2  # Line thickness
+                        )
+                    
+                    ty += line_height
 
 def draw_month_mode(screen, font, bigger_font, smaller_font, darker_background, lighter_background,
                   homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,

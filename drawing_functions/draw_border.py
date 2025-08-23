@@ -214,7 +214,7 @@ def draw_border(screen, rect, page, background_color, border, is_maximized, scal
         # y end matches hub bottom
         y_end2   = sh - (tc_h//2 + edge_h//2)
         yv4      = y_start2
-        while yv4 < y_end2:
+        while yv4 < y_end2 - 30:
             edge_tile = rng.choice([edge1_s,edge2_s])
             screen.blit(edge_tile,(left_x+edge_tile.get_width()//2 + 3,yv4))
             yv4 += edge_tile.get_height()

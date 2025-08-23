@@ -105,6 +105,22 @@ image_categories = {
         'progress_bar_spoon_siding':('progressBarSpoonSiding.png',(6,34)),
         'progress_bar_spoon_top':    ('progressBarSpoonTop.png',(10,2)),
         'remove_edit_icons':         ('removeEditIcons.png',(20,40)),
+        'task_label_border_hover':       ('taskLabelBorderHover.png', (36, 36)),
+        'task_label_border':       ('taskLabelBorder.png', (36, 36)),
+        'task_label_border_hover_blank':       ('taskLabelBorderHoverBlank.png', (36, 36)),
+        'task_label_border_blank':       ('taskLabelBorderBlank.png', (36, 36)),
+        'drop_down_corner': ('dropDownCorner.png', (6, 6)),
+        'drop_down_corner_sharp': ('dropDownCornerSharp.png', (4, 4)),
+        'drop_down_top_edge': ('dropDownTopEdge.png', (8, 2)),
+        'drop_down_border': ('dropDownBorder.png', (8, 5)),
+        'drop_down_top_corners': ('dropDownTopCorners.png', (7, 2)),
+        'label_border': ('labelBorder.png', (150, 34)),
+        'label_new_border': ('labelNewBorder.png', (150, 34)),
+        'label_favorite_border': ('labelFavoriteBorder.png', (109, 30)),
+        'label_favorite_border_top': ('labelFavoriteBorderTop.png', (246, 12)),
+        'label_favorite_border_side': ('labelFavoriteBorderSide.png', (6, 42)),
+        'trashcan': ('trashcan.png', (16, 22)),
+
     },
     'scrollBar': {
         'scroll_bar_body':   ('scrollBarBody.png',(20,350)),
@@ -282,10 +298,29 @@ manilla_folder_tab  = manillaFolder['manilla_folder_tab']
 manilla_folder_full = manillaFolder['manilla_folder_full']
 
 # — task border pieces —
-task_spoons_border       = taskBorder['task_spoons_border']
+task_spoons_border       =  taskBorder['task_spoons_border']
 progress_bar_spoon_siding = taskBorder['progress_bar_spoon_siding']
 progress_bar_spoon_top    = taskBorder['progress_bar_spoon_top']
 remove_edit_icons         = taskBorder['remove_edit_icons']
+task_label_border =         taskBorder['task_label_border']
+task_label_border_hover =   taskBorder['task_label_border_hover']
+task_label_border_blank =         taskBorder['task_label_border_blank']
+task_label_border_hover_blank =   taskBorder['task_label_border_hover_blank']
+
+# drop down pieces
+drop_down_corner = taskBorder['drop_down_corner']
+drop_down_corner_sharp = taskBorder['drop_down_corner_sharp']
+drop_down_top_edge = taskBorder['drop_down_top_edge']
+drop_down_border = taskBorder['drop_down_border']
+drop_down_top_corners = taskBorder['drop_down_top_corners']
+
+#label pieces
+label_border = taskBorder['label_border']
+label_new_border = taskBorder['label_new_border']
+label_favorite_border = taskBorder['label_favorite_border']
+label_favorite_border_top = taskBorder['label_favorite_border_top']
+label_favorite_border_side = taskBorder['label_favorite_border_side']
+trashcan_image = taskBorder['trashcan']
 
 # — scroll bar pieces —
 scroll_bar   = scrollBar['scroll_bar_body']

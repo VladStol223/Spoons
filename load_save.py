@@ -14,8 +14,8 @@ Returns:
 """
 
 def task_to_serializable(task):
-    if len(task) == 7:  # Task has start_time and end_time
-        task_name, spoons_needed, done, days_till_due_date, due_date, start_time, end_time = task
+    if len(task) == 8 or len(task) == 7:  # Task has start_time and end_time
+        task_name, spoons_needed, done, days_till_due_date, due_date, start_time, end_time, labels = task
         return {
             "task_name": task_name,
             "spoons_needed": spoons_needed,
@@ -23,16 +23,18 @@ def task_to_serializable(task):
             "days_till_due_date": days_till_due_date,
             "due_date": due_date.isoformat(),
             "start_time": start_time,
-            "end_time": end_time
+            "end_time": end_time,
+            "labels": labels if isinstance(labels, list) else []
         }
     elif len(task) == 5:  # Task without start_time and end_time
-        task_name, spoons_needed, done, days_till_due_date, due_date = task
+        task_name, spoons_needed, done, days_till_due_date, due_date, labels = task
         return {
             "task_name": task_name,
             "spoons_needed": spoons_needed,
             "done": done,
             "days_till_due_date": days_till_due_date,
-            "due_date": due_date.isoformat()
+            "due_date": due_date.isoformat(),
+            "labels": labels if isinstance(labels, list) else []
         }
 
 """
@@ -162,9 +164,11 @@ def task_from_serializable(task):
     due_date = datetime.strptime(due_date_str, '%Y-%m-%dT%H:%M:%S')
     start_time = task.get("start_time", default_start_time)
     end_time = task.get("end_time", default_end_time)
+    labels = task.get("labels", [])
+    if not isinstance(labels, list): labels = []
 
     # Return the task as a list with all fields
-    return [task_name, spoons_needed, done, days_till_due_date, due_date, start_time, end_time]
+    return [task_name, spoons_needed, done, days_till_due_date, due_date, start_time, end_time, labels]
 
 """
 Summary:

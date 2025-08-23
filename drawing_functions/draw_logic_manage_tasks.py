@@ -1,5 +1,4 @@
 # draw_logic_manage_tasks.py
-
 from config import *
 from drawing_functions.draw_rounded_button import draw_rounded_button
 from drawing_functions.draw_input_box import draw_input_box
@@ -24,12 +23,45 @@ edit_state = {}
 
 spoons_xp = 0
 
+# Dropdown state + click targets
+expanded_label_tasks = set()  # indices of tasks whose label dropdown is open
+label_buttons = []            # (pygame.Rect, task_index)
+
+# Label chip hitboxes + drag state
+label_chip_buttons = []   # (pygame.Rect, task_index, label_index)
+dragging_label = None     # {"task_idx": int, "label_idx": int, "text": str}
+
+# Temporary favorites (will be saved to data.json later)
+favorites_labels = []
+
+# --- NEW globals for drag/drop targets + hover indexes ---
+favorites_chip_buttons = []  # (pygame.Rect, fav_index)
+favorites_drop_rect = None   # pygame.Rect (inner content of favorites panel)
+task_drop_rects = {}         # {task_idx: pygame.Rect for that task's labels area}
+hover_insert_index_per_task = {}  # {task_idx: int or None}
+dropdown_outer_rects = {}    # {task_idx: pygame.Rect}
+
+# --- New label creation state ---
+new_label_active_task = None   # int | None  (task idx currently typing a new label for)
+new_label_text = ""            # current text being typed
+new_label_rect = None          # pygame.Rect of the active "new label" chip for click-away commit
+new_label_buttons = []         # (pygame.Rect, task_index) for non-active "new label" chips
+
 # Scrolling layout constants
 CONTENT_TOP     = 148   # Where content starts
 VIEWPORT_HEIGHT = 350   # Visible content height
 SCROLL_X        = 910   # Scrollbar X
 SCROLL_Y        = 140   # Scrollbar Y
 TRACK_HEIGHT    = 330   # Scrollbar track height
+
+# Max width equals the width of the reference string using the same font as your task input
+TASK_NAME_REF = "thisisthecharacterlimi"
+MAX_TASK_PIXEL_WIDTH = font.size(TASK_NAME_REF)[0]
+
+DARK_BROWN      = (40, 25, 22)
+LIGHT_BROWN     = (85, 50, 43)
+VERY_DARK_BROWN = (20, 12, 10)
+DROPDOWN_BROWN = (65, 40, 33)
 
 def draw_complete_tasks(
     screen,
@@ -51,11 +83,22 @@ def draw_complete_tasks(
     """
     Draws the manage-tasks page, or the edit form if currently_editing is set.
     """
-    global edit_buttons, remove_buttons, frame_buttons
+    global edit_buttons, remove_buttons, frame_buttons, label_buttons, label_chip_buttons, dragging_label
+    global favorites_chip_buttons, favorites_drop_rect, task_drop_rects, hover_insert_index_per_task
+    global dropdown_outer_rects, new_label_rect, new_label_buttons
     edit_buttons.clear()
     remove_buttons.clear()
     buttons.clear()
     frame_buttons.clear()
+    label_buttons.clear()
+    label_chip_buttons.clear()
+    favorites_chip_buttons.clear()
+    favorites_drop_rect = None
+    task_drop_rects.clear()
+    hover_insert_index_per_task.clear()
+    dropdown_outer_rects.clear()
+    new_label_buttons.clear()
+    new_label_rect = None
 
     # If we're editing, draw the edit UI instead of the list
     if currently_editing is not None:
@@ -64,15 +107,16 @@ def draw_complete_tasks(
 
     # --- existing drawing logic below ---
     border_img   = task_spoons_border
+    label_img    = task_label_border
+    label_img_blank = task_label_border_blank
+    label_img_hover = task_label_border_hover
+    label_img_hover_blank = task_label_border_hover_blank
     siding_img   = progress_bar_spoon_siding
     top_img      = progress_bar_spoon_top
     bottom_img   = pygame.transform.flip(top_img, False, True)
     right_siding = pygame.transform.flip(siding_img, True, False)
     remove_edit  = remove_edit_icons
 
-    DARK_BROWN      = (40, 25, 22)
-    LIGHT_BROWN     = (85, 60, 53)
-    VERY_DARK_BROWN = (20, 12, 10)
     t       = pygame.time.get_ticks() / 300.0
     pulse   = (math.sin(t) + 1) / 2.0
     def lerp(a, b, f):
@@ -83,13 +127,13 @@ def draw_complete_tasks(
         )
 
     overdue, upcoming, completed = [], {}, []
-    for idx, (name, cost, done, days, date, st, et) in enumerate(task_list):
+    for idx, (name, cost, done, days, date, st, et, labels) in enumerate(task_list):
         if done >= cost:
-            completed.append((idx, name, cost, done, days, date, st, et))
+            completed.append((idx, name, cost, done, days, date, st, et, labels))
         elif days < 0:
-            overdue.append((idx, name, cost, done, days, date, st, et))
+            overdue.append((idx, name, cost, done, days, date, st, et, labels))
         else:
-            upcoming.setdefault(days, []).append((idx, name, cost, done, days, date, st, et))
+            upcoming.setdefault(days, []).append((idx, name, cost, done, days, date, st, et, labels))
     overdue.sort(key=lambda x: x[4])
     days_sorted = sorted(upcoming.keys())
 
@@ -113,15 +157,19 @@ def draw_complete_tasks(
     scroll_offset_px = max(0, min(scroll_offset_px, max_scroll))
 
     # scrollbar
-    screen.blit(scroll_bar, (SCROLL_X, SCROLL_Y))
-    if total_content_height <= VIEWPORT_HEIGHT:
-        slider_h, slider_y = TRACK_HEIGHT, SCROLL_Y
-    else:
-        slider_h = max(int((VIEWPORT_HEIGHT/total_content_height)*TRACK_HEIGHT), 20)
-        slider_y = SCROLL_Y + int((scroll_offset_px/(total_content_height-VIEWPORT_HEIGHT))*(TRACK_HEIGHT-slider_h))
-    slider_x = SCROLL_X + (20 - scroll_bar_slider.get_width())//2
-    screen.blit(pygame.transform.scale(scroll_bar_slider, (scroll_bar_slider.get_width(), slider_h)),
-                (slider_x, slider_y))
+    added_extra = 0
+    total_content_height += added_extra
+
+    if len(task_list) > 5:
+        screen.blit(scroll_bar, (SCROLL_X, SCROLL_Y))
+        if total_content_height <= VIEWPORT_HEIGHT:
+            slider_h, slider_y = TRACK_HEIGHT, SCROLL_Y
+        else:
+            slider_h = max(int((VIEWPORT_HEIGHT/total_content_height)*TRACK_HEIGHT), 20)
+            slider_y = SCROLL_Y + int((scroll_offset_px/(total_content_height-VIEWPORT_HEIGHT))*(TRACK_HEIGHT-slider_h))
+        slider_x = SCROLL_X + (20 - scroll_bar_slider.get_width())//2
+        screen.blit(pygame.transform.scale(scroll_bar_slider, (scroll_bar_slider.get_width(), slider_h)),
+                    (slider_x, slider_y))
 
     y_cursor = CONTENT_TOP
     mx, my = pygame.mouse.get_pos()
@@ -135,11 +183,235 @@ def draw_complete_tasks(
             screen.blit(surf, (150, py))
         y_cur += h
 
-        for idx, name, cost, done, days, date, st, et in items:
+        for idx, name, cost, done, days, date, st, et, labels in items:
             by = y_cur - scroll_offset_px
             if not (by+50 < CONTENT_TOP or by > CONTENT_TOP+VIEWPORT_HEIGHT):
+                # If this task’s label dropdown is open, draw it and push below rows down
+                if idx in expanded_label_tasks:
+                    # Attach directly under the task border; border is 50px tall at y=by
+                    border_w = border_img.get_width()
+                    attach_x = 145
+                    attach_y = by + 49
+                    attach_w = border_w - 14
+
+                    # --- Compute dropdown inner height from BOTH task labels and favorites ---
+
+                    LABEL_COLS = 3
+                    ROW_H = max(28, label_border.get_height() + 8)
+
+                    # Count labels + the "Add label" chip so height grows if it starts a new row
+                    labels_count_for_layout = max(1, len(labels) + 1)  # +1 for the add chip
+                    label_rows = math.ceil(labels_count_for_layout / LABEL_COLS)
+                    labels_height_px = label_rows * ROW_H
+
+                    # Favorites: 2 columns
+                    FAV_COLS = 2
+                    fav_chip_h = label_favorite_border.get_height() - 2
+                    FAV_GAP_Y = 4
+                    fav_rows = max(1, math.ceil(len(favorites_labels) / FAV_COLS))
+                    favorites_height_px = fav_rows * (fav_chip_h + FAV_GAP_Y)
+
+                    # Use the larger inner height, convert back to "rows" for the dropdown builder
+                    inner_needed_px = max(labels_height_px, favorites_height_px)
+                    rows_count = max(1, math.ceil(inner_needed_px / ROW_H))
+
+                    # Build dropdown at the needed height
+                    content_x, content_y, content_w, content_h = _draw_label_dropdown(
+                        screen, attach_x, attach_y, attach_w, rows_count
+                    )
+
+
+                    tc_h = drop_down_top_corners.get_height()
+                    bc_h = drop_down_corner.get_height()
+                    outer_h = tc_h + content_h + bc_h
+                    dropdown_outer_rects[idx] = pygame.Rect(attach_x, attach_y, attach_w, outer_h)
+
+                    # --- Favorites panel docked to the right side of the dropdown ---
+                    _draw_favorites_panel(
+                        screen,
+                        attach_x,            # same outer box x as dropdown
+                        attach_y,            # same outer box y as dropdown
+                        attach_w,            # same width as dropdown
+                        content_y,           # inner content top from _draw_label_dropdown
+                        content_h,           # inner content height from _draw_label_dropdown
+                        favorites_labels     # temp list for now
+                    )
+                    
+                    # Record where task-labels can accept drops (left of favorites)
+                    task_labels_rect = pygame.Rect(content_x, content_y, attach_w - 260, content_h + 30)
+                    task_drop_rects[idx] = task_labels_rect
+
+                    # draw label chips or “No labels” text inside:
+                    inner_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen.get_height() * 0.045))
+                    if len(labels) == 0 and not (dragging_label and dragging_label.get("source") == "task" and dragging_label.get("task_idx") == idx):
+                        screen.blit(inner_font.render("No labels", True, BLACK), (content_x + 12, content_y + 6))  # type: ignore
+                    else:
+                        lb = label_border
+                        lbw, lbh = lb.get_size()
+
+                        row_h = max(28, lbh + 8)
+                        PAD_X = 12
+                        GAP_X = 7
+                        COLS = 3
+
+                        mx2, my2 = pygame.mouse.get_pos()
+
+                        # 1) Build label/index lists from the ORIGINAL labels
+                        orig_labels   = labels
+                        orig_indices  = list(range(len(orig_labels)))
+
+                        # 2) If dragging a label from THIS task, remove it from the working lists
+                        working_labels  = orig_labels[:]         # copy
+                        working_indices = orig_indices[:]        # copy
+
+                        if dragging_label is not None and dragging_label.get("source") == "task" and dragging_label.get("task_idx") == idx:
+                            drag_i = dragging_label["label_idx"]
+                            if 0 <= drag_i < len(working_labels):
+                                del working_labels[drag_i]
+                                del working_indices[drag_i]
+
+                        # 3) Build slot rectangles for the working labels (no placeholder yet),
+                        #    and figure out which slot we're hovering over.
+                        slot_rects = []     # rects for current chips (used for hover detection)
+                        for i in range(len(working_labels)):
+                            row = i // COLS
+                            col = i % COLS
+                            chip_x = content_x + PAD_X + col * (lbw + GAP_X)
+                            chip_y = content_y + row * row_h + (row_h - lbh) // 2
+                            slot_rects.append(pygame.Rect(chip_x, chip_y, lbw, lbh))
+
+                        hover_insert_index = None
+                        if dragging_label is not None and dragging_label.get("source") == "task" and dragging_label.get("task_idx") == idx:
+                            # If we hover any chip, insert BEFORE that chip
+                            for i, r in enumerate(slot_rects):
+                                if r.collidepoint(mx2, my2):
+                                    hover_insert_index = i
+                                    break
+                            #allow inserting at the END if hovering beyond last chip)
+                            else:
+                                if slot_rects:
+                                    last = slot_rects[-1]
+                                    tail_rect = pygame.Rect(last.right + GAP_X, last.y, lbw, lbh)
+                                    if tail_rect.collidepoint(mx2, my2):
+                                        hover_insert_index = len(working_labels)
+
+                        # 4) Create the DISPLAY lists (with optional "Temporary Label")
+                        display_labels  = working_labels[:]
+                        display_indices = working_indices[:]
+                        if hover_insert_index is not None:
+                            display_labels.insert(hover_insert_index, "Temporary Label")
+                            display_indices.insert(hover_insert_index, None)  # placeholder has no original index
+
+                        hover_insert_index_per_task[idx] = hover_insert_index
+
+                        # 5) Draw the chips (skip drawing the dragged chip; draw placeholder with low opacity)
+                        for disp_i, lab in enumerate(display_labels):
+                            row = disp_i // COLS
+                            col = disp_i % COLS
+                            chip_x = content_x + PAD_X + col * (lbw + GAP_X)
+                            chip_y = content_y + row * row_h + (row_h - lbh) // 2
+
+                            chip_rect = pygame.Rect(chip_x, chip_y, lbw, lbh)
+
+                            if lab == "Temporary Label":
+                                # Low opacity border, no text
+                                ghost = lb.copy()
+                                ghost.set_alpha(90)
+                                screen.blit(ghost, (chip_x, chip_y))
+                                # No hitbox for placeholder
+                                continue
+
+                            # Regular label
+                            screen.blit(lb, (chip_x, chip_y))
+                            ts = inner_font.render(lab, True, BLACK)  # type: ignore
+                            tx = chip_x + (lbw - ts.get_width()) // 2
+                            ty = chip_y + (lbh - ts.get_height()) // 2 - 1
+                            screen.blit(ts, (tx, ty + 2))
+
+                            # Record hitbox with ORIGINAL label index so "start drag" stays correct
+                            original_idx = display_indices[disp_i]
+                            if original_idx is not None:
+                                label_chip_buttons.append((chip_rect, idx, original_idx))
+
+                        # --- NEW: "Add new label" chip (always AFTER all existing labels) ---
+                        add_w, add_h = label_new_border.get_size()
+
+                        real_count = len(working_labels)
+                        add_row = real_count // COLS
+                        add_col = real_count % COLS
+                        add_x = content_x + PAD_X + add_col * (lbw + GAP_X)
+                        add_y = content_y + add_row * row_h + (row_h - lbh) // 2
+
+                        add_rect = pygame.Rect(add_x, add_y, add_w, add_h)
+
+                        if new_label_active_task == idx:
+                            # base chip
+                            screen.blit(label_new_border, (add_x, add_y))
+
+                            inner_font = pygame.font.Font("fonts/Stardew_Valley.ttf",
+                                                        int(screen.get_height() * 0.045))
+
+                            # draw ONLY the user's text (no placeholder when active)
+                            display_text = new_label_text
+                            text_surface = inner_font.render(display_text, True, BLACK)  # type: ignore
+
+                            # center whatever has been typed (may be empty)
+                            tx = add_x + (add_w - text_surface.get_width()) // 2
+                            ty = add_y + (add_h - text_surface.get_height()) // 2 - 1
+
+                            # if there is text, blit it
+                            if display_text:
+                                screen.blit(text_surface, (tx, ty + 2))
+
+                            # caret: blink whether or not we have text
+                            if (pygame.time.get_ticks() // 400) % 2 == 0:
+                                caret_x = tx + text_surface.get_width()  # if empty, this is the centered start
+                                pygame.draw.line(
+                                    screen, BLACK, #type: ignore
+                                    (caret_x + 2, ty + 4),
+                                    (caret_x + 2, ty + text_surface.get_height() - 2), 2
+                                )  # type: ignore
+
+                            # remember rect so click-away can commit
+                            new_label_rect = add_rect
+                        else:
+                            # idle add chip
+                            screen.blit(label_new_border, (add_x, add_y))
+                            inner_font = pygame.font.Font("fonts/Stardew_Valley.ttf",
+                                                        int(screen.get_height() * 0.045))
+                            ts = inner_font.render("+ New Label", True, BLACK)  # type: ignore
+                            tx = add_x + (add_w - ts.get_width()) // 2
+                            ty = add_y + (add_h - ts.get_height()) // 2 - 1
+                            screen.blit(ts, (tx, ty + 2))
+                            new_label_buttons.append((add_rect, idx))
+
+
+
+                    # Increase the vertical cursor and global extra height to push subsequent rows
+                    dropdown_h = (content_y - (attach_y)) + content_h + (attach_y + (content_y - (attach_y)) + content_h - (attach_y + 0)) * 0  # keep simple; actual extra is top corners + content + bottom corners
+                    # We already know outer_h = top_corners_h + inner_h + bottom_corners_h; recompute directly:
+                    tc_h = drop_down_top_corners.get_height()
+                    bc_h = drop_down_corner.get_height()
+                    extra_h = tc_h + content_h + bc_h
+                    y_cur += extra_h
+                    added_extra_local = extra_h
+                    # Track added extra to fix total height and scrollbar
+                    nonlocal added_extra
+                    added_extra += added_extra_local
                 # border+name
                 screen.blit(border_img, (138, by))
+                # Hover-grow the label image while keeping its center fixed
+                label_x, label_y = 395, by + 7
+                lw, lh = label_img.get_size()
+                label_rect = pygame.Rect(label_x, label_y, lw, lh)
+                if len(labels) > 0:
+                    if label_rect.collidepoint(mx, my): screen.blit(label_img_hover, (label_x, label_y))
+                    else: screen.blit(label_img, (label_x, label_y))
+                else:
+                    if label_rect.collidepoint(mx, my): screen.blit(label_img_hover_blank, (label_x, label_y))
+                    else: screen.blit(label_img_blank, (label_x, label_y))
+                label_buttons.append((label_rect, idx))
+
                 ts = task_font.render(name, True, BLACK) #type: ignore
                 screen.blit(ts, (148, by+12))
 
@@ -224,8 +496,262 @@ def draw_complete_tasks(
         y_cursor = draw_section(hdr, upcoming[d], y_cursor)
     y_cursor = draw_section("Completed", completed, y_cursor)
 
+    # Draw the dragged label chip (overlay) if any
+    if dragging_label is not None:
+        mx2, my2 = pygame.mouse.get_pos()
+        lb = label_border
+        lbw, lbh = lb.get_size()
+
+        chip_x = mx2 - lbw // 2
+        chip_y = my2 - lbh // 2
+
+        # Is cursor outside the active dropdown?
+        open_task_idx = next(iter(expanded_label_tasks), None)
+        outer_rect = dropdown_outer_rects.get(open_task_idx)
+        deleting = (outer_rect is not None and not outer_rect.collidepoint(mx2, my2))
+
+        # chip base
+        screen.blit(lb, (chip_x, chip_y))
+
+        inner_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen.get_height() * 0.045))
+        ts = inner_font.render(dragging_label["text"], True, BLACK)  # type: ignore
+        tx = chip_x + (lbw - ts.get_width()) // 2
+        ty = chip_y + (lbh - ts.get_height()) // 2 - 1
+        screen.blit(ts, (tx, ty + 2))
+
+        # trashcan icon if deleting
+        if deleting:
+            tw, th = trashcan_image.get_size()
+            screen.blit(trashcan_image, (chip_x + lbw - tw, chip_y + lbh - th + 2))
+
+
     return scroll_offset_px, total_content_height
 
+def _draw_label_dropdown(screen, attach_x, attach_y, attach_w, rows_count):
+    # rows_count controls inner height; tweak ROW_H to taste
+    ROW_H = max(28, label_border.get_height() + 8)
+    inner_h = max(rows_count, 1) * ROW_H
+    tc = drop_down_top_corners
+    bc = drop_down_corner
+    bh = drop_down_border
+    bh_v = pygame.transform.rotate(bh, 90)
+    tc_w, tc_h = tc.get_size()
+    bc_w, bc_h = bc.get_size()
+    bh_w, bh_h = bh.get_size()
+    bh_v_w, bh_v_h = bh_v.get_size()
+
+    # Outer box geometry
+    outer_x = attach_x
+    outer_y = attach_y
+    outer_w = attach_w
+    outer_h = tc_h + inner_h + bc_h
+
+    pygame.draw.rect(screen, DROPDOWN_BROWN, (outer_x + 3, outer_y - 3, outer_w - 6, outer_h))
+
+    # Top corners
+    screen.blit(tc, (outer_x - 2, outer_y + 1))
+    screen.blit(pygame.transform.flip(tc, True, False), (outer_x + outer_w - tc_w + 2, outer_y - 1))
+
+    # Bottom corners
+    by = outer_y + outer_h - bc_h
+    screen.blit(pygame.transform.flip(bc, True, True), (outer_x, by))
+    screen.blit(pygame.transform.flip(bc, False, True), (outer_x + outer_w - bc_w, by))
+
+    # Bottom horizontal border (between bottom corners)
+    bot_gap_w = max(outer_w - 2 * bc_w, 0)
+    bx = outer_x + bc_w
+    while bx + bh_w <= outer_x + bc_w + bot_gap_w:
+        screen.blit(bh, (bx, by + 1))  # +1 to align with bottom edge of corner
+        bx += bh_w
+    rem = outer_x + bc_w + bot_gap_w - bx
+    if rem > 0:
+        screen.blit(bh, (bx, by + 1), pygame.Rect(0, 0, rem, bh_h))
+
+    # Left vertical border (between top and bottom corners)
+    ly = outer_y + tc_h
+    lv_h = max(outer_h - tc_h - bc_h, 0)
+    cy = 0
+    while cy + bh_v_h <= lv_h:
+        screen.blit(bh_v, (outer_x, ly + cy))
+        cy += bh_v_h
+    remh = lv_h - cy
+    if remh > 0:
+        screen.blit(bh_v, (outer_x, ly + cy), pygame.Rect(0, 0, bh_v_w, remh))
+
+    # Right vertical border
+    rx = outer_x + outer_w - bh_v_w
+    cy = 0
+    screen.blit(bh_v, (rx, ly + cy - 2))
+    while cy + bh_v_h <= lv_h:
+        screen.blit(bh_v, (rx, ly + cy))
+        cy += bh_v_h
+    remh = lv_h - cy
+    if remh > 0:
+        screen.blit(bh_v, (rx, ly + cy), pygame.Rect(0, 0, bh_v_w, remh))
+
+    # Return outer box geometry for caller to fill content if needed
+    return outer_x, outer_y + tc_h, outer_w, inner_h
+
+def _draw_favorites_panel(screen, outer_x, outer_y, outer_w, content_y, content_h, favorites):
+    """
+    Draw a right-aligned favorites column inside the dropdown area.
+    Also: build chip hitboxes and show a ghost slot while dragging.
+    Returns: ((inner_x, inner_y, inner_w, inner_h), panel_w)
+    """
+    global favorites_chip_buttons, favorites_drop_rect
+    favorites_chip_buttons.clear()
+    favorites_drop_rect = None
+
+    # Art handles
+    top_cap = label_favorite_border_top
+    bot_cap = pygame.transform.rotate(top_cap, 180)
+    side_src = label_favorite_border_side
+    side = pygame.transform.rotate(side_src, 180)
+    chip = label_favorite_border
+
+    cap_w, cap_h = top_cap.get_size()
+    Lw, Lh = side_src.get_size()
+    Rw, Rh = side.get_size()
+    chip_w, chip_h = chip.get_size()
+
+    # Panel geometry (inside dropdown, flush to the right)
+    panel_w = cap_w
+    panel_inner_top  = content_y
+    panel_inner_bot  = content_y + content_h
+    panel_top_y      = panel_inner_top - cap_h // 2
+    panel_bot_y      = panel_inner_bot - cap_h // 2
+    panel_x          = outer_x + outer_w - panel_w
+
+    # ---- Pixel nudges ----
+    dx      = -6
+    dy_top  =  3
+    dy_bot  =  7
+
+    # Caps
+    top_x = panel_x + dx
+    top_y = panel_top_y + dy_top
+    bot_x = panel_x + dx
+    bot_y = panel_bot_y - cap_h + dy_bot
+    screen.blit(top_cap, (top_x, top_y))
+    screen.blit(bot_cap, (bot_x, bot_y))
+
+    # LEFT wall (between dropdown and favorites)
+    wall_start_y = top_y + cap_h
+    wall_end_y   = bot_y
+    left_x = top_x
+    y = wall_start_y
+    while y + Lh <= wall_end_y:
+        screen.blit(side_src, (left_x + 1, y))
+        y += Lh
+    if y < wall_end_y:
+        screen.blit(side_src, (left_x + 1, y), pygame.Rect(0, 0, Lw, wall_end_y - y))
+
+    # RIGHT wall (outer)
+    right_x = (panel_x + panel_w - Rw) + dx
+    y = wall_start_y
+    while y + Rh <= wall_end_y:
+        screen.blit(side, (right_x - 1, y))
+        y += Rh
+    if y < wall_end_y:
+        screen.blit(side, (right_x - 1, y), pygame.Rect(0, 0, Rw, wall_end_y - y))
+
+    # Inner content rect for chips
+    inset_l = 10
+    inset_r = max(Lw, Rw) + 8
+    inset_t = cap_h + 6
+    inset_b = cap_h + 6
+
+    inner_x = top_x + inset_l
+    inner_y = top_y + inset_t
+    inner_w = panel_w - inset_l - inset_r
+    inner_h = (bot_y - top_y) - inset_t - inset_b
+    inner_rect = pygame.Rect(inner_x, inner_y, inner_w, inner_h)
+    favorites_drop_rect = inner_rect  # global set
+
+    # Layout
+    COLS  = 2
+    GAP_Y = 10
+    GAP_X = -2
+    left_col_x  = inner_x
+    right_col_x = inner_x + inner_w - chip_w - GAP_X
+    if right_col_x < left_col_x:
+        right_col_x = left_col_x
+    col_x = [left_col_x, right_col_x]
+
+    font_chip = pygame.font.Font("fonts/Stardew_Valley.ttf",
+                                 int(screen.get_height() * 0.04))
+
+    # Build working list and hover/placeholder for drag from tasks
+    display_labels = favorites[:]
+    hover_insert_index = None
+
+    if dragging_label is not None and dragging_label.get("source", "task") == "task":
+        # Detect hover slot in favorites
+        mx, my = pygame.mouse.get_pos()
+        # Build current chip rects
+        slot_rects = []
+        for i in range(len(display_labels)):
+            row = i // COLS
+            col = i % COLS
+            cx = col_x[col]
+            cy = inner_y + row * (chip_h + GAP_Y)
+            r = pygame.Rect(cx, cy - 8, chip_w, chip_h)  # same draw offset
+            slot_rects.append(r)
+
+        for i, r in enumerate(slot_rects):
+            if r.collidepoint(mx, my):
+                hover_insert_index = i
+                break
+        else:
+            # tail insert
+            tail_row = len(display_labels) // COLS
+            tail_col = len(display_labels) % COLS
+            tail_x = col_x[tail_col]
+            tail_y = inner_y + tail_row * (chip_h + GAP_Y)
+            tail_rect = pygame.Rect(tail_x, tail_y - 8, chip_w, chip_h)
+            if inner_rect.collidepoint(mx, my):
+                hover_insert_index = len(display_labels)
+
+        if hover_insert_index is not None:
+            display_labels.insert(hover_insert_index, "Temporary Label")
+
+    if not favorites and dragging_label is None:
+        msg = "No Favorite Labels"
+        ts = font_chip.render(msg, True, BLACK)  # type: ignore
+        tx = inner_x + (inner_w - ts.get_width()) // 2
+        ty = inner_y + (inner_h - ts.get_height()) // 2
+        screen.blit(ts, (tx, ty + 8))
+        return (inner_x, inner_y, inner_w, inner_h), panel_w
+
+    # Draw chips (and collect hitboxes)
+    for i, label_txt in enumerate(display_labels if display_labels else []):
+        row = i // COLS
+        col = i % COLS
+        cx = col_x[col]
+        cy = inner_y + row * (chip_h + GAP_Y)
+
+        if label_txt == "Temporary Label":
+            ghost = chip.copy()
+            ghost.set_alpha(90)
+            screen.blit(ghost, (cx, cy - 8))
+            continue
+
+        screen.blit(chip, (cx, cy - 8))
+        ts = font_chip.render(label_txt, True, BLACK)  # type: ignore
+        tx = cx + (chip_w - ts.get_width()) // 2
+        ty = cy + (chip_h - ts.get_height()) // 2 - 1
+        screen.blit(ts, (tx, ty - 6))
+
+    # Build *real* hitboxes only for actual favorites (not ghost)
+    for i, label_txt in enumerate(favorites):
+        row = i // COLS
+        col = i % COLS
+        cx = col_x[col]
+        cy = inner_y + row * (chip_h + GAP_Y)
+        rect = pygame.Rect(cx, cy - 8, chip_w, chip_h)
+        favorites_chip_buttons.append((rect, i))
+
+    return (inner_x, inner_y, inner_w, inner_h), panel_w
 
 def _draw_edit_form(screen, background_color, icon_image, spoons):
     """
@@ -252,6 +778,7 @@ def _draw_edit_form(screen, background_color, icon_image, spoons):
 
     # Gather state
     name = edit_state.get("name", "")
+    label = edit_state.get("labels", "")
     # after: never let cost > 10, and never let done > cost
     raw_cost = int(edit_state.get("cost", "0") or 0)
     cost = max(0, min(10, raw_cost))
@@ -427,6 +954,123 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
     """
     global currently_editing, edit_state, input_active, cancel_button_rect, done_button_rect
     global spoons_xp
+    global dragging_label
+    global new_label_active_task, new_label_text, new_label_rect, new_label_buttons
+
+    def _commit_new_label():
+        global new_label_active_task, new_label_text
+        if new_label_active_task is not None:
+            t = new_label_active_task
+            txt = (new_label_text or "").strip()
+            if txt:
+                # append to the end (it is drawn after all labels)
+                if txt not in task_list[t][7]:  # avoid duplicate labels; remove this line if dupes allowed
+                    task_list[t][7].append(txt)
+            # reset state
+            new_label_active_task = None
+            new_label_text = ""
+
+    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        # 0) Click on a "new label" chip -> start editing
+        for rect, t_idx in new_label_buttons:
+            if rect.collidepoint(event.pos):
+                # activate the inline editor for that task
+                new_label_active_task = t_idx
+                new_label_text = ""
+                return False, spoons, confetti_particles, streak_dates, level
+        # 0b) If we were typing and clicked somewhere else (not on the active chip), commit
+        if new_label_active_task is not None:
+            # If there's an active chip, and we clicked outside it, commit
+            if not (new_label_rect and new_label_rect.collidepoint(event.pos)):
+                _commit_new_label()
+                return False, spoons, confetti_particles, streak_dates, level
+
+        # 1) Start dragging a label chip (check this BEFORE other click targets)
+        for rect, t_idx, l_idx in label_chip_buttons:
+            if rect.collidepoint(event.pos):
+                # Start drag: store the chip info; it will be hidden from its slot while dragging
+                lab_text = task_list[t_idx][7][l_idx]  # labels list at index 7
+                dragging_label = {"source": "task", "task_idx": t_idx, "label_idx": l_idx, "text": lab_text}
+                return False, spoons, confetti_particles, streak_dates, level
+        # 1b) Start dragging from Favorites panel
+        for rect, fav_idx in favorites_chip_buttons:
+            if rect.collidepoint(event.pos):
+                lab_text = favorites_labels[fav_idx]
+                dragging_label = {"source": "fav", "fav_idx": fav_idx, "text": lab_text}
+                return False, spoons, confetti_particles, streak_dates, level
+
+    if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+        if dragging_label is not None:
+            mx, my = event.pos
+
+            open_task_idx = next(iter(expanded_label_tasks), None)  # single-open policy
+            in_favorites  = (favorites_drop_rect is not None and favorites_drop_rect.collidepoint(mx, my))
+            in_task_area  = (open_task_idx is not None and task_drop_rects.get(open_task_idx) and task_drop_rects[open_task_idx].collidepoint(mx, my))
+
+            # NEW: outside whole dropdown?
+            outer_rect = dropdown_outer_rects.get(open_task_idx)
+            outside_dropdown = (outer_rect is not None and not outer_rect.collidepoint(mx, my))
+
+            # A) task -> favorites
+            if dragging_label.get("source") == "task" and in_favorites:
+                label_text = dragging_label["text"]
+                if label_text not in favorites_labels:
+                    favorites_labels.append(label_text)
+                dragging_label = None
+                return False, spoons, confetti_particles, streak_dates, level
+
+            # B) favorites -> task
+            if dragging_label.get("source") == "fav" and in_task_area and open_task_idx is not None:
+                label_text = dragging_label["text"]
+                insert_i = hover_insert_index_per_task.get(open_task_idx)
+                if insert_i is None:
+                    insert_i = len(task_list[open_task_idx][7])
+                if label_text not in task_list[open_task_idx][7]:
+                    task_list[open_task_idx][7].insert(insert_i, label_text)
+                dragging_label = None
+                return False, spoons, confetti_particles, streak_dates, level
+
+            # C) reorder within same task
+            if (dragging_label.get("source") == "task"
+                and open_task_idx is not None
+                and dragging_label.get("task_idx") == open_task_idx
+                and in_task_area):
+                label_text = dragging_label["text"]
+                from_i = dragging_label["label_idx"]
+                insert_i = hover_insert_index_per_task.get(open_task_idx)
+                if insert_i is None:
+                    insert_i = len(task_list[open_task_idx][7])
+                labels_ref = task_list[open_task_idx][7]
+                if 0 <= from_i < len(labels_ref) and labels_ref[from_i] == label_text:
+                    del labels_ref[from_i]
+                    if insert_i > from_i:
+                        insert_i -= 1
+                labels_ref.insert(insert_i, label_text)
+                dragging_label = None
+                return False, spoons, confetti_particles, streak_dates, level
+
+            # NEW D1) delete from TASK if dropped outside dropdown
+            if dragging_label.get("source") == "task" and open_task_idx is not None and outside_dropdown:
+                t_idx = dragging_label.get("task_idx")
+                l_idx = dragging_label.get("label_idx")
+                if t_idx is not None and l_idx is not None:
+                    labels_ref = task_list[t_idx][7]
+                    if 0 <= l_idx < len(labels_ref) and labels_ref[l_idx] == dragging_label.get("text"):
+                        del labels_ref[l_idx]
+                dragging_label = None
+                return False, spoons, confetti_particles, streak_dates, level
+
+            # NEW D2) delete from FAVORITES if dropped outside dropdown
+            if dragging_label.get("source") == "fav" and outside_dropdown:
+                f_idx = dragging_label.get("fav_idx")
+                if f_idx is not None and 0 <= f_idx < len(favorites_labels) and favorites_labels[f_idx] == dragging_label.get("text"):
+                    del favorites_labels[f_idx]
+                dragging_label = None
+                return False, spoons, confetti_particles, streak_dates, level
+
+            # Fallback: cancel drag
+            dragging_label = None
+            return False, spoons, confetti_particles, streak_dates, level
 
     # --- Edit mode ---
     if currently_editing is not None:
@@ -456,7 +1100,7 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
                 orig = task_list[currently_editing]
                 new_date = orig[4].replace(month=mon, day=day)
                 new_days = (new_date - datetime.now()).days + 1
-                task_list[currently_editing] = [name, cost, done_, new_days, new_date, orig[5], orig[6]]
+                task_list[currently_editing] = [name, cost, done_, new_days, new_date, orig[5], orig[6], orig[7]]
 
                 currently_editing = None
                 input_active = None
@@ -490,35 +1134,80 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
 
         # Keyboard events for active field
         if event.type == pygame.KEYDOWN and input_active:
-            # Backspace
+            cur = edit_state.get(input_active, "")
+            # Backspace (repeat-friendly via pygame.key.set_repeat)
             if event.key == pygame.K_BACKSPACE:
-                edit_state[input_active] = edit_state.get(input_active, "")[:-1]
-            # Append character
-            elif input_active == "name":
-                edit_state[input_active] = edit_state.get(input_active, "") + event.unicode
-            elif input_active in ("cost", "done") and event.unicode.isdigit():
-                edit_state[input_active] = edit_state.get(input_active, "") + event.unicode
+                edit_state[input_active] = cur[:-1]
+            else:
+                ch = event.unicode  # empty for non-text keys; good guard below
+                if input_active == "name":
+                    if ch:  # printable text only
+                        candidate = cur + ch
+                        if font.size(candidate)[0] <= MAX_TASK_PIXEL_WIDTH:
+                            edit_state["name"] = candidate
+                elif input_active in ("cost", "done"):
+                    if ch.isdigit():
+                        edit_state[input_active] = cur + ch
 
         return False, spoons, confetti_particles, streak_dates, level
+    
+    # Typing for NEW label (only in list mode)
+    if new_label_active_task is not None and event.type == pygame.KEYDOWN:
+        if event.key == pygame.K_RETURN:
+            _commit_new_label()
+            return False, spoons, confetti_particles, streak_dates, level
+        elif event.key == pygame.K_ESCAPE:
+            # cancel
+            new_label_active_task = None
+            new_label_text = ""
+            return False, spoons, confetti_particles, streak_dates, level
+        elif event.key == pygame.K_BACKSPACE:
+            new_label_text = new_label_text[:-1]
+            return False, spoons, confetti_particles, streak_dates, level
+        else:
+            ch = event.unicode
+            if ch:
+                # prevent overflow: ensure rendered width fits inside label_new_border
+                lbw = label_new_border.get_width()
+                inner_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(pygame.display.get_surface().get_height() * 0.045))
+                test = new_label_text + ch
+                if inner_font.size(test)[0] <= (lbw - 12):  # light padding
+                    new_label_text = test
+            return False, spoons, confetti_particles, streak_dates, level
 
     # --- List mode: handle remove/edit icon and spoon-frame clicks ---
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        # Label icon toggles dropdown (single-open policy)
+        for rect, idx in label_buttons:
+            if rect.collidepoint(event.pos):
+                if idx in expanded_label_tasks:
+                    expanded_label_tasks.clear()           # close current
+                else:
+                    expanded_label_tasks.clear()           # close others
+                    expanded_label_tasks.add(idx)          # open this one
+                return False, spoons, confetti_particles, streak_dates, level
+
+
         # Remove or enter edit
         for icon_rect, idx in remove_buttons:
             if icon_rect.collidepoint(event.pos):
                 mid = icon_rect.y + icon_rect.height//2
                 if event.pos[1] < mid:
                     # Remove task
+                    expanded_label_tasks.discard(idx)
+                    if idx in expanded_label_tasks: expanded_label_tasks.discard(idx)
                     task_list.pop(idx)
                 else:
                     # Enter edit
-                    name, cost, done_, days, date, st, et = task_list[idx]
+                    name, cost, done_, days, date, st, et, labels = task_list[idx]
+                    expanded_label_tasks.clear()
                     edit_state = {
                         "name":  name,
                         "cost":  str(cost),
                         "done":  str(done_),
                         "month": str(date.month),
-                        "day":   str(date.day)
+                        "day":   str(date.day),
+                        "labels": labels[:]
                     }
                     currently_editing = idx
                 return False, spoons, confetti_particles, streak_dates, level
@@ -526,7 +1215,7 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
         # Spoon-frame clicks
         for rect, idx, frame_i in frame_buttons:
             if rect.collidepoint(event.pos):
-                name, cost, done_, days, date, st, et = task_list[idx]
+                name, cost, done_, days, date, st, et, labels = task_list[idx]
                 new_done = frame_i + 1
                 to_fill  = new_done - done_
                 if to_fill > 0 and spoons >= to_fill:

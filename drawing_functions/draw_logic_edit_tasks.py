@@ -104,9 +104,8 @@ def draw_normal_interface(screen, spoons, type, task_list, buttons, scroll_offse
 
         # Draw spoon images
         for j in range(spoons_needed):
-                screen.blit(spoon_bracket_image, (button.x + j * 40 + 310, button.y + 10))
-                if done == "✅":
-                    screen.blit(icon_image, (button.x + j * 40 + 310, button.y + 10))
+            if done == "✅":
+                screen.blit(icon_image, (button.x + j * 40 + 310, button.y + 10))
 
         buttons.append((button, scroll_offset + i))  # Map button to actual task index in task_list
 
@@ -132,7 +131,6 @@ def draw_editing_interface(screen, spoons, task_list, complete_tasks_task_color,
 
     # Draw spoon images
     for j in range(int(editing_state["new_spoons"])):
-        screen.blit(spoon_bracket_image, (button.x + j * 40 + 310, button.y + 10))
         if editing_state["new_done_status"] == "✅":
             screen.blit(icon_image, (button.x + j * 40 + 310, button.y + 10))
 
