@@ -5,7 +5,7 @@ from .draw_complete_tasks_folders import draw_complete_tasks_folders
 from .draw_logic_input_spoons import draw_input_spoons, logic_input_spoons
 from .draw_logic_input_tasks import draw_input_tasks, logic_input_tasks
 from .draw_logic_manage_tasks_hub import draw_manage_tasks_hub
-from .draw_logic_manage_tasks import draw_complete_tasks
+from .draw_logic_manage_tasks import draw_complete_tasks, logic_complete_tasks, set_favorites_binding
 from .draw_logic_remove_tasks import draw_remove_tasks, logic_remove_tasks
 from .draw_logic_calendar import draw_calendar, logic_calendar
 from .draw_logic_shop import draw_shop, logic_shop

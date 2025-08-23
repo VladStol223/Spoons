@@ -32,7 +32,16 @@ label_chip_buttons = []   # (pygame.Rect, task_index, label_index)
 dragging_label = None     # {"task_idx": int, "label_idx": int, "text": str}
 
 # Temporary favorites (will be saved to data.json later)
-favorites_labels = []
+favorites_labels = []  # this will be rebound per page
+
+def set_favorites_binding(fav_list_ref):
+    """
+    Bind the Favorites panel in this module to a *live* list that belongs to the current folder slot.
+    Mutations (adding/removing/reordering) will directly update the list in main.label_favorites[slot].
+    """
+    global favorites_labels
+    favorites_labels = fav_list_ref if isinstance(fav_list_ref, list) else []
+
 
 # --- NEW globals for drag/drop targets + hover indexes ---
 favorites_chip_buttons = []  # (pygame.Rect, fav_index)
@@ -241,150 +250,156 @@ def draw_complete_tasks(
                     task_labels_rect = pygame.Rect(content_x, content_y, attach_w - 260, content_h + 30)
                     task_drop_rects[idx] = task_labels_rect
 
-                    # draw label chips or “No labels” text inside:
                     inner_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen.get_height() * 0.045))
-                    if len(labels) == 0 and not (dragging_label and dragging_label.get("source") == "task" and dragging_label.get("task_idx") == idx):
-                        screen.blit(inner_font.render("No labels", True, BLACK), (content_x + 12, content_y + 6))  # type: ignore
-                    else:
-                        lb = label_border
-                        lbw, lbh = lb.get_size()
 
-                        row_h = max(28, lbh + 8)
-                        PAD_X = 12
-                        GAP_X = 7
-                        COLS = 3
+                    lb = label_border
+                    lbw, lbh = lb.get_size()
 
-                        mx2, my2 = pygame.mouse.get_pos()
+                    row_h = max(28, lbh + 8)
+                    PAD_X = 12
+                    GAP_X = 7
+                    COLS = 3
 
-                        # 1) Build label/index lists from the ORIGINAL labels
-                        orig_labels   = labels
-                        orig_indices  = list(range(len(orig_labels)))
+                    mx2, my2 = pygame.mouse.get_pos()
 
-                        # 2) If dragging a label from THIS task, remove it from the working lists
-                        working_labels  = orig_labels[:]         # copy
-                        working_indices = orig_indices[:]        # copy
+                    # 1) Build label/index lists from the ORIGINAL labels
+                    orig_labels   = labels
+                    orig_indices  = list(range(len(orig_labels)))
 
-                        if dragging_label is not None and dragging_label.get("source") == "task" and dragging_label.get("task_idx") == idx:
-                            drag_i = dragging_label["label_idx"]
-                            if 0 <= drag_i < len(working_labels):
-                                del working_labels[drag_i]
-                                del working_indices[drag_i]
+                    # 2) If dragging a label from THIS task, remove it from the working lists
+                    working_labels  = orig_labels[:]         # copy
+                    working_indices = orig_indices[:]        # copy
 
-                        # 3) Build slot rectangles for the working labels (no placeholder yet),
-                        #    and figure out which slot we're hovering over.
-                        slot_rects = []     # rects for current chips (used for hover detection)
-                        for i in range(len(working_labels)):
-                            row = i // COLS
-                            col = i % COLS
-                            chip_x = content_x + PAD_X + col * (lbw + GAP_X)
-                            chip_y = content_y + row * row_h + (row_h - lbh) // 2
-                            slot_rects.append(pygame.Rect(chip_x, chip_y, lbw, lbh))
+                    is_drag_from_this_task = (
+                        dragging_label is not None
+                        and dragging_label.get("source") == "task"
+                        and dragging_label.get("task_idx") == idx
+                    )
 
-                        hover_insert_index = None
-                        if dragging_label is not None and dragging_label.get("source") == "task" and dragging_label.get("task_idx") == idx:
-                            # If we hover any chip, insert BEFORE that chip
+                    if is_drag_from_this_task:
+                        drag_i = dragging_label["label_idx"]
+                        if 0 <= drag_i < len(working_labels):
+                            del working_labels[drag_i]
+                            del working_indices[drag_i]
+
+                    ADD_SENTINEL = "__ADD__"
+                    working_labels.append(ADD_SENTINEL)
+                    working_indices.append(None)  # not a real label index
+
+                    # 3) Build slot rectangles
+                    slot_rects = []
+                    for i in range(len(working_labels)):  # includes ADD_SENTINEL
+                        row = i // COLS
+                        col = i % COLS
+                        chip_x = content_x + PAD_X + col * (lbw + GAP_X)
+                        chip_y = content_y + row * row_h + (row_h - lbh) // 2
+                        slot_rects.append(pygame.Rect(chip_x, chip_y, lbw, lbh))
+
+                    hover_insert_index = None
+                    if dragging_label is not None:
+                        drag_txt = dragging_label.get("text", "")
+                        # reordering within same task is allowed; cross-source needs duplicate block
+                        is_reorder = (
+                            dragging_label.get("source") == "task"
+                            and dragging_label.get("task_idx") == idx
+                        )
+                        allow_preview = True
+                        if not is_reorder and drag_txt in orig_labels:
+                            # DUPLICATE → block ALL preview positions (including tail)
+                            allow_preview = False
+
+                        if allow_preview:
+                            # 1) Hovering a chip → insert BEFORE that chip
                             for i, r in enumerate(slot_rects):
                                 if r.collidepoint(mx2, my2):
                                     hover_insert_index = i
                                     break
-                            #allow inserting at the END if hovering beyond last chip)
-                            else:
-                                if slot_rects:
-                                    last = slot_rects[-1]
-                                    tail_rect = pygame.Rect(last.right + GAP_X, last.y, lbw, lbh)
-                                    if tail_rect.collidepoint(mx2, my2):
-                                        hover_insert_index = len(working_labels)
 
-                        # 4) Create the DISPLAY lists (with optional "Temporary Label")
-                        display_labels  = working_labels[:]
-                        display_indices = working_indices[:]
-                        if hover_insert_index is not None:
-                            display_labels.insert(hover_insert_index, "Temporary Label")
-                            display_indices.insert(hover_insert_index, None)  # placeholder has no original index
+                            # 2) Gaps between chips → i+1
+                            if hover_insert_index is None:
+                                for i in range(len(slot_rects) - 1):
+                                    left_r  = slot_rects[i]
+                                    right_r = slot_rects[i+1]
+                                    gap_r = pygame.Rect(left_r.right, left_r.y, right_r.left - left_r.right, lbh)
+                                    if gap_r.width > 0 and gap_r.collidepoint(mx2, my2):
+                                        hover_insert_index = i + 1
+                                        break
 
-                        hover_insert_index_per_task[idx] = hover_insert_index
-
-                        # 5) Draw the chips (skip drawing the dragged chip; draw placeholder with low opacity)
-                        for disp_i, lab in enumerate(display_labels):
-                            row = disp_i // COLS
-                            col = disp_i % COLS
-                            chip_x = content_x + PAD_X + col * (lbw + GAP_X)
-                            chip_y = content_y + row * row_h + (row_h - lbh) // 2
-
-                            chip_rect = pygame.Rect(chip_x, chip_y, lbw, lbh)
-
-                            if lab == "Temporary Label":
-                                # Low opacity border, no text
-                                ghost = lb.copy()
-                                ghost.set_alpha(90)
-                                screen.blit(ghost, (chip_x, chip_y))
-                                # No hitbox for placeholder
-                                continue
-
-                            # Regular label
-                            screen.blit(lb, (chip_x, chip_y))
-                            ts = inner_font.render(lab, True, BLACK)  # type: ignore
-                            tx = chip_x + (lbw - ts.get_width()) // 2
-                            ty = chip_y + (lbh - ts.get_height()) // 2 - 1
-                            screen.blit(ts, (tx, ty + 2))
-
-                            # Record hitbox with ORIGINAL label index so "start drag" stays correct
-                            original_idx = display_indices[disp_i]
-                            if original_idx is not None:
-                                label_chip_buttons.append((chip_rect, idx, original_idx))
-
-                        # --- NEW: "Add new label" chip (always AFTER all existing labels) ---
-                        add_w, add_h = label_new_border.get_size()
-
-                        real_count = len(working_labels)
-                        add_row = real_count // COLS
-                        add_col = real_count % COLS
-                        add_x = content_x + PAD_X + add_col * (lbw + GAP_X)
-                        add_y = content_y + add_row * row_h + (row_h - lbh) // 2
-
-                        add_rect = pygame.Rect(add_x, add_y, add_w, add_h)
-
-                        if new_label_active_task == idx:
-                            # base chip
-                            screen.blit(label_new_border, (add_x, add_y))
-
-                            inner_font = pygame.font.Font("fonts/Stardew_Valley.ttf",
-                                                        int(screen.get_height() * 0.045))
-
-                            # draw ONLY the user's text (no placeholder when active)
-                            display_text = new_label_text
-                            text_surface = inner_font.render(display_text, True, BLACK)  # type: ignore
-
-                            # center whatever has been typed (may be empty)
-                            tx = add_x + (add_w - text_surface.get_width()) // 2
-                            ty = add_y + (add_h - text_surface.get_height()) // 2 - 1
-
-                            # if there is text, blit it
-                            if display_text:
-                                screen.blit(text_surface, (tx, ty + 2))
-
-                            # caret: blink whether or not we have text
-                            if (pygame.time.get_ticks() // 400) % 2 == 0:
-                                caret_x = tx + text_surface.get_width()  # if empty, this is the centered start
-                                pygame.draw.line(
-                                    screen, BLACK, #type: ignore
-                                    (caret_x + 2, ty + 4),
-                                    (caret_x + 2, ty + text_surface.get_height() - 2), 2
-                                )  # type: ignore
-
-                            # remember rect so click-away can commit
-                            new_label_rect = add_rect
+                            # 3) End-zone: right of ADD or anywhere below ADD
+                            if hover_insert_index is None and slot_rects:
+                                last = slot_rects[-1]  # ADD_SENTINEL
+                                right_tail = pygame.Rect(last.right, task_labels_rect.top,
+                                                         max(0, task_labels_rect.right - last.right),
+                                                         task_labels_rect.height)
+                                below_tail = pygame.Rect(task_labels_rect.left, last.bottom,
+                                                         task_labels_rect.width,
+                                                         max(0, task_labels_rect.bottom - last.bottom))
+                                if right_tail.collidepoint(mx2, my2) or below_tail.collidepoint(mx2, my2):
+                                    hover_insert_index = len(working_labels) - 1  # end (just before ADD)
                         else:
-                            # idle add chip
-                            screen.blit(label_new_border, (add_x, add_y))
-                            inner_font = pygame.font.Font("fonts/Stardew_Valley.ttf",
-                                                        int(screen.get_height() * 0.045))
-                            ts = inner_font.render("+ New Label", True, BLACK)  # type: ignore
-                            tx = add_x + (add_w - ts.get_width()) // 2
-                            ty = add_y + (add_h - ts.get_height()) // 2 - 1
-                            screen.blit(ts, (tx, ty + 2))
-                            new_label_buttons.append((add_rect, idx))
+                            # ensure no ghost is drawn or drop index stored
+                            hover_insert_index = None
 
+
+                    # 4) Display list + remember whether hover is the terminal end-slot
+                    display_labels  = working_labels[:]
+                    display_indices = working_indices[:]
+                    is_end_slot = (hover_insert_index == len(working_labels) - 1) if hover_insert_index is not None else False
+                    if hover_insert_index is not None:
+                        display_labels.insert(hover_insert_index, "Temporary Label")
+                        display_indices.insert(hover_insert_index, None)
+
+                    # store either an int, "END", or None if suppressed
+                    hover_insert_index_per_task[idx] = ("END" if is_end_slot else hover_insert_index)
+
+
+                    # 5) Draw chips (includes ADD chip; no separate "+ New Label" pass later)
+                    for disp_i, lab in enumerate(display_labels):
+                        row = disp_i // COLS
+                        col = disp_i % COLS
+                        chip_x = content_x + PAD_X + col * (lbw + GAP_X)
+                        chip_y = content_y + row * row_h + (row_h - lbh) // 2
+                        chip_rect = pygame.Rect(chip_x, chip_y, lbw, lbh)
+
+                        if lab == "Temporary Label":
+                            ghost = lb.copy(); ghost.set_alpha(90)
+                            screen.blit(ghost, (chip_x, chip_y))
+                            continue
+
+                        if lab == ADD_SENTINEL:
+                            add_w, add_h = label_new_border.get_size()
+                            screen.blit(label_new_border, (chip_x, chip_y))
+                            if new_label_active_task == idx:
+                                inner_font2 = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen.get_height() * 0.045))
+                                text_surface = inner_font2.render(new_label_text, True, BLACK) #type: ignore
+                                tx = chip_x + (add_w - text_surface.get_width()) // 2
+                                ty = chip_y + (add_h - text_surface.get_height()) // 2 - 1
+                                if new_label_text:
+                                    screen.blit(text_surface, (tx, ty + 2))
+                                if (pygame.time.get_ticks() // 400) % 2 == 0:
+                                    caret_x = tx + text_surface.get_width()
+                                    pygame.draw.line(screen, BLACK, (caret_x + 2, ty + 4), #type: ignore
+                                                    (caret_x + 2, ty + text_surface.get_height() - 2), 2)
+                                new_label_rect = chip_rect
+                            else:
+                                inner_font2 = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen.get_height() * 0.045))
+                                ts = inner_font2.render("+ New Label", True, BLACK) #type: ignore
+                                tx = chip_x + (add_w - ts.get_width()) // 2
+                                ty = chip_y + (add_h - ts.get_height()) // 2 - 1
+                                screen.blit(ts, (tx, ty + 2))
+                                new_label_buttons.append((chip_rect, idx))
+                            continue
+
+                        # regular label chip
+                        screen.blit(lb, (chip_x, chip_y))
+                        ts = inner_font.render(lab, True, BLACK) #type: ignore
+                        tx = chip_x + (lbw - ts.get_width()) // 2
+                        ty = chip_y + (lbh - ts.get_height()) // 2 - 1
+                        screen.blit(ts, (tx, ty + 2))
+
+                        original_idx = display_indices[disp_i]
+                        if original_idx is not None:
+                            label_chip_buttons.append((chip_rect, idx, original_idx))
 
 
                     # Increase the vertical cursor and global extra height to push subsequent rows
@@ -499,8 +514,8 @@ def draw_complete_tasks(
     # Draw the dragged label chip (overlay) if any
     if dragging_label is not None:
         mx2, my2 = pygame.mouse.get_pos()
-        lb = label_border
-        lbw, lbh = lb.get_size()
+        chip_img = label_favorite_border if dragging_label.get("source") == "fav" else label_border
+        lbw, lbh = chip_img.get_size()
 
         chip_x = mx2 - lbw // 2
         chip_y = my2 - lbh // 2
@@ -511,7 +526,7 @@ def draw_complete_tasks(
         deleting = (outer_rect is not None and not outer_rect.collidepoint(mx2, my2))
 
         # chip base
-        screen.blit(lb, (chip_x, chip_y))
+        screen.blit(chip_img, (chip_x, chip_y))
 
         inner_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen.get_height() * 0.045))
         ts = inner_font.render(dragging_label["text"], True, BLACK)  # type: ignore
@@ -666,7 +681,11 @@ def _draw_favorites_panel(screen, outer_x, outer_y, outer_w, content_y, content_
     inner_w = panel_w - inset_l - inset_r
     inner_h = (bot_y - top_y) - inset_t - inset_b
     inner_rect = pygame.Rect(inner_x, inner_y, inner_w, inner_h)
-    favorites_drop_rect = inner_rect  # global set
+    accept_rect = inner_rect.copy()
+    accept_rect.y -= 10
+    accept_rect.h += 20
+
+    favorites_drop_rect = accept_rect 
 
     # Layout
     COLS  = 2
@@ -686,34 +705,40 @@ def _draw_favorites_panel(screen, outer_x, outer_y, outer_w, content_y, content_
     hover_insert_index = None
 
     if dragging_label is not None and dragging_label.get("source", "task") == "task":
-        # Detect hover slot in favorites
         mx, my = pygame.mouse.get_pos()
-        # Build current chip rects
-        slot_rects = []
-        for i in range(len(display_labels)):
-            row = i // COLS
-            col = i % COLS
-            cx = col_x[col]
-            cy = inner_y + row * (chip_h + GAP_Y)
-            r = pygame.Rect(cx, cy - 8, chip_w, chip_h)  # same draw offset
-            slot_rects.append(r)
+        drag_txt = dragging_label.get("text", "")
+        allow_preview = drag_txt not in favorites  # DUPLICATE → block preview entirely
 
-        for i, r in enumerate(slot_rects):
-            if r.collidepoint(mx, my):
-                hover_insert_index = i
-                break
+        if allow_preview:
+            # Build current chip rects
+            slot_rects = []
+            for i in range(len(display_labels)):
+                row = i // COLS
+                col = i % COLS
+                cx = col_x[col]
+                cy = inner_y + row * (chip_h + GAP_Y)
+                r = pygame.Rect(cx, cy - 8, chip_w, chip_h)
+                slot_rects.append(r)
+
+            for i, r in enumerate(slot_rects):
+                if r.collidepoint(mx, my):
+                    hover_insert_index = i
+                    break
+            else:
+                # tail insert (only if cursor inside accept_rect)
+                tail_row = len(display_labels) // COLS
+                tail_col = len(display_labels) % COLS
+                tail_x = col_x[tail_col]
+                tail_y = inner_y + tail_row * (chip_h + GAP_Y)
+                tail_rect = pygame.Rect(tail_x, tail_y - 8, chip_w, chip_h)
+                if accept_rect.collidepoint(mx, my):
+                    hover_insert_index = len(display_labels)
+
+            if hover_insert_index is not None:
+                display_labels.insert(hover_insert_index, "Temporary Label")
         else:
-            # tail insert
-            tail_row = len(display_labels) // COLS
-            tail_col = len(display_labels) % COLS
-            tail_x = col_x[tail_col]
-            tail_y = inner_y + tail_row * (chip_h + GAP_Y)
-            tail_rect = pygame.Rect(tail_x, tail_y - 8, chip_w, chip_h)
-            if inner_rect.collidepoint(mx, my):
-                hover_insert_index = len(display_labels)
+            hover_insert_index = None  # keep it explicit for clarity
 
-        if hover_insert_index is not None:
-            display_labels.insert(hover_insert_index, "Temporary Label")
 
     if not favorites and dragging_label is None:
         msg = "No Favorite Labels"
@@ -1023,10 +1048,14 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
             if dragging_label.get("source") == "fav" and in_task_area and open_task_idx is not None:
                 label_text = dragging_label["text"]
                 insert_i = hover_insert_index_per_task.get(open_task_idx)
-                if insert_i is None:
-                    insert_i = len(task_list[open_task_idx][7])
-                if label_text not in task_list[open_task_idx][7]:
-                    task_list[open_task_idx][7].insert(insert_i, label_text)
+                labels_ref = task_list[open_task_idx][7]
+                if insert_i == "END" or insert_i is None:
+                    insert_pos = len(labels_ref)  # append
+                else:
+                    insert_pos = int(insert_i)
+
+                if label_text not in labels_ref:
+                    labels_ref.insert(insert_pos, label_text)
                 dragging_label = None
                 return False, spoons, confetti_particles, streak_dates, level
 
@@ -1038,14 +1067,23 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
                 label_text = dragging_label["text"]
                 from_i = dragging_label["label_idx"]
                 insert_i = hover_insert_index_per_task.get(open_task_idx)
-                if insert_i is None:
-                    insert_i = len(task_list[open_task_idx][7])
                 labels_ref = task_list[open_task_idx][7]
+
+                # remove first
                 if 0 <= from_i < len(labels_ref) and labels_ref[from_i] == label_text:
                     del labels_ref[from_i]
-                    if insert_i > from_i:
-                        insert_i -= 1
-                labels_ref.insert(insert_i, label_text)
+
+                # map end-slot to append *after* removal (length has changed)
+                if insert_i == "END" or insert_i is None:
+                    insert_pos = len(labels_ref)
+                else:
+                    insert_pos = int(insert_i)
+                    # if we removed an earlier index, and target was after it, shift left by 1
+                    if from_i < insert_pos:
+                        insert_pos -= 1
+
+                labels_ref.insert(insert_pos, label_text)
+
                 dragging_label = None
                 return False, spoons, confetti_particles, streak_dates, level
 

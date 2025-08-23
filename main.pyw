@@ -86,9 +86,6 @@ def get_scale_factor() -> float:
 
 scale_factor = get_scale_factor()
 
-print("Looking for sounds in:", SOUNDS_DIR)
-print("Contents:", os.listdir(SOUNDS_DIR))
-
 ####################################################################################################################################
 def hub_buttons(event):
     global scroll_offset
@@ -114,7 +111,7 @@ def hub_buttons(event):
             spoon_name_input, folder_one, folder_two, folder_three, folder_four,
             folder_five, folder_six, streak_dates,
             border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
-            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, level, coins)
+            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, level, coins)
 
             if page == "manage_tasks":
                 scroll_offset = 0
@@ -127,7 +124,7 @@ from drawing_functions.draw_hub_buttons import draw_hub_buttons
 from drawing_functions.draw_logic_input_spoons import draw_input_spoons, logic_input_spoons
 from drawing_functions.draw_logic_input_tasks import draw_input_tasks, logic_input_tasks
 from drawing_functions.draw_logic_manage_tasks_hub import draw_manage_tasks_hub, logic_manage_tasks_hub
-from drawing_functions.draw_logic_manage_tasks import draw_complete_tasks, logic_complete_tasks
+from drawing_functions.draw_logic_manage_tasks import draw_complete_tasks, logic_complete_tasks, set_favorites_binding
 from drawing_functions.draw_logic_calendar import draw_calendar, logic_calendar
 from drawing_functions.draw_logic_shop import draw_shop, logic_shop, logic_change_image
 from drawing_functions.logic_task_toggle import logic_task_toggle
@@ -151,9 +148,19 @@ border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder,
 taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro,
 border_name, hubIcons_name, spoonIcons_name, restIcons_name,
 hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
-calendarImages_name, themeBackgroundsImages_name, intro_name,
+calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites,
 level, coins) = load_data()
 current_theme = switch_theme(loaded_theme, globals())
+
+def slot_key_for_page(p: str) -> str:
+    return {
+        "complete_homework_tasks": "folder_one",
+        "complete_chores_tasks":   "folder_two",
+        "complete_work_tasks":     "folder_three",
+        "complete_misc_tasks":     "folder_four",
+        "complete_exams_tasks":    "folder_five",
+        "complete_projects_tasks": "folder_six",
+    }.get(p, "folder_one")
 
 
 # ----------------------------------------------------------------------------------------------------
@@ -230,31 +237,37 @@ while running:
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, manillaFolder)
         
     elif page == "complete_homework_tasks":
+        set_favorites_binding(label_favorites.get(slot_key_for_page(page), []))
         scroll_offset, total_content_height = draw_complete_tasks(screen, "Homework", homework_tasks_list, task_buttons_homework, spoons,  scroll_offset,
                             background_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         
     elif page == "complete_chores_tasks":
+        set_favorites_binding(label_favorites.get(slot_key_for_page(page), []))
         scroll_offset, total_content_height = draw_complete_tasks(screen, "Chores", chores_tasks_list, task_buttons_chores, spoons,  scroll_offset,
                             background_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         
     elif page == "complete_work_tasks":
+        set_favorites_binding(label_favorites.get(slot_key_for_page(page), []))
         scroll_offset, total_content_height = draw_complete_tasks(screen, "Work", work_tasks_list, task_buttons_work, spoons,  scroll_offset,
                             background_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         
     elif page == "complete_misc_tasks":
+        set_favorites_binding(label_favorites.get(slot_key_for_page(page), []))
         scroll_offset, total_content_height = draw_complete_tasks(screen, "Misc", misc_tasks_list, task_buttons_misc, spoons,  scroll_offset,
                             background_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
 
     elif page == "complete_exams_tasks":
+        set_favorites_binding(label_favorites.get(slot_key_for_page(page), []))
         scroll_offset, total_content_height = draw_complete_tasks(screen, "Exams", exams_tasks_list, task_buttons_exams, spoons,  scroll_offset,
                             background_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
 
     elif page == "complete_projects_tasks":
+        set_favorites_binding(label_favorites.get(slot_key_for_page(page), []))
         scroll_offset, total_content_height = draw_complete_tasks(screen, "Projects", projects_tasks_list, task_buttons_projects, spoons,  scroll_offset,
                             background_color, icon_image, spoon_name,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
@@ -294,7 +307,7 @@ while running:
             spoon_name_input, folder_one, folder_two, folder_three, folder_four,
             folder_five, folder_six, streak_dates,
             border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
-            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, level, coins)
+            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, level, coins)
 
             running = False
                 
@@ -311,7 +324,7 @@ while running:
                         spoon_name_input, folder_one, folder_two, folder_three, folder_four,
                         folder_five, folder_six, streak_dates,
                         border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
-                        scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, level, coins)
+                        scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, level, coins)
                         if page_key == "manage_tasks":
                             scroll_offset = 0
                         page = page_key

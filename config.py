@@ -395,6 +395,7 @@ class_schedule = {
 
 months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
+label_favorites = []
 
 # Creating input boxes/ buttons
 # Spoon input

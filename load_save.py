@@ -10,7 +10,7 @@ Parameters:
     task (tuple): The task tuple containing task details.
 
 Returns:
-    dict: A dictionary representation of the task.
+    dict: A dictionary representation of the taskv.
 """
 
 def task_to_serializable(task):
@@ -60,7 +60,7 @@ def save_data(
     spoon_name_input, folder_one, folder_two, folder_three, folder_four,
     folder_five, folder_six, streak_dates,
     border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder,
-    taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro,
+    taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, label_favorites,
     level, coins):
     
     global icon_image_name
@@ -132,6 +132,7 @@ def save_data(
                 }) +
                 ",\n"
             )
+            f.write('  "label_favorites": ' + json.dumps(label_favorites) + ",\n")
             f.write(f'  "level": {json.dumps(level)},\n')
             f.write(f'  "coins": {json.dumps(coins)}\n')
             f.write("}\n")
@@ -192,7 +193,7 @@ def load_data():
     global border_name, hubIcons_name, spoonIcons_name, restIcons_name
     global hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name
     global calendarImages_name, themeBackgroundsImages_name, intro_name
-    global level, coins
+    global label_favorites, level, coins
 
     try:
         with open("data.json", "r") as f:
@@ -240,6 +241,29 @@ def load_data():
 
         level = data.get("level", 0)
         coins = data.get("coins", 0)
+
+        # NEW: load per-folder favorites (with migration & sane defaults)
+        default_slots = ["folder_one", "folder_two", "folder_three", "folder_four", "folder_five", "folder_six"]
+        label_favorites = data.get("label_favorites", {})
+
+        # Migrate from legacy flat keys if present (optional, safe)
+        legacy_map = {
+            "folder_one_Label_favorites":   "folder_one",
+            "folder_two_Label_favorites":   "folder_two",
+            "folder_three_Label_favorites": "folder_three",
+            "folder_four_Label_favorites":  "folder_four",
+            "folder_five_Label_favorites":  "folder_five",
+            "folder_six_Label_favorites":   "folder_six",
+        }
+        for legacy_key, slot in legacy_map.items():
+            if legacy_key in data and slot not in label_favorites:
+                v = data.get(legacy_key, [])
+                label_favorites[slot] = v if isinstance(v, list) else []
+
+        # Ensure all slots exist with lists
+        for slot in default_slots:
+            if slot not in label_favorites or not isinstance(label_favorites[slot], list):
+                label_favorites[slot] = []
 
         # now only overwrite your asset‐images if they exist in JSON
         assets = data.get("assets", {})
@@ -311,6 +335,6 @@ def load_data():
         taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro,
         border_name, hubIcons_name, spoonIcons_name, restIcons_name,
         hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
-        calendarImages_name, themeBackgroundsImages_name, intro_name,
+        calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites,
         level, coins
     )
