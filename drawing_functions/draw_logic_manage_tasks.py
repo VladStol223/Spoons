@@ -161,24 +161,8 @@ def draw_complete_tasks(
     if completed:
         y_cursor += heading_font.render("Completed", True, BLACK).get_height() + len(completed)*60 #type: ignore
 
-    total_content_height = y_cursor - CONTENT_TOP
-    max_scroll = max(0, total_content_height - VIEWPORT_HEIGHT)
-    scroll_offset_px = max(0, min(scroll_offset_px, max_scroll))
-
     # scrollbar
     added_extra = 0
-    total_content_height += added_extra
-
-    if len(task_list) > 5:
-        screen.blit(scroll_bar, (SCROLL_X, SCROLL_Y))
-        if total_content_height <= VIEWPORT_HEIGHT:
-            slider_h, slider_y = TRACK_HEIGHT, SCROLL_Y
-        else:
-            slider_h = max(int((VIEWPORT_HEIGHT/total_content_height)*TRACK_HEIGHT), 20)
-            slider_y = SCROLL_Y + int((scroll_offset_px/(total_content_height-VIEWPORT_HEIGHT))*(TRACK_HEIGHT-slider_h))
-        slider_x = SCROLL_X + (20 - scroll_bar_slider.get_width())//2
-        screen.blit(pygame.transform.scale(scroll_bar_slider, (scroll_bar_slider.get_width(), slider_h)),
-                    (slider_x, slider_y))
 
     y_cursor = CONTENT_TOP
     mx, my = pygame.mouse.get_pos()
@@ -510,6 +494,25 @@ def draw_complete_tasks(
         hdr = "Due Today" if d==0 else ("Due in 1 Day" if d==1 else f"Due in {d} Days")
         y_cursor = draw_section(hdr, upcoming[d], y_cursor)
     y_cursor = draw_section("Completed", completed, y_cursor)
+
+    # Recompute total height with dropdown expansion
+    total_content_height = (y_cursor - CONTENT_TOP) + added_extra
+
+    # Now clamp using the correct height
+    max_scroll = max(0, total_content_height - VIEWPORT_HEIGHT)
+    scroll_offset_px = max(0, min(scroll_offset_px, max_scroll))
+
+    # Then draw the scrollbar using total_content_height
+    if len(task_list) > 5:
+        screen.blit(scroll_bar, (SCROLL_X, SCROLL_Y))
+        if total_content_height <= VIEWPORT_HEIGHT:
+            slider_h, slider_y = TRACK_HEIGHT, SCROLL_Y
+        else:
+            slider_h = max(int((VIEWPORT_HEIGHT/total_content_height)*TRACK_HEIGHT), 20)
+            slider_y = SCROLL_Y + int((scroll_offset_px/(total_content_height-VIEWPORT_HEIGHT))*(TRACK_HEIGHT-slider_h))
+        slider_x = SCROLL_X + (20 - scroll_bar_slider.get_width())//2
+        screen.blit(pygame.transform.scale(scroll_bar_slider, (scroll_bar_slider.get_width(), slider_h)),
+                    (slider_x, slider_y))
 
     # Draw the dragged label chip (overlay) if any
     if dragging_label is not None:

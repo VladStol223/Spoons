@@ -392,7 +392,7 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
                             # no time fields
                             [0,0,0,0],
                             [0,0,0,0],
-                            ["test label"]  # placeholder for labels
+                            []  # placeholder for labels
                         ]
                         if folder == "homework":
                             homework_tasks_list.append(entry)
@@ -415,7 +415,7 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
                         task_date,
                         [0,0,0,0],
                         [0,0,0,0],
-                        ["test label"]  # placeholder for labels
+                        []  # placeholder for labels
                     ]
                     if folder == "homework":
                         homework_tasks_list.append(entry)
