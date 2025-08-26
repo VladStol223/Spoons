@@ -45,7 +45,6 @@ for name, value in COLORS.items():
     globals()[name] = value
 
 import pygame
-import pygame_gui   
 import sys
 import calendar
 
@@ -168,7 +167,6 @@ def slot_key_for_page(p: str) -> str:
 # ----------------------------------------------------------------------------------------------------
 while running:
     screen_width, screen_height = screen.get_size()
-    manager = pygame_gui.UIManager((screen_width, screen_height), "themes/default.json")
     font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.06))
     big_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.067))
     bigger_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.075))
@@ -299,7 +297,6 @@ while running:
         draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
         
     for event in pygame.event.get():
-        manager.process_events(event)
         if event.type == pygame.QUIT:
             save_data(
             spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
@@ -395,8 +392,6 @@ while running:
         elif page == "stats":
             logic_stats(event)
     pygame.display.flip()
-    manager.update(delta_time)
-    manager.draw_ui(screen)
 
 pygame.quit()
 sys.exit()
