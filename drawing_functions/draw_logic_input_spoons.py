@@ -1,5 +1,4 @@
 import pygame
-import pygame_gui
 import math
 from pygame_gui.elements import UITextEntryLine, UILabel
 from config import *
