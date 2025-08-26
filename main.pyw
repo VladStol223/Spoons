@@ -36,6 +36,7 @@ To do:
 '''
 
 import ctypes
+import platform
 from os import name
 from datetime import datetime
 
@@ -48,7 +49,13 @@ import pygame
 import sys
 import calendar
 
-ctypes.windll.user32.SetProcessDpiAwarenessContext(ctypes.c_void_p(-4))
+IS_WINDOWS = platform.system() == "Windows"
+IS_LINUX   = platform.system() == "Linux"
+IS_MAC     = platform.system() == "Darwin"
+
+if IS_WINDOWS:
+    ctypes.windll.user32.SetProcessDpiAwarenessContext(ctypes.c_void_p(-4))
+
 
 pygame.init()
 pygame.key.set_repeat(450, 50) 
@@ -65,23 +72,30 @@ SWP_NOZORDER = 0x0004
 HWND_TOP     = 0
 
 def move_window(x: int, y: int):
-    """Move the Pygame window to (x, y) screen coordinates without resizing."""
-    hwnd = pygame.display.get_wm_info()["window"]
-    ctypes.windll.user32.SetWindowPos(hwnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER)
+    """Move the Pygame window (Windows only)."""
+    if IS_WINDOWS:
+        hwnd = pygame.display.get_wm_info()["window"]
+        ctypes.windll.user32.SetWindowPos(hwnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE | SWP_NOZORDER)
 
-user32 = ctypes.windll.user32
 def get_true_screen_size():
-    return ( user32.GetSystemMetrics(0),
-             user32.GetSystemMetrics(1) )
+    if IS_WINDOWS:
+        user32 = ctypes.windll.user32
+        return (user32.GetSystemMetrics(0), user32.GetSystemMetrics(1))
+    else:
+        # Cross-platform fallback: use Pygame's display info
+        info = pygame.display.Info()
+        return (info.current_w, info.current_h)
 
 # Constant for “pixels per logical inch” on X-axis
 LOGPIXELSX = 88
 
 def get_scale_factor() -> float:
-    hwnd = pygame.display.get_wm_info()["window"]
-    # Get the DPI that *this window* is on:
-    dpi = ctypes.windll.user32.GetDpiForWindow(hwnd)
-    return dpi / 96.0
+    if IS_WINDOWS:
+        hwnd = pygame.display.get_wm_info()["window"]
+        dpi = ctypes.windll.user32.GetDpiForWindow(hwnd)
+        return dpi / 96.0
+    else:
+        return 1.0  # Default scaling on Linux/macOS
 
 scale_factor = get_scale_factor()
 
@@ -330,14 +344,16 @@ while running:
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_F11:
             scale_factor = get_scale_factor()
             if not is_maximized:
-                # grow to 1920×1080 window
-                screen = pygame.display.set_mode(get_true_screen_size(), pygame.NOFRAME)
-                move_window(0, 0)  
+                if IS_WINDOWS:
+                    screen = pygame.display.set_mode(get_true_screen_size(), pygame.NOFRAME)
+                    move_window(0, 0)
+                else:
+                    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
                 is_maximized = True
             else:
-                # shrink back to 960×540
                 screen = pygame.display.set_mode(WINDOWED_SIZE)
-                move_window(0, 5)  
+                if IS_WINDOWS:
+                    move_window(0, 5)
                 is_maximized = False
             UI_elements_initialized = False
             scale = max(3, (6 / scale_factor)) if is_maximized else 3

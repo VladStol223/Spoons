@@ -55,8 +55,8 @@ image_categories = {
     },
     'border': {
         'corner':          ('borderCorner.png',(12,12)),
-        'edge1':           ('Border1.png',(6,12)),
-        'edge2':           ('Border2.png',(6,12)),
+        'edge1':           ('border1.png',(6,12)),
+        'edge2':           ('border2.png',(6,12)),
         'tcorner':         ('borderTcorner.png',(14,12)),
         'calendar_border': ('borderCalendarLeft.png',(9,24)),
     },
