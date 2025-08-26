@@ -95,7 +95,7 @@ def get_scale_factor() -> float:
         dpi = ctypes.windll.user32.GetDpiForWindow(hwnd)
         return dpi / 96.0
     else:
-        return 2.0  # Default scaling on Linux/macOS
+        return 0.5  # Default scaling on Linux/macOS
 
 scale_factor = get_scale_factor()
 
