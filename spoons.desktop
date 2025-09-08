@@ -1,0 +1,13 @@
+
+[Desktop Entry]
+#Save this to within your directory "/usr/share/applications" to run spoons
+Version=1.33.9
+Type=Application
+Terminal=false
+Exec=python3 main.pyw
+#Path of your spoons folder. Example "/home/jason/Documents/Spoons"
+Path=
+Name=Spoons
+Comment=Get your shit together
+#Path of your spoon icon. Should be within same folder. Example "/home/jason/Documents/Spoons/images/hubIcons/default/addSpoonsIcon.png"
+Icon=
