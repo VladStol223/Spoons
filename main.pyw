@@ -336,8 +336,16 @@ while running:
                         folder_five, folder_six, streak_dates,
                         border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
                         scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, level, coins)
+                        prev_page = page
                         if page_key == "manage_tasks":
                             scroll_offset = 0
+                        if page_key == "input_tasks" and prev_page != "input_tasks":
+                            now = datetime.now()
+                            task_month = now.month
+                            task_day = now.day
+                            max_days = calendar.monthrange(now.year, task_month)[1]
+                            input_active = False
+
                         page = page_key
                     break
 
