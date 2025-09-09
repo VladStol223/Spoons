@@ -190,6 +190,8 @@ def get_scale_factor() -> float:
 
 scale_factor = get_scale_factor()
 
+_apply_window_size()
+
 ####################################################################################################################################
 def hub_buttons(event):
     global scroll_offset
