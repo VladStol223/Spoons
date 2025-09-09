@@ -1,7 +1,6 @@
 
 [Desktop Entry]
 #Save this to within your directory "/usr/share/applications" to run spoons
-Version=1.33.9
 Type=Application
 Terminal=false
 Exec=python3 main.pyw
