@@ -64,7 +64,98 @@ button_widths = {}
 hub_closing = False
 UI_elements_initialized = False
 clock = pygame.time.Clock()
-screen = pygame.display.set_mode(WINDOWED_SIZE)
+# pick your logical base size (use your WINDOWED_SIZE from config)
+# window + logical size
+
+# Debounce / guard for mode switches
+F11_COOLDOWN_MS = 250
+ZOOM_COOLDOWN_MS = 60
+_last_f11_ms = -10000
+_last_zoom_ms = -10000
+_mode_switching = False
+
+
+LOGICAL_W, LOGICAL_H = WINDOWED_SIZE
+screen = pygame.display.set_mode((LOGICAL_W, LOGICAL_H), pygame.SCALED | pygame.RESIZABLE)
+
+is_maximized = False  # <-- track fullscreen
+
+# Integer zoom steps (avoid letterboxing jumps)
+INT_SCALE_MIN, INT_SCALE_MAX = 1, 4
+int_scale = 1
+last_windowed_size = (LOGICAL_W, LOGICAL_H)
+
+# SDL2 window handle (refresh after every set_mode)
+try:
+    from pygame._sdl2.video import Window
+    def refresh_window_handle():
+        # rebind after any set_mode()
+        return Window.from_display_module()
+    _pg_window = refresh_window_handle()
+except Exception:
+    _pg_window = None
+    def refresh_window_handle():
+        return None
+
+
+def _apply_window_size():
+    """Apply the current integer zoom to the window (windowed mode only)."""
+    global _pg_window, last_windowed_size, screen
+    if is_maximized:
+        return  # ignore while fullscreen
+    w, h = LOGICAL_W * int_scale, LOGICAL_H * int_scale
+    last_windowed_size = (w, h)
+    if _pg_window is not None:
+        _pg_window.size = (w, h)
+    else:
+        # Fallback: recreate window (rarely needed on pygame-ce)
+        screen = pygame.display.set_mode((LOGICAL_W, LOGICAL_H), pygame.SCALED | pygame.RESIZABLE)
+
+def set_zoom_step(delta: int):
+    """delta=+1 for ']', -1 for '[' — only in windowed mode."""
+    global int_scale
+    if is_maximized:
+        return
+    new_scale = max(INT_SCALE_MIN, min(INT_SCALE_MAX, int_scale + delta))
+    if new_scale != int_scale:
+        int_scale = new_scale
+        _apply_window_size()
+
+
+zoom = 1.0  # 1.0 = 100%
+try:
+    from pygame._sdl2.video import Window
+    _pg_window = Window.from_display_module()
+except Exception:
+    _pg_window = None
+
+_last_zoom_ms = 0
+def set_zoom(z: float, *, debounce_ms: int = 35):
+    """Robust zoom that resizes the window without segfaulting."""
+    global zoom, screen, _last_zoom_ms
+
+    # Debounce to avoid hammering SDL on key-repeat
+    now = pygame.time.get_ticks()
+    if now - _last_zoom_ms < debounce_ms:
+        return
+    _last_zoom_ms = now
+
+    # Clamp and compute new pixel size
+    zoom = max(0.5, min(3.0, z))
+    win_w = max(320, int(LOGICAL_W * zoom))
+    win_h = max(240, int(LOGICAL_H * zoom))
+
+    # In fullscreen we let the monitor handle scaling; ignore zoom changes
+    if is_maximized:
+        return
+
+    # Prefer SDL2 Window API (no display recreation)
+    if _pg_window is not None:
+        _pg_window.size = (win_w, win_h)
+    else:
+        # Fallback: recreate the window with SCALED+RESIZABLE
+        screen = pygame.display.set_mode((win_w, win_h), pygame.SCALED | pygame.RESIZABLE)
+
 pygame.display.set_caption("Spoons")
 
 SWP_NOSIZE   = 0x0001
@@ -224,7 +315,7 @@ while running:
     hub_icon_rects = draw_hub_buttons(screen, page, tool_tips, background_color,
                                   add_spoons_color, add_tasks_color,
                                   manage_tasks_color, inventory_color, calendar_color,
-                                  shop_color, stats_color, button_widths, hub_closing, delta_time, is_maximized, scale_factor)
+                                  shop_color, stats_color, button_widths, hub_closing, delta_time, False, scale_factor)
 
 
     if page == "input_spoons":
@@ -288,7 +379,7 @@ while running:
         draw_inventory(screen, spoon_name_input, inventory_tab, background_color, input_active, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open)
         
     elif page == "calendar":
-        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
+        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, False, scale_factor)
         draw_calendar(screen, spoon_name_input, displayed_week_offset, day_range_index, 
                   homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,
                   displayed_month, displayed_year, background_color,
@@ -304,11 +395,11 @@ while running:
         
     elif page == "stats":
         draw_stats(screen, font, big_font, personal_stats, global_leaderboard)
-        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
+        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, False, scale_factor)
 
     if page not in ("calendar", "stats"):
         draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page)
-        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
+        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, False, scale_factor)
         
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -350,22 +441,50 @@ while running:
                     break
 
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_F11:
-            scale_factor = get_scale_factor()
+            now = pygame.time.get_ticks()
+            if _mode_switching or (now - _last_f11_ms) < F11_COOLDOWN_MS:
+                continue  # ignore rapid presses
+
+            _mode_switching = True
+            _last_f11_ms = now
+
+            # IMPORTANT: drop stale handle before recreating the window
+            _pg_window = None
+
             if not is_maximized:
-                if IS_WINDOWS:
-                    screen = pygame.display.set_mode(get_true_screen_size(), pygame.NOFRAME)
-                    move_window(0, 0)
-                else:
-                    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
                 is_maximized = True
+                screen = pygame.display.set_mode((LOGICAL_W, LOGICAL_H),
+                                                pygame.SCALED | pygame.FULLSCREEN)
             else:
-                screen = pygame.display.set_mode(WINDOWED_SIZE)
-                if IS_WINDOWS:
-                    move_window(0, 5)
                 is_maximized = False
-            UI_elements_initialized = False
-            scale = max(3, (6 / scale_factor)) if is_maximized else 3
-            print(f"Scale factor: {scale_factor} - Border scale: {scale} - Maximized: {is_maximized}")
+                screen = pygame.display.set_mode((LOGICAL_W, LOGICAL_H),
+                                                pygame.SCALED | pygame.RESIZABLE)
+
+            # Re-grab a fresh handle AFTER set_mode
+            try:
+                from pygame._sdl2.video import Window
+                _pg_window = Window.from_display_module()
+            except Exception:
+                _pg_window = None
+
+            # When returning to windowed, restore last windowed size
+            if not is_maximized and _pg_window is not None:
+                _pg_window.size = last_windowed_size
+
+            _mode_switching = False
+
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RIGHTBRACKET or event.key == pygame.K_LEFTBRACKET:
+                now = pygame.time.get_ticks()
+                if (now - _last_zoom_ms) >= ZOOM_COOLDOWN_MS and not is_maximized:
+                    _last_zoom_ms = now
+                    if event.key == pygame.K_RIGHTBRACKET:
+                        set_zoom_step(+1)
+                    else:
+                        set_zoom_step(-1)
+
+
+
 
         new_page = hub_buttons(event)
 
