@@ -57,8 +57,8 @@ layout_heights = {
 
     "repetitions_amount_label":    0.65,   # “Repetitions:”
     "repetitions_input_line":      0.70,   # y=420/600
-    "how_long_label":              0.538,   # “How Long:”
-    "how_long_input_line":         0.583,   # y=290/600
+    "how_long_label":              0.55,   # “How Long:”
+    "how_long_input_line":         0.553,   # y=290/600
 }
 
 def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active, 
@@ -70,6 +70,9 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
                      folder_three, folder_four, folder_five, folder_six
                      , homework_tasks_list,chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, manillaFolder):
     global month_typed, day_typed, caret_task, caret_month, caret_day, caret_spoons
+    global start_time_typed, how_often_typed, how_long_typed, repetitions_typed
+    global caret_start_time, caret_how_often, caret_how_long, caret_repetitions
+
 
     if isinstance(current_spoons, int):
         display_spoons = "" if current_spoons == 0 else str(current_spoons)
@@ -87,23 +90,29 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
     due_date_infill_color = tuple(min(255, c + 20) for c in (r, g, b))
 
     task_input_box = pygame.Rect(250, y_pos["task_input_line"], 300, 50)
-    spoon_input_box = pygame.Rect(375, y_pos["spoons_input_line"], 50, 50)
     done_button       = pygame.Rect(630, done_button_y_pos,50, 32)
     arrow_points = [(done_button.right, done_button.top - 10),(done_button.right + 30, done_button.centery),(done_button.right, done_button.bottom + 10)]
 
-    recurring_toggle_button = pygame.Rect(760, 50, 40, 40)
+    # Mirror layout math from draw_input_tasks so click/hover regions match visuals
+    _recurring_vshift = y_pos["spoons_input_line"] - y_pos["due_date_input_line"]
+    _SPOONS_X_BASE = 375
+    _SPOONS_X_SHIFTED = 180
+    spoon_input_box = pygame.Rect(_SPOONS_X_SHIFTED if recurring_toggle_on else _SPOONS_X_BASE, y_pos["spoons_input_line"], 50, 50)
 
-    how_often_input_box          = pygame.Rect(410, y_pos["due_date_input_line"], 120, 50)
-    how_often_up_button          = pygame.Rect(510, int(y_pos["due_date_input_line"] + 7), 15, 15)
-    how_often_down_button        = pygame.Rect(510, int(y_pos["due_date_input_line"] + 7), 15, 15)
+    gap = 20
 
-    how_long_input_box           = pygame.Rect(555, y_pos["how_long_input_line"], 115, 30)
-    how_long_up_button           = pygame.Rect(650, int(y_pos["due_date_input_line"] - 7), 15, 15)
-    how_long_down_button         = pygame.Rect(650, int(y_pos["due_date_input_line"] - 7), 15, 15)
+    how_often_input_box          = pygame.Rect(spoon_input_box.x + spoon_input_box.width + gap, y_pos["spoons_input_line"], 120, 50)
+    how_often_up_button          = pygame.Rect(how_often_input_box.right - 20, y_pos["spoons_input_line"] + 7, 15, 15)
+    how_often_down_button        = pygame.Rect(how_often_input_box.right - 20, y_pos["spoons_input_line"] + 25, 15, 15)
 
-    repetitions_amount_input_box = pygame.Rect(555, y_pos["repetitions_input_line"], 115, 30)
-    repetitions_amount_up_button = pygame.Rect(650, y_pos["repetitions_input_line"] + 0, 15, 15)
-    repetitions_amount_down_button = pygame.Rect(650, y_pos["repetitions_input_line"] + 15, 15, 15)
+    how_long_input_box           = pygame.Rect(how_often_input_box.x + how_often_input_box.width + gap,  y_pos["spoons_input_line"], 120, 50)
+    how_long_up_button           = pygame.Rect(how_long_input_box.right - 20, y_pos["spoons_input_line"] + 7, 15, 15)
+    how_long_down_button         = pygame.Rect(how_long_input_box.right - 20, y_pos["spoons_input_line"] + 25, 15, 15)
+
+    repetitions_amount_input_box = pygame.Rect(how_long_input_box.x + how_long_input_box.width + gap, y_pos["spoons_input_line"], 120, 50)
+    repetitions_amount_up_button = pygame.Rect(repetitions_amount_input_box.right - 20, y_pos["spoons_input_line"] + 7, 15, 15)
+    repetitions_amount_down_button = pygame.Rect(repetitions_amount_input_box.right - 20, y_pos["spoons_input_line"] + 25, 15, 15)
+
 
     month_input_box_normal = pygame.Rect(280, y_pos["due_date_input_line"], 160, 50)
     month_up_button_normal = pygame.Rect(420, int(y_pos["due_date_input_line"] + 7), 15, 15)
@@ -112,14 +121,26 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
     day_up_button_normal   = pygame.Rect(515, int(y_pos["due_date_input_line"] + 7), 15, 15)
     day_down_button_normal = pygame.Rect(515, int(y_pos["due_date_input_line"] + 25), 15, 15)
 
-    month_input_box_recurring_shifted = pygame.Rect(150, y_pos["due_date_input_line"], 160, 50)
-    month_up_button_recurring_shifted = pygame.Rect(290, int(y_pos["due_date_input_line"] + 7), 15, 15)
-    month_down_button_recurring_shifted = pygame.Rect(290, int(y_pos["due_date_input_line"] + 25), 15, 15)
-    day_input_box_recurring_shifted   = pygame.Rect(325, y_pos["due_date_input_line"], 70, 50)
-    day_up_button_recurring_shifted   = pygame.Rect(375, int(y_pos["due_date_input_line"] + 7), 15, 15)
-    day_down_button_recurring_shifted = pygame.Rect(375, int(y_pos["due_date_input_line"] + 25), 15, 15)
+    time_shift = 80
+
+    month_input_box_recurring_shifted = pygame.Rect(280 - time_shift, y_pos["due_date_input_line"], 160, 50)
+    month_up_button_recurring_shifted = pygame.Rect(420 - time_shift, int(y_pos["due_date_input_line"] + 7), 15, 15)
+    month_down_button_recurring_shifted = pygame.Rect(420 - time_shift, int(y_pos["due_date_input_line"] + 25), 15, 15)
+    day_input_box_recurring_shifted   = pygame.Rect(465 - time_shift, y_pos["due_date_input_line"], 70, 50)
+    day_up_button_recurring_shifted   = pygame.Rect(515 - time_shift, int(y_pos["due_date_input_line"] + 7), 15, 15)
+    day_down_button_recurring_shifted = pygame.Rect(515 - time_shift, int(y_pos["due_date_input_line"] + 25), 15, 15)
 
     draw_complete_tasks_folders(screen,folder,folder_one,folder_two,folder_three,folder_four,folder_five,folder_six, homework_tasks_list,chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, manillaFolder)
+
+    time_btn_rect = time_button.get_rect(topleft=(120,140))
+    recurring_btn_rect = recurring_button.get_rect(topleft=(120,190))
+    def _draw_toggle_aura(rect): 
+        aura = pygame.Surface((rect.width + 8, rect.height + 8), pygame.SRCALPHA); pygame.draw.rect(aura, (0,255,0,70), aura.get_rect(), border_radius=8); screen.blit(aura, (rect.x - 4, rect.y - 4))
+    if time_toggle_on: _draw_toggle_aura(time_btn_rect)
+    if recurring_toggle_on: _draw_toggle_aura(recurring_btn_rect)
+    screen.blit(time_button, time_btn_rect.topleft)
+    screen.blit(recurring_button, recurring_btn_rect.topleft)
+
 
     # Draw the boxes as before
     draw_input_box(screen, task_input_box, input_active == "task", current_task, DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light")
@@ -151,9 +172,31 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
     up_arrow = pygame.transform.rotate(arrow, 90)
     down_arrow = pygame.transform.rotate(arrow, 270)
 
+    # --- Start Time (draw-only) ---
+    def _fmt_time_display(t):
+        # expects [HH, MM] or similar; safe fallback
+        try:
+            if isinstance(t, (list, tuple)) and len(t) >= 2:
+                return f"{int(t[0]):02d}:{int(t[1]):02d}"
+        except Exception:
+            pass
+        return "HH:MM"  # placeholder
+
+    # position to the right of the day box; same y-level
+    _START_TIME_X = day_input_box_recurring_shifted.right + 20  # tweak horizontally later
+    _START_TIME_W = 120
+    _START_TIME_H = 50
+    start_time_input_box = pygame.Rect(_START_TIME_X, day_input_box_recurring_shifted.y, _START_TIME_W, _START_TIME_H)
+
+    # spinner buttons for start time (draw-only for now)
+    start_time_up_button   = pygame.Rect(start_time_input_box.right - 20, start_time_input_box.y + 7, 15, 15)
+    start_time_down_button = pygame.Rect(start_time_input_box.right - 20, start_time_input_box.y + 25, 15, 15)
+
+
+
     def _render_month_box(active, rect, month_num):
         global caret_month
-        pygame.draw.rect(screen, background_color if recurring_toggle_on else due_date_infill_color, rect, 0)
+        pygame.draw.rect(screen, background_color if time_toggle_on else due_date_infill_color, rect, 0)
         draw_input_box(screen, rect, active, "", DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light")
         x0, y0 = rect.x + 10, rect.y + 8
         if active:
@@ -176,7 +219,7 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
 
     def _render_day_box(active, rect, day_value):
         global caret_day
-        pygame.draw.rect(screen, background_color if recurring_toggle_on else due_date_infill_color, rect, 0)
+        pygame.draw.rect(screen, background_color if time_toggle_on else due_date_infill_color, rect, 0)
         draw_input_box(screen, rect, active, "", DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light")
         x0, y0 = rect.x + 10, rect.y + 8
         if active:
@@ -192,32 +235,116 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
             screen.blit(txt, (x0, y0))
 
     if recurring_toggle_on:
-        screen.blit(font.render("Enter Start date:", True, WHITE),(170, y_pos["due_date_label"]))
+        screen.blit(font.render("Spoons:", True, WHITE),(spoon_input_box.x - 15, y_pos["spoons_label"]))
+
+        small_label_shift = 5
+
+        screen.blit(small_font.render("How Often:", True, WHITE), (how_often_input_box.x + 10, y_pos["spoons_label"] + small_label_shift))
+        # while active: keep unit visible, hide default "1" if the buffer is empty
+        _ho_txt = (how_often_typed if input_active == "how_often" else str(task_how_often)) + " days"
+        draw_input_box(screen, how_often_input_box, input_active == "how_often", _ho_txt, DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light")
+        if input_active == "how_often" and _caret_visible():
+            x0, y0 = how_often_input_box.x + 10, how_often_input_box.y + 8
+            # caret goes after the typed digits (before the space in " days")
+            cx = _caret_x(font, how_often_typed, x0)
+            pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2)
+
+        screen.blit(small_font.render("How Long:", True, WHITE), (how_long_input_box.x + 10, y_pos["spoons_label"] + small_label_shift))
+        _hl_txt = (how_long_typed if input_active == "how_long" else str(task_how_long)) + " weeks"
+        draw_input_box(screen, how_long_input_box, input_active == "how_long", _hl_txt, DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light")
+        if input_active == "how_long" and _caret_visible():
+            x0, y0 = how_long_input_box.x + 10, how_long_input_box.y + 8
+            cx = _caret_x(font, how_long_typed, x0)
+            pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2)
+
+        screen.blit(small_font.render("Repetitions:", True, WHITE), (repetitions_amount_input_box.x + 7, y_pos["spoons_label"] + small_label_shift))
+        _hr_txt = (repetitions_typed if input_active == "repetitions" else str(task_repetitions_amount)) + " times"
+        draw_input_box(screen, repetitions_amount_input_box, input_active == "repetitions", _hr_txt, DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light")
+        if input_active == "repetitions" and _caret_visible():
+            x0, y0 = repetitions_amount_input_box.x + 10, repetitions_amount_input_box.y + 8
+            cx = _caret_x(font, repetitions_typed, x0)
+            pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2)
+
+        # draw a small barrier under the arrow area so clicks don't fall through to the input field
+        barrier_w = 24
+        for base_rect in (how_often_input_box, how_long_input_box, repetitions_amount_input_box):
+            barrier_rect = pygame.Rect(base_rect.right - barrier_w, base_rect.y + 4, barrier_w - 4, base_rect.height - 8)
+            pygame.draw.rect(screen, due_date_infill_color, barrier_rect)
+
+        # spinner buttons for all recurring inputs (draw-only)
+        for btn in (
+            how_often_up_button, how_often_down_button,
+            how_long_up_button, how_long_down_button,
+            repetitions_amount_up_button, repetitions_amount_down_button
+        ):
+            pygame.draw.rect(screen, due_date_infill_color, btn)
+
+        # arrows on the buttons
+        screen.blit(up_arrow,   (how_often_up_button.x - 9, how_often_up_button.y))
+        screen.blit(down_arrow, (how_often_down_button.x - 12, how_often_down_button.y))
+
+        screen.blit(up_arrow,   (how_long_up_button.x - 9, how_long_up_button.y))
+        screen.blit(down_arrow, (how_long_down_button.x - 12, how_long_down_button.y))
+
+        screen.blit(up_arrow,   (repetitions_amount_up_button.x - 9, repetitions_amount_up_button.y))
+        screen.blit(down_arrow, (repetitions_amount_down_button.x - 12, repetitions_amount_down_button.y))
+
+
+    else:
+        screen.blit(font.render("Spoons:", True, WHITE),(360, y_pos["spoons_label"]))
+
+    if time_toggle_on:
+        screen.blit(font.render("Due Date:", True, WHITE),(345 - time_shift + 10, y_pos["due_date_label"]))
         _render_month_box(input_active == "month", month_input_box_recurring_shifted, task_month)
         _render_day_box(input_active == "day", day_input_box_recurring_shifted, int(task_day))
-        for btn in (month_up_button_recurring_shifted,month_down_button_recurring_shifted,day_up_button_recurring_shifted,day_down_button_recurring_shifted):
-            pygame.draw.rect(screen, background_color, btn)
-        screen.blit(up_arrow,   (month_up_button_recurring_shifted.x, month_up_button_recurring_shifted.y - 7))
-        screen.blit(down_arrow, (month_down_button_recurring_shifted.x, month_down_button_recurring_shifted.y - 7))
-        screen.blit(up_arrow,   (day_up_button_recurring_shifted.x, day_up_button_recurring_shifted.y - 7))
-        screen.blit(down_arrow, (day_down_button_recurring_shifted.x, day_down_button_recurring_shifted.y - 7))
 
-        screen.blit(font.render("How Often:", True, WHITE), (395, y_pos["due_date_input_line"]))
-        draw_input_box(screen, how_often_input_box, False, f"{task_how_often} days", GREEN, LIGHT_GRAY, False, background_color, "light")
-        pygame.draw.rect(screen, background_color, how_often_up_button); pygame.draw.rect(screen, background_color, how_often_down_button)
-        screen.blit(up_arrow,   (how_often_up_button.x, how_often_up_button.y - 7)); screen.blit(down_arrow, (how_often_down_button.x, how_often_down_button.y - 7))
+        for btn in (
+            month_up_button_recurring_shifted, month_down_button_recurring_shifted,
+            day_up_button_recurring_shifted,   day_down_button_recurring_shifted
+        ):
+            pygame.draw.rect(screen, due_date_infill_color, btn)
+        screen.blit(up_arrow,   (month_up_button_recurring_shifted.x - 9, month_up_button_recurring_shifted.y))
+        screen.blit(down_arrow, (month_down_button_recurring_shifted.x - 12, month_down_button_recurring_shifted.y))
+        screen.blit(up_arrow,   (day_up_button_recurring_shifted.x - 9, day_up_button_recurring_shifted.y))
+        screen.blit(down_arrow, (day_down_button_recurring_shifted.x - 12, day_down_button_recurring_shifted.y))
 
-        screen.blit(small_font.render("How Long:", True, WHITE),(560, y_pos["how_long_label"]))
-        draw_input_box(screen, how_long_input_box, False, f"{task_how_long} weeks", GREEN, LIGHT_GRAY, False, background_color, "light")
-        pygame.draw.rect(screen, background_color, how_long_up_button); pygame.draw.rect(screen, background_color, how_long_down_button)
-        screen.blit(up_arrow,   (how_long_up_button.x, how_long_up_button.y - 7)); screen.blit(down_arrow, (how_long_down_button.x, how_long_down_button.y - 7))
+        # Start Time label + box
+        screen.blit(font.render("Start Time:", True, WHITE),(start_time_input_box.x - 10, y_pos["due_date_label"]))
+        pygame.draw.rect(screen, background_color, start_time_input_box, 0)
 
-        screen.blit(small_font.render("Repetitions:", True, WHITE), (552, y_pos["repetitions_amount_label"]))
-        draw_input_box(screen, repetitions_amount_input_box, False, f"{task_repetitions_amount} times", GREEN, LIGHT_GRAY, False, background_color, "light")
-        pygame.draw.rect(screen, background_color, repetitions_amount_up_button); pygame.draw.rect(screen, background_color, repetitions_amount_down_button)
-        screen.blit(up_arrow,   (repetitions_amount_up_button.x, repetitions_amount_up_button.y - 7)); screen.blit(down_arrow, (repetitions_amount_down_button.x, repetitions_amount_down_button.y - 7))
+        # default shown should be current time if start_time is unset/invalid
+        try:
+            disp_time = _fmt_time_display(start_time)
+        except Exception:
+            hh, mm = _now_hh_mm()
+            disp_time = f"{hh:02d}:{mm:02d}"
 
-        screen.blit(small_font.render("Remove Recurring Task", True, WHITE), (recurring_toggle_button.x - 280, y_pos["time_toggle_label"]))
+        # when active: always show the raw typed digits (may be empty) and caret; otherwise: HH:MM
+        if input_active == "start_time":
+            show_txt = start_time_typed  # no colon; may be empty on first focus
+            is_active = True
+        else:
+            show_txt = disp_time          # HH:MM
+            is_active = False
+
+        draw_input_box(
+            screen, start_time_input_box, is_active, show_txt,
+            DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light"
+        )
+        if input_active == "start_time" and _caret_visible():
+            x0, y0 = start_time_input_box.x + 10, start_time_input_box.y + 8
+            cx = _caret_x(font, start_time_typed, x0)
+            pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2)
+
+
+        # Start Time spinner buttons + arrows (draw-only)
+        for btn in (start_time_up_button, start_time_down_button):
+            pygame.draw.rect(screen, due_date_infill_color, btn)
+        screen.blit(up_arrow,   (start_time_up_button.x - 9, start_time_up_button.y))
+        screen.blit(down_arrow, (start_time_down_button.x - 12, start_time_down_button.y))
+
+
+
     else:
         screen.blit(font.render("Due Date:", True, WHITE),(345, y_pos["due_date_label"]))
         _render_month_box(input_active == "month", month_input_box_normal, task_month)
@@ -230,7 +357,6 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
         screen.blit(down_arrow, (day_down_button_normal.x - 12, day_down_button_normal.y))
 
     screen.blit(font.render("Task Name:", True, WHITE),(335, y_pos["task_label"]))
-    screen.blit(font.render("Spoons:", True, WHITE),(360, y_pos["spoons_label"]))
     pygame.draw.rect(screen, done_button_color, done_button)
     pygame.draw.polygon(screen, done_button_color, arrow_points)
     screen.blit(font.render("Add", True, BLACK),(done_button.x + 15, done_button.y + 2))
@@ -265,10 +391,23 @@ Returns:
 # --- Inline edit buffers & carets ---
 month_typed = ""
 day_typed = ""
+
+# typed buffers for editable fields
+start_time_typed = ""           # raw digits while editing (e.g., "930", "1230")
+how_often_typed = ""            # raw digits while editing (no unit)
+how_long_typed = ""             # raw digits while editing (no unit)
+repetitions_typed = ""          # raw digits while editing (no unit)
+
+# carets
 caret_task = 0
 caret_month = 0
 caret_day = 0
 caret_spoons = 0
+caret_start_time = 0
+caret_how_often = 0
+caret_how_long = 0
+caret_repetitions = 0
+
 def _caret_visible(): return (pygame.time.get_ticks() // 500) % 2 == 0
 def _caret_x(font_obj, text, start_x): return start_x + font_obj.size(text)[0]
 def _index_from_click(font_obj, text, click_x, start_x):
@@ -312,9 +451,65 @@ def _commit_day(global_state, task_day, max_days):
     global_state["day_typed"] = ""
     return task_day
 
-def _add_task_entry(current_task, current_spoons, folder, task_date, current_time, lists_tuple, recurring_toggle_on, task_how_often, task_how_long, task_repetitions_amount):
-    (homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list) = lists_tuple
+# ---- Time + integer field commits ----
+def _now_hh_mm():
+    n = datetime.now()
+    return n.hour, n.minute
+
+def _start_time_from_digits(d):
+    """Parse 'H', 'HH', 'HMM', 'HHMM' into (hh, mm) with clamping."""
+    d = "".join(ch for ch in d if ch.isdigit())[:4]
+    if not d:
+        return _now_hh_mm()
+    if len(d) <= 2:
+        hh = int(d)
+        return max(0, min(23, hh)), 0
+    hh = int(d[:-2]) if d[:-2] else 0
+    mm = int(d[-2:])
+    hh = max(0, min(23, hh))
+    mm = max(0, min(59, mm))
+    return hh, mm
+
+def _start_time_digits(hh, mm):
+    return f"{int(hh):02d}{int(mm):02d}"
+
+def _commit_start_time(global_state, start_time_list):
+    """Commit typed digits to start_time list; if empty, keep current value."""
+    s = global_state["start_time_typed"]
+    if s != "":
+        hh, mm = _start_time_from_digits(s)
+        start_time_list[0], start_time_list[1] = hh, mm
+    global_state["start_time_typed"] = ""
+    return start_time_list
+
+def _commit_positive_int(global_state, key_name, current_val, default_val=1, min_val=1, max_val=None):
+    """Commit a typed numeric buffer into an int with bounds; empty -> default."""
+    raw = global_state[key_name]
+    if raw.isdigit():
+        v = int(raw)
+        if max_val is not None: v = min(max_val, v)
+        v = max(min_val, v)
+        current_val = v
+    else:
+        current_val = default_val
+    global_state[key_name] = ""
+    return current_val
+
+def _add_task_entry(current_task, current_spoons, folder, task_date, current_time, lists_tuple,
+                    recurring_toggle_on, task_how_often, task_how_long, task_repetitions_amount,
+                    start_time):
+    (homework_tasks_list, chores_tasks_list, work_tasks_list,
+     misc_tasks_list, exams_tasks_list, projects_tasks_list) = lists_tuple
+
+    # Normalize start_time -> [HH, MM, 0, 0]
+    try:
+        hh, mm = int(start_time[0]) % 24, int(start_time[1]) % 60
+    except Exception:
+        now = datetime.now(); hh, mm = now.hour, now.minute
+    start_time_4 = [hh, mm, 0, 0]
+
     days_till_due = (task_date - current_time).days + 1
+
     def _push(entry):
         if folder == "homework": homework_tasks_list.append(entry)
         elif folder == "chores": chores_tasks_list.append(entry)
@@ -327,13 +522,23 @@ def _add_task_entry(current_task, current_spoons, folder, task_date, current_tim
         for i in range(task_repetitions_amount):
             actual_date = task_date + timedelta(days=i * task_how_often)
             days_left = (actual_date - current_time).days + 1
-            _push([current_task, int(current_spoons), 0, days_left, actual_date, [0,0,0,0], [0,0,0,0], []])
+            _push([current_task, int(current_spoons), 0, days_left, actual_date,
+                   start_time_4, [0,0,0,0], []])
     else:
-        _push([current_task, int(current_spoons), 0, days_till_due, task_date, [0,0,0,0], [0,0,0,0], []])
+        _push([current_task, int(current_spoons), 0, days_till_due, task_date,
+               start_time_4, [0,0,0,0], []])
 
-
-def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month,task_day,task_how_often,task_how_long,task_repetitions_amount,recurring_toggle_on,max_days,input_active,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list):
+def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month,task_day,task_how_often,task_how_long,task_repetitions_amount,time_toggle_on,recurring_toggle_on,max_days,input_active,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list, start_time):
     global month_typed, day_typed, caret_task, caret_month, caret_day, caret_spoons
+    global start_time_typed, how_often_typed, how_long_typed, repetitions_typed
+    global caret_start_time, caret_how_often, caret_how_long, caret_repetitions
+
+    # default start_time -> current time if not provided
+    try:
+        _ = int(start_time[0]); _ = int(start_time[1])
+    except Exception:
+        now = datetime.now()
+        start_time[:] = [now.hour, now.minute]
 
     page = "input_tasks"
     screen_h = screen.get_height()
@@ -343,22 +548,34 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
     done_button_y_pos = 144 + 60 * folder_list.index(folder)
 
     task_input_box = pygame.Rect(250, y_pos["task_input_line"], 300, 50)
-    spoon_input_box = pygame.Rect(375, y_pos["spoons_input_line"], 50, 50)
-    done_button       = pygame.Rect(630, done_button_y_pos,50, 32)
 
-    recurring_toggle_button = pygame.Rect(760, 50, 40, 40)
+    # Needed in this scope too
+    done_button = pygame.Rect(630, done_button_y_pos, 50, 32)
+    time_btn_rect = time_button.get_rect(topleft=(120, 140))
+    recurring_btn_rect = recurring_button.get_rect(topleft=(120, 190))
 
-    how_often_input_box          = pygame.Rect(410, y_pos["due_date_input_line"], 120, 50)
-    how_often_up_button          = pygame.Rect(510, int(y_pos["due_date_input_line"] + 7), 15, 15)
-    how_often_down_button        = pygame.Rect(510, int(y_pos["due_date_input_line"] + 7), 15, 15)
+    _recurring_vshift = y_pos["spoons_input_line"] - y_pos["due_date_input_line"]
+    _SPOONS_X_BASE = 375
+    _SPOONS_X_SHIFTED = 180  # must match draw_input_tasks
+    spoon_input_box = pygame.Rect(
+        _SPOONS_X_SHIFTED if recurring_toggle_on else _SPOONS_X_BASE,
+        y_pos["spoons_input_line"], 50, 50
+    )
 
-    how_long_input_box           = pygame.Rect(555, y_pos["how_long_input_line"], 115, 30)
-    how_long_up_button           = pygame.Rect(650, int(y_pos["due_date_input_line"] - 7), 15, 15)
-    how_long_down_button         = pygame.Rect(650, int(y_pos["due_date_input_line"] - 7), 15, 15)
+    gap = 20  # must match draw_input_tasks
 
-    repetitions_amount_input_box = pygame.Rect(555, y_pos["repetitions_input_line"], 115, 30)
-    repetitions_amount_up_button = pygame.Rect(650, y_pos["repetitions_input_line"] + 0, 15, 15)
-    repetitions_amount_down_button = pygame.Rect(650, y_pos["repetitions_input_line"] + 15, 15, 15)
+    how_often_input_box   = pygame.Rect(spoon_input_box.x + spoon_input_box.width + gap, y_pos["spoons_input_line"], 120, 50)
+    how_often_up_button   = pygame.Rect(how_often_input_box.right - 20, y_pos["spoons_input_line"] + 7, 15, 15)
+    how_often_down_button = pygame.Rect(how_often_input_box.right - 20, y_pos["spoons_input_line"] + 25, 15, 15)
+
+    how_long_input_box    = pygame.Rect(how_often_input_box.x + how_often_input_box.width + gap, y_pos["spoons_input_line"], 120, 50)
+    how_long_up_button    = pygame.Rect(how_long_input_box.right - 20, y_pos["spoons_input_line"] + 7, 15, 15)
+    how_long_down_button  = pygame.Rect(how_long_input_box.right - 20, y_pos["spoons_input_line"] + 25, 15, 15)
+
+    repetitions_amount_input_box   = pygame.Rect(how_long_input_box.x + how_long_input_box.width + gap, y_pos["spoons_input_line"], 120, 50)
+    repetitions_amount_up_button   = pygame.Rect(repetitions_amount_input_box.right - 20, y_pos["spoons_input_line"] + 7, 15, 15)
+    repetitions_amount_down_button = pygame.Rect(repetitions_amount_input_box.right - 20, y_pos["spoons_input_line"] + 25, 15, 15)
+
 
     month_input_box_normal = pygame.Rect(280, y_pos["due_date_input_line"], 160, 50)
     month_up_button_normal = pygame.Rect(420, int(y_pos["due_date_input_line"] + 7), 15, 15)
@@ -367,31 +584,45 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
     day_up_button_normal   = pygame.Rect(515, int(y_pos["due_date_input_line"] + 7), 15, 15)
     day_down_button_normal = pygame.Rect(515, int(y_pos["due_date_input_line"] + 25), 15, 15)
 
-    month_input_box_recurring_shifted = pygame.Rect(150, y_pos["due_date_input_line"], 160, 50)
-    month_up_button_recurring_shifted = pygame.Rect(290, int(y_pos["due_date_input_line"] + 7), 15, 15)
-    month_down_button_recurring_shifted = pygame.Rect(290, int(y_pos["due_date_input_line"] + 25), 15, 15)
-    day_input_box_recurring_shifted   = pygame.Rect(325, y_pos["due_date_input_line"], 70, 50)
-    day_up_button_recurring_shifted   = pygame.Rect(375, int(y_pos["due_date_input_line"] + 7), 15, 15)
-    day_down_button_recurring_shifted = pygame.Rect(375, int(y_pos["due_date_input_line"] + 25), 15, 15)
+    time_shift = 80  # must match draw_input_tasks
+
+    month_input_box_recurring_shifted = pygame.Rect(280 - time_shift, y_pos["due_date_input_line"], 160, 50)
+    month_up_button_recurring_shifted = pygame.Rect(420 - time_shift, int(y_pos["due_date_input_line"] + 7), 15, 15)
+    month_down_button_recurring_shifted = pygame.Rect(420 - time_shift, int(y_pos["due_date_input_line"] + 25), 15, 15)
+    day_input_box_recurring_shifted   = pygame.Rect(465 - time_shift, y_pos["due_date_input_line"], 70, 50)
+    day_up_button_recurring_shifted   = pygame.Rect(515 - time_shift, int(y_pos["due_date_input_line"] + 7), 15, 15)
+    day_down_button_recurring_shifted = pygame.Rect(515 - time_shift, int(y_pos["due_date_input_line"] + 25), 15, 15)
+
+
+    # --- Start Time geometry (must follow day_input_box_recurring_shifted) ---
+    _START_TIME_X = day_input_box_recurring_shifted.right + 20
+    _START_TIME_W = 120
+    _START_TIME_H = 50
+    start_time_input_box = pygame.Rect(_START_TIME_X, day_input_box_recurring_shifted.y, _START_TIME_W, _START_TIME_H)
+    start_time_up_button   = pygame.Rect(start_time_input_box.right - 20, start_time_input_box.y + 7, 15, 15)
+    start_time_down_button = pygame.Rect(start_time_input_box.right - 20, start_time_input_box.y + 25, 15, 15)
+
+
 
     def _active_month_rect():
-        return month_input_box_recurring_shifted if recurring_toggle_on else month_input_box_normal
+        return month_input_box_recurring_shifted if time_toggle_on else month_input_box_normal
 
     def _active_day_rect():
-        return day_input_box_recurring_shifted if recurring_toggle_on else day_input_box_normal
+        return day_input_box_recurring_shifted if time_toggle_on else day_input_box_normal
+
 
     if event.type == pygame.MOUSEBUTTONDOWN:
-        if recurring_toggle_button.collidepoint(event.pos):
-            # Commit any in-progress edits before toggling
-            if input_active == "month":
-                task_month = _commit_month({"month_typed": month_typed}, task_month, months); month_typed = ""
-            if input_active == "day":
-                task_day = _commit_day({"day_typed": day_typed}, task_day, max_days); day_typed = ""
+        if time_btn_rect.collidepoint(event.pos):
+            time_toggle_on = not time_toggle_on
+        elif recurring_btn_rect.collidepoint(event.pos):
+            if input_active == "month": task_month = _commit_month({"month_typed": month_typed}, task_month, months); month_typed = ""
+            if input_active == "day": task_day = _commit_day({"day_typed": day_typed}, task_day, max_days); day_typed = ""
             recurring_toggle_on = not recurring_toggle_on
+
 
         # --- 1) SPINNER BUTTONS FIRST (so they don't trigger edit mode) ---
         clicked_spinner = False
-        if recurring_toggle_on:
+        if time_toggle_on:
             if month_up_button_recurring_shifted.collidepoint(event.pos):
                 task_month = task_month + 1 if task_month < 12 else 1
                 clicked_spinner = True
@@ -418,6 +649,7 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
                 task_day = int(task_day) - 1 if int(task_day) > 1 else max_days
                 clicked_spinner = True
 
+
         # If the user clicked a spinner, don't enter edit mode or clear typed buffers
         if clicked_spinner:
             pass
@@ -426,9 +658,13 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
             month_rect_full = _active_month_rect()
             day_rect_full   = _active_day_rect()
 
-            # shrink only the RIGHT side (e.g., 24px for month, 20px for day)
             month_rect_edit = month_rect_full.copy(); month_rect_edit.width = max(10, month_rect_edit.width - 24)
             day_rect_edit   = day_rect_full.copy();  day_rect_edit.width   = max(10, day_rect_edit.width   - 20)
+            start_time_rect_edit = start_time_input_box.copy(); start_time_rect_edit.width = max(10, start_time_rect_edit.width - 24)
+
+            how_often_rect_edit      = how_often_input_box.copy();      how_often_rect_edit.width      = max(10, how_often_rect_edit.width      - 24)
+            how_long_rect_edit       = how_long_input_box.copy();       how_long_rect_edit.width       = max(10, how_long_rect_edit.width       - 24)
+            repetitions_rect_edit    = repetitions_amount_input_box.copy(); repetitions_rect_edit.width = max(10, repetitions_rect_edit.width    - 24)
 
             # Click into inputs (set focus + caret)
             if task_input_box.collidepoint(event.pos):
@@ -440,18 +676,65 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
             elif day_rect_edit.collidepoint(event.pos):
                 input_active = "day"
                 caret_day = _index_from_click(font, day_typed, event.pos[0], day_rect_full.x + 10)
+            elif time_toggle_on and start_time_rect_edit.collidepoint(event.pos):
+                input_active = "start_time"
+                # Clear for free typing (show nothing while active)
+                start_time_typed = ""
+                caret_start_time = 0
+
+            # numeric recurring inputs: focus -> erase default "1", keep unit text, caret at start of number
+            elif how_often_rect_edit.collidepoint(event.pos):
+                input_active = "how_often"
+                how_often_typed = ""  # hide default 1 on focus
+                caret_how_often = 0
+            elif how_long_rect_edit.collidepoint(event.pos):
+                input_active = "how_long"
+                how_long_typed = ""   # hide default 1 on focus
+                caret_how_long = 0
+            elif repetitions_rect_edit.collidepoint(event.pos):
+                input_active = "repetitions"
+                repetitions_typed = ""   # hide default 1 on focus
+                caret_repetitions = 0
             elif spoon_input_box.collidepoint(event.pos):
                 input_active = "spoons"
                 if isinstance(current_spoons, int): current_spoons = ""
                 caret_spoons = _index_from_click(font, current_spoons, event.pos[0], spoon_input_box.x + 10)
             else:
-                # Clicking elsewhere commits month/day edits if active
+                # Clicking elsewhere commits any active edit box
                 if input_active == "month":
-                    task_month = _commit_month({"month_typed": month_typed}, task_month, months); month_typed = ""; input_active = False
+                    task_month = _commit_month({"month_typed": month_typed}, task_month, months); month_typed = ""
                 elif input_active == "day":
-                    task_day = _commit_day({"day_typed": day_typed}, task_day, max_days); day_typed = ""; input_active = False
+                    task_day = _commit_day({"day_typed": day_typed}, task_day, max_days); day_typed = ""
+                elif input_active == "start_time":
+                    start_time = _commit_start_time({"start_time_typed": start_time_typed}, start_time); start_time_typed = ""
+                elif input_active == "how_often":
+                    task_how_often = _commit_positive_int({"how_often_typed": how_often_typed}, "how_often_typed", task_how_often, default_val=1, min_val=1); how_often_typed = ""
+                elif input_active == "how_long":
+                    task_how_long = _commit_positive_int({"how_long_typed": how_long_typed}, "how_long_typed", task_how_long, default_val=1, min_val=1); how_long_typed = ""
+                elif input_active == "repetitions":
+                    task_repetitions_amount = _commit_positive_int({"repetitions_typed": repetitions_typed}, "repetitions_typed", task_repetitions_amount, default_val=1, min_val=1, max_val=26); repetitions_typed = ""
+                input_active = False
+
+        # Start Time spinner clicks (15-minute steps, 24h wrap)
+        if time_toggle_on and start_time_up_button.collidepoint(event.pos):
+            try:
+                hh, mm = int(start_time[0]) % 24, int(start_time[1]) % 60
+            except Exception:
+                hh, mm = 0, 0
+            mm += 15
+            if mm >= 60: mm = 0; hh = (hh + 1) % 24
+            start_time[0], start_time[1] = hh, mm
+        elif time_toggle_on and start_time_down_button.collidepoint(event.pos):
+            try:
+                hh, mm = int(start_time[0]) % 24, int(start_time[1]) % 60
+            except Exception:
+                hh, mm = 0, 0
+            mm -= 15
+            if mm < 0: mm = 45; hh = (hh - 1) % 24
+            start_time[0], start_time[1] = hh, mm
 
         # Recurrence controls (unchanged math)
+
         if how_often_up_button.collidepoint(event.pos):
             new_val = task_how_often + 1; task_how_often = max(1, new_val)
             total_days = (task_repetitions_amount - 1) * task_how_often + 1
@@ -491,7 +774,8 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
                 _add_task_entry(
                     current_task, current_spoons, folder, task_date, current_time,
                     (homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list),
-                    recurring_toggle_on, task_how_often, task_how_long, task_repetitions_amount
+                    recurring_toggle_on, task_how_often, task_how_long, task_repetitions_amount,
+                    start_time
                 )
                 current_task = ""; current_spoons = ""; input_active = False; month_typed = ""; day_typed = ""
 
@@ -509,20 +793,60 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
             step = -1 if event.key == pygame.K_UP else 1
             folder = folder_list[(idx + step) % len(folder_list)]
 
-        # Tab order: task -> month -> day -> spoons -> task
-        tab_order = ["task","month","day","spoons"]
+        # Tab order:
+        # with time: task -> month -> day -> start_time -> how_often -> how_long -> repetitions -> spoons -> task
+        # without time: task -> month -> day -> how_often -> how_long -> repetitions -> spoons -> task
+        tab_core = ["task","month","day", "spoons"]
+        if time_toggle_on: tab_core = ["task","month","day","start_time","spoons"]
+        if recurring_toggle_on: tab_core = ["task","month","day","spoons", "how_often","how_long","repetitions"]
+        if time_toggle_on and recurring_toggle_on: tab_core = ["task","month","day","start_time","spoons", "how_often","how_long","repetitions"]
+        tab_order = tab_core
+
+
         if event.key == pygame.K_TAB:
-            if input_active == "month": task_month = _commit_month({"month_typed": month_typed}, task_month, months); month_typed = ""
-            if input_active == "day": task_day = _commit_day({"day_typed": day_typed}, task_day, max_days); day_typed = ""
+            # commit fields you're leaving
+            if input_active == "month":
+                task_month = _commit_month({"month_typed": month_typed}, task_month, months); month_typed = ""
+            elif input_active == "day":
+                task_day = _commit_day({"day_typed": day_typed}, task_day, max_days); day_typed = ""
+            elif input_active == "start_time":
+                start_time = _commit_start_time({"start_time_typed": start_time_typed}, start_time)  # buffer cleared inside
+                start_time_typed = ""
+            elif input_active == "how_often":
+                task_how_often = _commit_positive_int({"how_often_typed": how_often_typed}, "how_often_typed", task_how_often, default_val=1, min_val=1)
+                how_often_typed = ""
+            elif input_active == "how_long":
+                task_how_long = _commit_positive_int({"how_long_typed": how_long_typed}, "how_long_typed", task_how_long, default_val=1, min_val=1)
+                how_long_typed = ""
+            elif input_active == "repetitions":
+                task_repetitions_amount = _commit_positive_int({"repetitions_typed": repetitions_typed}, "repetitions_typed", task_repetitions_amount, default_val=1, min_val=1, max_val=26)
+                repetitions_typed = ""
+
+            # move focus
             try:
                 i = tab_order.index(input_active) if input_active in tab_order else -1
                 input_active = tab_order[(i + 1) % len(tab_order)]
             except ValueError:
                 input_active = "task"
-            if input_active == "task": caret_task = len(current_task)
-            elif input_active == "month": caret_month = 0
-            elif input_active == "day": caret_day = 0
-            elif input_active == "spoons": caret_spoons = 0
+
+            # set carets / prefill on entry
+            if input_active == "task":
+                caret_task = len(current_task)
+            elif input_active == "month":
+                caret_month = 0
+            elif input_active == "day":
+                caret_day = 0
+            elif input_active == "start_time":
+                start_time_typed = ""
+                caret_start_time = 0
+            elif input_active == "how_often":
+                how_often_typed = ""; caret_how_often = 0
+            elif input_active == "how_long":
+                how_long_typed = ""; caret_how_long = 0
+            elif input_active == "repetitions":
+                repetitions_typed = ""; caret_repetitions = 0
+            elif input_active == "spoons":
+                caret_spoons = 0
 
         elif input_active == "task":
             if event.key == pygame.K_RETURN:
@@ -600,12 +924,83 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
                         day_typed = day_typed[:caret_day] + ch + day_typed[caret_day:]
                         caret_day += 1
 
+        elif input_active == "start_time":
+            # digits only; no colon while editing
+            if event.key == pygame.K_RETURN:
+                start_time = _commit_start_time({"start_time_typed": start_time_typed}, start_time); start_time_typed = ""
+                # advance to next editable: how_often
+                input_active = "how_often"; caret_how_often = 0; how_often_typed = ""
+            elif event.key == pygame.K_BACKSPACE:
+                if len(start_time_typed) > 0:
+                    start_time_typed = start_time_typed[:-1]
+                    caret_start_time = max(0, caret_start_time - 1)
+            elif event.key in (pygame.K_LEFT, pygame.K_RIGHT):
+                # optional: nudge minutes in 15-min steps with arrows
+                try: hh, mm = int(start_time[0]) % 24, int(start_time[1]) % 60
+                except Exception: hh, mm = _now_hh_mm()
+                if event.key == pygame.K_RIGHT:
+                    mm += 15; 
+                    if mm >= 60: mm = 0; hh = (hh + 1) % 24
+                else:
+                    mm -= 15; 
+                    if mm < 0: mm = 45; hh = (hh - 1) % 24
+                start_time[0], start_time[1] = hh, mm
+                start_time_typed = _start_time_digits(hh, mm)
+                caret_start_time = len(start_time_typed)
+            else:
+                ch = event.unicode
+                if ch.isdigit() and len(start_time_typed) < 4:
+                    start_time_typed += ch
+                    caret_start_time = len(start_time_typed)
+
+        elif input_active == "how_often":
+            if event.key == pygame.K_RETURN:
+                task_how_often = _commit_positive_int({"how_often_typed": how_often_typed}, "how_often_typed", task_how_often, default_val=1, min_val=1); how_often_typed = ""
+                input_active = "how_long"; caret_how_long = 0; how_long_typed = ""
+            elif event.key == pygame.K_BACKSPACE:
+                if len(how_often_typed) > 0:
+                    how_often_typed = how_often_typed[:-1]; caret_how_often = max(0, caret_how_often - 1)
+            else:
+                ch = event.unicode
+                if ch.isdigit() and len(how_often_typed) < 3:
+                    how_often_typed += ch; caret_how_often = len(how_often_typed)
+
+        elif input_active == "how_long":
+            if event.key == pygame.K_RETURN:
+                task_how_long = _commit_positive_int({"how_long_typed": how_long_typed}, "how_long_typed", task_how_long, default_val=1, min_val=1); how_long_typed = ""
+                input_active = "repetitions"; caret_repetitions = 0; repetitions_typed = ""
+            elif event.key == pygame.K_BACKSPACE:
+                if len(how_long_typed) > 0:
+                    how_long_typed = how_long_typed[:-1]; caret_how_long = max(0, caret_how_long - 1)
+            else:
+                ch = event.unicode
+                if ch.isdigit() and len(how_long_typed) < 3:
+                    how_long_typed += ch; caret_how_long = len(how_long_typed)
+
+        elif input_active == "repetitions":
+            if event.key == pygame.K_RETURN:
+                task_repetitions_amount = _commit_positive_int({"repetitions_typed": repetitions_typed}, "repetitions_typed", task_repetitions_amount, default_val=1, min_val=1, max_val=26); repetitions_typed = ""
+                input_active = "spoons"; caret_spoons = 0
+            elif event.key == pygame.K_BACKSPACE:
+                if len(repetitions_typed) > 0:
+                    repetitions_typed = repetitions_typed[:-1]; caret_repetitions = max(0, caret_repetitions - 1)
+            else:
+                ch = event.unicode
+                if ch.isdigit() and len(repetitions_typed) < 2:
+                    repetitions_typed += ch; caret_repetitions = len(repetitions_typed)
+
+
         elif input_active == "spoons":
             if isinstance(current_spoons, int): current_spoons = ""
             if event.key == pygame.K_RETURN:
                 if current_task and current_spoons:
                     task_date = datetime(current_time.year, task_month, int(task_day))
-                    _add_task_entry(current_task, current_spoons, folder, task_date, current_time, (homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list), recurring_toggle_on, task_how_often, task_how_long, task_repetitions_amount)
+                    _add_task_entry(
+                        current_task, current_spoons, folder, task_date, current_time,
+                        (homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list),
+                        recurring_toggle_on, task_how_often, task_how_long, task_repetitions_amount,
+                        start_time
+                    )
                     current_task = ""; current_spoons = ""; input_active = "task"; month_typed = ""; day_typed = ""; caret_task = 0; caret_spoons = 0
             elif event.key == pygame.K_BACKSPACE:
                 if caret_spoons > 0:
@@ -631,4 +1026,4 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
                 current_spoons = "10"; caret_spoons = min(caret_spoons, len(current_spoons))
 
 
-    return (input_active,page,folder,recurring_toggle_on,current_task,current_spoons,task_month,task_day,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list,task_how_often,task_how_long,task_repetitions_amount)
+    return (input_active,page,folder,time_toggle_on,recurring_toggle_on,current_task,current_spoons,task_month,task_day,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list,task_how_often,task_how_long,task_repetitions_amount, start_time)

@@ -142,6 +142,10 @@ image_categories = {
         'borders': ('borders.png', (24, 24)),
         'extras': ('extras.png', (24, 24)),
     },
+    'toggleButtons': {
+        'recurringButton': ('recurringToggleButton.png', (40,40)),
+        'timeButton': ('timeToggleButton.png', (40,40)),
+    },
 }
 
 # 2) First load *all* images into a nested dict:
@@ -209,6 +213,8 @@ intro = ""
 intro_name = ""
 inventoryIcons = "default"
 inventoryIcons_name = "default"
+toggleButtons = "default"
+toggleButtons_name = "default"
 
 # 4) Now overwrite each category name with the actual image dict you want to use:
 for category, data in loaded_images.items():
@@ -341,6 +347,10 @@ inventory_icons_folders = inventoryIcons['folders']
 inventory_icons_themes = inventoryIcons['themes']
 inventory_icons_borders = inventoryIcons['borders']
 inventory_icons_extras = inventoryIcons['extras']
+
+#toggle buttons
+recurring_button = toggleButtons['recurringButton']
+time_button = toggleButtons['timeButton']
 
 
 def set_image(category: str, theme_name: str):
