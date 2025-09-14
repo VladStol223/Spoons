@@ -145,6 +145,8 @@ image_categories = {
     'toggleButtons': {
         'recurringButton': ('recurringToggleButton.png', (40,40)),
         'timeButton': ('timeToggleButton.png', (40,40)),
+        'ConfirmButton': ('confirmButton.png', (120,40)),
+        'CancelButton': ('cancelButton.png', (120,40)),
     },
 }
 
@@ -351,7 +353,8 @@ inventory_icons_extras = inventoryIcons['extras']
 #toggle buttons
 recurring_button = toggleButtons['recurringButton']
 time_button = toggleButtons['timeButton']
-
+confirm_edit_button = toggleButtons['ConfirmButton']
+cancel_edit_button = toggleButtons['CancelButton']
 
 def set_image(category: str, theme_name: str):
     """

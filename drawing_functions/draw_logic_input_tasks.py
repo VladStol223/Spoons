@@ -143,8 +143,8 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
 
 
     # Draw the boxes as before
-    draw_input_box(screen, task_input_box, input_active == "task", current_task, DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light")
-    draw_input_box(screen, spoon_input_box, input_active == "spoons", display_spoons, DARK_SLATE_GRAY, DARK_SLATE_GRAY, True, background_color, "light")
+    draw_input_box(screen, task_input_box, input_active == "task", current_task, DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light") #type: ignore
+    draw_input_box(screen, spoon_input_box, input_active == "spoons", display_spoons, DARK_SLATE_GRAY, DARK_SLATE_GRAY, True, background_color, "light") #type: ignore
 
     # Overlay a blinking caret for Task / Spoons when active
 
@@ -153,7 +153,7 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
         x0, y0 = task_input_box.x + 10, task_input_box.y + 8
         cx = _caret_x(font, left, x0) - 5  # nudge left
         cx = min(cx, task_input_box.right - 6)
-        pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2)
+        pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2) #type: ignore
 
     if input_active == "spoons" and _caret_visible():
         # The spoons text is centered by draw_input_box (we passed True), so anchor the caret
@@ -166,7 +166,7 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
         left = text[:max(0, min(caret_spoons, len(text)))]
         cx = _caret_x(font, left, start_x)  # nudge left
         cx = min(max(cx, spoon_input_box.x + 4), spoon_input_box.right - 6)
-        pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2)
+        pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2) #type: ignore
 
     arrow   = font.render(">", True, done_button_color)
     up_arrow = pygame.transform.rotate(arrow, 90)
@@ -197,12 +197,12 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
     def _render_month_box(active, rect, month_num):
         global caret_month
         pygame.draw.rect(screen, background_color if time_toggle_on else due_date_infill_color, rect, 0)
-        draw_input_box(screen, rect, active, "", DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light")
+        draw_input_box(screen, rect, active, "", DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light") #type: ignore
         x0, y0 = rect.x + 10, rect.y + 8
         if active:
             base = month_typed
             suffix = _month_suffix(month_typed, months)
-            txt1 = font.render(base, True, LIGHT_GRAY)
+            txt1 = font.render(base, True, LIGHT_GRAY) #type: ignore
             screen.blit(txt1, (x0, y0))
             if suffix:
                 txt2 = font.render(suffix, True, (170,170,170))
@@ -210,60 +210,60 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
             if _caret_visible():
                 left = base[:max(0, min(caret_month, len(base)))]
                 cx = _caret_x(font, left, x0)
-                pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2)
+                pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2) #type: ignore
         else:
             label = months[month_num - 1]
-            txt = font.render(label, True, BLACK)
+            txt = font.render(label, True, BLACK) #type: ignore
             screen.blit(txt, (x0, y0))
 
 
     def _render_day_box(active, rect, day_value):
         global caret_day
         pygame.draw.rect(screen, background_color if time_toggle_on else due_date_infill_color, rect, 0)
-        draw_input_box(screen, rect, active, "", DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light")
+        draw_input_box(screen, rect, active, "", DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light") #type: ignore
         x0, y0 = rect.x + 10, rect.y + 8
         if active:
             disp = day_typed
-            txt = font.render(disp, True, LIGHT_GRAY)
+            txt = font.render(disp, True, LIGHT_GRAY) #type: ignore
             screen.blit(txt, (x0, y0))
             if _caret_visible():
                 left = disp[:max(0, min(caret_day, len(disp)))]
                 cx = _caret_x(font, left, x0)
-                pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2)
+                pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2) #type: ignore
         else:
-            txt = font.render(str(day_value), True, BLACK)
+            txt = font.render(str(day_value), True, BLACK) #type: ignore
             screen.blit(txt, (x0, y0))
 
     if recurring_toggle_on:
-        screen.blit(font.render("Spoons:", True, WHITE),(spoon_input_box.x - 15, y_pos["spoons_label"]))
+        screen.blit(font.render("Spoons:", True, WHITE),(spoon_input_box.x - 15, y_pos["spoons_label"])) #type: ignore
 
         small_label_shift = 5
 
-        screen.blit(small_font.render("How Often:", True, WHITE), (how_often_input_box.x + 10, y_pos["spoons_label"] + small_label_shift))
+        screen.blit(small_font.render("How Often:", True, WHITE), (how_often_input_box.x + 10, y_pos["spoons_label"] + small_label_shift)) #type: ignore
         # while active: keep unit visible, hide default "1" if the buffer is empty
         _ho_txt = (how_often_typed if input_active == "how_often" else str(task_how_often)) + " days"
-        draw_input_box(screen, how_often_input_box, input_active == "how_often", _ho_txt, DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light")
+        draw_input_box(screen, how_often_input_box, input_active == "how_often", _ho_txt, DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light") #type: ignore
         if input_active == "how_often" and _caret_visible():
             x0, y0 = how_often_input_box.x + 10, how_often_input_box.y + 8
             # caret goes after the typed digits (before the space in " days")
             cx = _caret_x(font, how_often_typed, x0)
-            pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2)
+            pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2) #type: ignore
 
-        screen.blit(small_font.render("How Long:", True, WHITE), (how_long_input_box.x + 10, y_pos["spoons_label"] + small_label_shift))
+        screen.blit(small_font.render("How Long:", True, WHITE), (how_long_input_box.x + 10, y_pos["spoons_label"] + small_label_shift)) #type: ignore
         _hl_txt = (how_long_typed if input_active == "how_long" else str(task_how_long)) + " weeks"
-        draw_input_box(screen, how_long_input_box, input_active == "how_long", _hl_txt, DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light")
+        draw_input_box(screen, how_long_input_box, input_active == "how_long", _hl_txt, DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light") #type: ignore
         if input_active == "how_long" and _caret_visible():
             x0, y0 = how_long_input_box.x + 10, how_long_input_box.y + 8
             cx = _caret_x(font, how_long_typed, x0)
-            pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2)
+            pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2) #type: ignore
 
-        screen.blit(small_font.render("Repetitions:", True, WHITE), (repetitions_amount_input_box.x + 7, y_pos["spoons_label"] + small_label_shift))
+        screen.blit(small_font.render("Repetitions:", True, WHITE), (repetitions_amount_input_box.x + 7, y_pos["spoons_label"] + small_label_shift)) #type: ignore
         _hr_txt = (repetitions_typed if input_active == "repetitions" else str(task_repetitions_amount)) + " times"
-        draw_input_box(screen, repetitions_amount_input_box, input_active == "repetitions", _hr_txt, DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light")
+        draw_input_box(screen, repetitions_amount_input_box, input_active == "repetitions", _hr_txt, DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light") #type: ignore
         if input_active == "repetitions" and _caret_visible():
             x0, y0 = repetitions_amount_input_box.x + 10, repetitions_amount_input_box.y + 8
             cx = _caret_x(font, repetitions_typed, x0)
-            pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2)
+            pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2) #type: ignore
 
         # draw a small barrier under the arrow area so clicks don't fall through to the input field
         barrier_w = 24
@@ -291,10 +291,10 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
 
 
     else:
-        screen.blit(font.render("Spoons:", True, WHITE),(360, y_pos["spoons_label"]))
+        screen.blit(font.render("Spoons:", True, WHITE),(360, y_pos["spoons_label"])) #type: ignore
 
     if time_toggle_on:
-        screen.blit(font.render("Due Date:", True, WHITE),(345 - time_shift + 10, y_pos["due_date_label"]))
+        screen.blit(font.render("Due Date:", True, WHITE),(345 - time_shift + 10, y_pos["due_date_label"])) #type: ignore
         _render_month_box(input_active == "month", month_input_box_recurring_shifted, task_month)
         _render_day_box(input_active == "day", day_input_box_recurring_shifted, int(task_day))
 
@@ -309,7 +309,7 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
         screen.blit(down_arrow, (day_down_button_recurring_shifted.x - 12, day_down_button_recurring_shifted.y))
 
         # Start Time label + box
-        screen.blit(font.render("Start Time:", True, WHITE),(start_time_input_box.x - 10, y_pos["due_date_label"]))
+        screen.blit(font.render("Start Time:", True, WHITE),(start_time_input_box.x - 10, y_pos["due_date_label"])) #type: ignore
         pygame.draw.rect(screen, background_color, start_time_input_box, 0)
 
         # default shown should be current time if start_time is unset/invalid
@@ -329,12 +329,12 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
 
         draw_input_box(
             screen, start_time_input_box, is_active, show_txt,
-            DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light"
+            DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light" #type: ignore
         )
         if input_active == "start_time" and _caret_visible():
             x0, y0 = start_time_input_box.x + 10, start_time_input_box.y + 8
             cx = _caret_x(font, start_time_typed, x0)
-            pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2)
+            pygame.draw.line(screen, LIGHT_GRAY, (cx, y0), (cx, y0 + font.get_height()), 2) #type: ignore
 
 
         # Start Time spinner buttons + arrows (draw-only)
@@ -346,7 +346,7 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
 
 
     else:
-        screen.blit(font.render("Due Date:", True, WHITE),(345, y_pos["due_date_label"]))
+        screen.blit(font.render("Due Date:", True, WHITE),(345, y_pos["due_date_label"])) #type: ignore
         _render_month_box(input_active == "month", month_input_box_normal, task_month)
         _render_day_box(input_active == "day", day_input_box_normal, int(task_day))
         for btn in (month_up_button_normal, month_down_button_normal, day_up_button_normal, day_down_button_normal):
@@ -356,10 +356,10 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
         screen.blit(up_arrow,   (day_up_button_normal.x - 9, day_up_button_normal.y))
         screen.blit(down_arrow, (day_down_button_normal.x - 12, day_down_button_normal.y))
 
-    screen.blit(font.render("Task Name:", True, WHITE),(335, y_pos["task_label"]))
+    screen.blit(font.render("Task Name:", True, WHITE),(335, y_pos["task_label"])) #type: ignore
     pygame.draw.rect(screen, done_button_color, done_button)
     pygame.draw.polygon(screen, done_button_color, arrow_points)
-    screen.blit(font.render("Add", True, BLACK),(done_button.x + 15, done_button.y + 2))
+    screen.blit(font.render("Add", True, BLACK),(done_button.x + 15, done_button.y + 2)) #type: ignore
 
 
 
