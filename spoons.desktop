@@ -1,6 +1,6 @@
 
 [Desktop Entry]
-#Save this to within your directory "/usr/share/applications" to run spoons
+#Save this to within your directory "~/.local/share/applications" to run spoons
 Type=Application
 Terminal=false
 Exec=python3 main.pyw
