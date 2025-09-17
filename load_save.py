@@ -1,5 +1,7 @@
 import json
-import datetime
+from datetime import datetime, date
+import os
+import tempfile
 from config import *
 
 """
@@ -14,28 +16,74 @@ Returns:
 """
 
 def task_to_serializable(task):
-    if len(task) == 8 or len(task) == 7:  # Task has start_time and end_time
-        task_name, spoons_needed, done, days_till_due_date, due_date, start_time, end_time, labels = task
+    """
+    Accepts either a tuple/list in legacy formats (5/6/7/8 fields) or a dict.
+    Outputs a dict with stable keys.
+    """
+    if isinstance(task, dict):
+        name = task.get("task_name", "")
+        spoons_needed = int(task.get("spoons_needed", 0))
+        done = int(task.get("done", 0))
+        days_left = int(task.get("days_till_due_date", 0))
+        due = task.get("due_date", "1970-01-01T00:00:00")
+        # keep ISO string if provided; else assume datetime and convert
+        if isinstance(due, datetime):
+            due_iso = due.isoformat()
+        else:
+            due_iso = str(due)
+        start_time = task.get("start_time", [0,0,0,0])
+        end_time   = task.get("end_time",   [0,0,0,0])
+        labels     = task.get("labels", [])
+        if not isinstance(labels, list): labels = []
         return {
-            "task_name": task_name,
+            "task_name": name,
             "spoons_needed": spoons_needed,
             "done": done,
-            "days_till_due_date": days_till_due_date,
-            "due_date": due_date.isoformat(),
+            "days_till_due_date": days_left,
+            "due_date": due_iso,
             "start_time": start_time,
             "end_time": end_time,
-            "labels": labels if isinstance(labels, list) else []
+            "labels": labels
         }
-    elif len(task) == 5:  # Task without start_time and end_time
-        task_name, spoons_needed, done, days_till_due_date, due_date, labels = task
-        return {
-            "task_name": task_name,
-            "spoons_needed": spoons_needed,
-            "done": done,
-            "days_till_due_date": days_till_due_date,
-            "due_date": due_date.isoformat(),
-            "labels": labels if isinstance(labels, list) else []
-        }
+
+    # tuple/list paths
+    t = list(task)
+    L = len(t)
+
+    # Common pieces
+    name = t[0] if L >= 1 else ""
+    spoons_needed = int(t[1]) if L >= 2 else 0
+    # default to 0 (int), not "❌"
+    done = int(t[2]) if L >= 3 and isinstance(t[2], (int, float)) else 0
+    days_left = int(t[3]) if L >= 4 else 0
+    due_dt = t[4] if L >= 5 else datetime(1970,1,1)
+
+    # optional bits
+    start_time = t[5] if L >= 6 else [0,0,0,0]
+    end_time   = t[6] if L >= 7 else [0,0,0,0]
+    labels     = t[7] if L >= 8 else []
+    if not isinstance(labels, list): labels = []
+
+    # normalize due_date
+    if isinstance(due_dt, datetime):
+        due_iso = due_dt.isoformat()
+    else:
+        # if someone stored a date or string, coerce to string
+        try:
+            due_iso = due_dt.isoformat()  # date has isoformat too
+        except Exception:
+            due_iso = "1970-01-01T00:00:00"
+
+    return {
+        "task_name": name,
+        "spoons_needed": spoons_needed,
+        "done": done,
+        "days_till_due_date": days_left,
+        "due_date": due_iso,
+        "start_time": start_time,
+        "end_time": end_time,
+        "labels": labels
+    }
 
 """
 Summary:
@@ -54,6 +102,10 @@ Returns:
     No returns.
 """
 
+import os
+import tempfile
+from datetime import date  # at top alongside datetime import
+
 def save_data(
     spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
     exams_tasks_list, projects_tasks_list, daily_spoons, theme, icon_image,
@@ -61,84 +113,80 @@ def save_data(
     folder_five, folder_six, streak_dates,
     border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder,
     taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, label_favorites,
-    level, coins):
-    
+    level, coins, last_save_date):
+
+    # resolve icon file name
     global icon_image_name
-    if icon_image == spoon_image:
-        icon_image_name = "spoon.png"
-    elif icon_image == battery_image:
-        icon_image_name = "battery.png"
-    elif icon_image == star_image:
-        icon_image_name = "star.png"
-    elif icon_image == potion_image:
-        icon_image_name = "potion.png"
-    elif icon_image == yourdidit_image:
-        icon_image_name = "yourdidit.png"
-    elif icon_image == mike_image:
-        icon_image_name = "mike.png"
-    elif icon_image == lightningface_image:
-        icon_image_name = "lightningface.png"
-    elif icon_image == diamond_image:
-        icon_image_name = "diamond.png"
-    elif icon_image == starfruit_image:
-        icon_image_name = "starfruit.png"
-    elif icon_image == strawberry_image:
-        icon_image_name = "strawberry.png"
-    elif icon_image == terstar_image:
-        icon_image_name = "terstar.png"
-    elif icon_image == hcheart_image:
-        icon_image_name = "hcheart.png"
-    elif icon_image == beer_image:
-        icon_image_name = "beer.png"
-    elif icon_image == drpepper_image:
-        icon_image_name = "drpepper.png"
+    if   icon_image == spoon_image:        icon_image_name = "spoon.png"
+    elif icon_image == battery_image:      icon_image_name = "battery.png"
+    elif icon_image == star_image:         icon_image_name = "star.png"
+    elif icon_image == potion_image:       icon_image_name = "potion.png"
+    elif icon_image == yourdidit_image:    icon_image_name = "yourdidit.png"
+    elif icon_image == mike_image:         icon_image_name = "mike.png"
+    elif icon_image == lightningface_image: icon_image_name = "lightningface.png"
+    elif icon_image == diamond_image:      icon_image_name = "diamond.png"
+    elif icon_image == starfruit_image:    icon_image_name = "starfruit.png"
+    elif icon_image == strawberry_image:   icon_image_name = "strawberry.png"
+    elif icon_image == terstar_image:      icon_image_name = "terstar.png"
+    elif icon_image == hcheart_image:      icon_image_name = "hcheart.png"
+    elif icon_image == beer_image:         icon_image_name = "beer.png"
+    elif icon_image == drpepper_image:     icon_image_name = "drpepper.png"
+    else:                                  icon_image_name = "spoon.png"
+
+    payload = {
+        "spoons": spoons,
+        "homework_tasks_list": [task_to_serializable(t) for t in homework_tasks_list],
+        "chores_tasks_list":   [task_to_serializable(t) for t in chores_tasks_list],
+        "work_tasks_list":     [task_to_serializable(t) for t in work_tasks_list],
+        "misc_tasks_list":     [task_to_serializable(t) for t in misc_tasks_list],
+        "exams_tasks_list":    [task_to_serializable(t) for t in exams_tasks_list],
+        "projects_tasks_list": [task_to_serializable(t) for t in projects_tasks_list],
+        "daily_spoons": daily_spoons,
+        "theme": theme,
+        "icon_image": icon_image_name,
+        "spoon_name_input": spoon_name_input,
+        "folder_one": folder_one,
+        "folder_two": folder_two,
+        "folder_three": folder_three,
+        "folder_four": folder_four,
+        "folder_five": folder_five,
+        "folder_six": folder_six,
+        "streak_dates": streak_dates,
+        "assets": {
+            "border": border,
+            "hubIcons": hubIcons,
+            "spoonIcons": spoonIcons,
+            "restIcons": restIcons,
+            "hotbar": hotbar,
+            "manillaFolder": manillaFolder,
+            "taskBorder": taskBorder,
+            "scrollBar": scrollBar,
+            "calendarImages": calendarImages,
+            "themeBackgrounds": themeBackgroundsImages,
+            "intro": intro
+        },
+        "label_favorites": label_favorites,
+        "level": level,
+        "coins": coins,
+        "last_save_date": date.today().isoformat()
+    }
 
     try:
-        with open("data.json", "w") as f:
-            f.write("{\n")
-            f.write(f'  "spoons": {json.dumps(spoons)},\n')
-            f.write(f'  "homework_tasks_list": {json.dumps([task_to_serializable(t) for t in homework_tasks_list])},\n')
-            f.write(f'  "chores_tasks_list": {json.dumps([task_to_serializable(t) for t in chores_tasks_list])},\n')
-            f.write(f'  "work_tasks_list": {json.dumps([task_to_serializable(t) for t in work_tasks_list])},\n')
-            f.write(f'  "misc_tasks_list": {json.dumps([task_to_serializable(t) for t in misc_tasks_list])},\n')
-            f.write(f'  "exams_tasks_list": {json.dumps([task_to_serializable(t) for t in exams_tasks_list])},\n')
-            f.write(f'  "projects_tasks_list": {json.dumps([task_to_serializable(t) for t in projects_tasks_list])},\n')
-            f.write(f'  "daily_spoons": {json.dumps(daily_spoons)},\n')
-            f.write(f'  "theme": {json.dumps(theme)},\n')
-            f.write(f'  "icon_image": {json.dumps(icon_image_name)},\n')
-            f.write(f'  "spoon_name_input": {json.dumps(spoon_name_input)},\n')
-            f.write(
-                f'  "folder_one": {json.dumps(folder_one)}, "folder_two": {json.dumps(folder_two)}, '
-                f'"folder_three": {json.dumps(folder_three)}, "folder_four": {json.dumps(folder_four)}, '
-                f'"folder_five": {json.dumps(folder_five)}, "folder_six": {json.dumps(folder_six)},\n'
-            )
-            # streak_dates now with a trailing comma
-            f.write(f'  "streak_dates": {json.dumps(streak_dates)},\n')
-            # all the rest in one line under "assets"
-            f.write(
-                '  "assets": ' +
-                json.dumps({
-                    "border": border,
-                    "hubIcons": hubIcons,
-                    "spoonIcons": spoonIcons,
-                    "restIcons": restIcons,
-                    "hotbar": hotbar,
-                    "manillaFolder": manillaFolder,
-                    "taskBorder": taskBorder,
-                    "scrollBar": scrollBar,
-                    "calendarImages": calendarImages,
-                    "themeBackgrounds": themeBackgroundsImages,
-                    "intro": intro
-                }) +
-                ",\n"
-            )
-            f.write('  "label_favorites": ' + json.dumps(label_favorites) + ",\n")
-            f.write(f'  "level": {json.dumps(level)},\n')
-            f.write(f'  "coins": {json.dumps(coins)}\n')
-            f.write("}\n")
-
+        # atomic write
+        dir_name = os.path.dirname(os.path.abspath("data.json"))
+        fd, tmp_path = tempfile.mkstemp(prefix="data_", suffix=".json", dir=dir_name)
+        with os.fdopen(fd, "w", encoding="utf-8") as tmp:
+            json.dump(payload, tmp, ensure_ascii=False, indent=2)
+            tmp.flush()
+            os.fsync(tmp.fileno())
+        os.replace(tmp_path, "data.json")
     except Exception as e:
         print(f"Error saving data: {e}")
+        try:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+        except Exception:
+            pass
 
 """
 Summary:
@@ -152,24 +200,35 @@ Returns:
 """
 
 def task_from_serializable(task):
-    # Default values for start_time and end_time
-    default_start_time = [0, 0, 0, 0]
-    default_end_time = [0, 0, 0, 0]
+    """
+    Converts saved dict -> canonical list format used in-app:
+    [name, spoons_needed, done, days_left, due_datetime, start_time, end_time, labels]
+    """
+    name = task.get("task_name", "")
+    spoons_needed = int(task.get("spoons_needed", 0))
+    # store as int; you compare numerically elsewhere
+    done = int(task.get("done", 0))
+    days_left = int(task.get("days_till_due_date", 0))
 
-    # Extract fields with defaults for optional fields
-    task_name = task.get("task_name", "")
-    spoons_needed = task.get("spoons_needed", 0)
-    done = task.get("done", "❌")
-    days_till_due_date = task.get("days_till_due_date", 0)
-    due_date_str = task.get("due_date", "1970-01-01T00:00:00")
-    due_date = datetime.strptime(due_date_str, '%Y-%m-%dT%H:%M:%S')
-    start_time = task.get("start_time", default_start_time)
-    end_time = task.get("end_time", default_end_time)
-    labels = task.get("labels", [])
+    due_str = task.get("due_date", "1970-01-01T00:00:00")
+    # be tolerant of both full seconds and possible microseconds
+    due_dt = None
+    for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d", "%Y-%m-%dT%H:%M:%S.%f"):
+        try:
+            due_dt = datetime.strptime(due_str, fmt)
+            break
+        except Exception:
+            pass
+    if due_dt is None:
+        # fallback to "now" if completely unparsable
+        due_dt = datetime(1970,1,1)
+
+    start_time = task.get("start_time", [0,0,0,0])
+    end_time   = task.get("end_time",   [0,0,0,0])
+    labels     = task.get("labels", [])
     if not isinstance(labels, list): labels = []
 
-    # Return the task as a list with all fields
-    return [task_name, spoons_needed, done, days_till_due_date, due_date, start_time, end_time, labels]
+    return [name, spoons_needed, done, days_left, due_dt, start_time, end_time, labels]
 
 """
 Summary:
@@ -241,6 +300,8 @@ def load_data():
 
         level = data.get("level", 0)
         coins = data.get("coins", 0)
+
+        last_save_date = data.get("last_save_date")  # may be None on first run / old saves
 
         # NEW: load per-folder favorites (with migration & sane defaults)
         default_slots = ["folder_one", "folder_two", "folder_three", "folder_four", "folder_five", "folder_six"]
@@ -336,5 +397,5 @@ def load_data():
         border_name, hubIcons_name, spoonIcons_name, restIcons_name,
         hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
         calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites,
-        level, coins
+        level, coins, last_save_date
     )

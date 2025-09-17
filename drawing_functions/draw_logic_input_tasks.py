@@ -42,7 +42,7 @@ Returns:
 """
 
 # Max width equals the width of the reference string using the same font as your task input
-TASK_NAME_REF = "thisisthecharacterlim"
+TASK_NAME_REF = "thisisthecharacterlimit?ye"
 MAX_TASK_PIXEL_WIDTH = font.size(TASK_NAME_REF)[0]  # uses your existing `font`
 
 layout_heights = {

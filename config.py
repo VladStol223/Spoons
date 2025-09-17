@@ -120,6 +120,7 @@ image_categories = {
         'label_favorite_border_top': ('labelFavoriteBorderTop.png', (246, 12)),
         'label_favorite_border_side': ('labelFavoriteBorderSide.png', (6, 42)),
         'trashcan': ('trashcan.png', (16, 22)),
+        'task_time_border': ('taskTimeBorder.png', (64, 36)),
 
     },
     'scrollBar': {
@@ -329,6 +330,9 @@ label_favorite_border = taskBorder['label_favorite_border']
 label_favorite_border_top = taskBorder['label_favorite_border_top']
 label_favorite_border_side = taskBorder['label_favorite_border_side']
 trashcan_image = taskBorder['trashcan']
+
+#time pieces
+task_time_border = taskBorder['task_time_border']
 
 # — scroll bar pieces —
 scroll_bar   = scrollBar['scroll_bar_body']

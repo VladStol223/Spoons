@@ -100,6 +100,59 @@ def get_scale_factor() -> float:
 scale_factor = get_scale_factor()
 
 ####################################################################################################################################
+def compute_spoons_needed_today(*task_lists):
+    """Sum remaining spoons for tasks due today (across all folders)."""
+    today = datetime.now().date()
+    total_needed = 0
+
+    for lst in task_lists:
+        for t in lst:
+            try:
+                if isinstance(t, dict):
+                    due = t.get("due_date")
+                    if isinstance(due, str):
+                        # tolerate ISO with/without time
+                        due_dt = datetime.fromisoformat(due.replace("Z", ""))
+                    else:
+                        due_dt = due
+                    if hasattr(due_dt, "date") and due_dt.date() == today:
+                        need = int(t.get("spoons_needed", 0)) - int(t.get("done", 0))
+                        if need > 0:
+                            total_needed += need
+                else:
+                    # tuple/list: [name, spoons_needed, done, days_left, due_dt, ...]
+                    due_dt = t[4]
+                    due_day = due_dt.date() if hasattr(due_dt, "date") else due_dt
+                    if due_day == today:
+                        need = int(t[1]) - int(t[2])
+                        if need > 0:
+                            total_needed += need
+            except Exception:
+                # ignore malformed tasks
+                pass
+
+    return total_needed
+
+def _decrement_days(lst, n_days):
+    if not lst or n_days <= 0:
+        return
+    for task in lst:
+        try:
+            if task[3] > 0:
+                task[3] = max(0, task[3] - n_days)
+        except Exception:
+            pass
+
+def slot_key_for_page(p: str) -> str:
+    return {
+        "complete_homework_tasks": "folder_one",
+        "complete_chores_tasks":   "folder_two",
+        "complete_work_tasks":     "folder_three",
+        "complete_misc_tasks":     "folder_four",
+        "complete_exams_tasks":    "folder_five",
+        "complete_projects_tasks": "folder_six",
+    }.get(p, "folder_one")
+
 def hub_buttons(event):
     global scroll_offset
 
@@ -124,7 +177,7 @@ def hub_buttons(event):
             spoon_name_input, folder_one, folder_two, folder_three, folder_four,
             folder_five, folder_six, streak_dates,
             border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
-            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, level, coins)
+            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, level, coins, last_save_date)
 
             if page == "manage_tasks":
                 scroll_offset = 0
@@ -162,19 +215,46 @@ taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro,
 border_name, hubIcons_name, spoonIcons_name, restIcons_name,
 hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
 calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites,
-level, coins) = load_data()
+level, coins, last_save_date) = load_data()
 current_theme = switch_theme(loaded_theme, globals())
 
-def slot_key_for_page(p: str) -> str:
-    return {
-        "complete_homework_tasks": "folder_one",
-        "complete_chores_tasks":   "folder_two",
-        "complete_work_tasks":     "folder_three",
-        "complete_misc_tasks":     "folder_four",
-        "complete_exams_tasks":    "folder_five",
-        "complete_projects_tasks": "folder_six",
-    }.get(p, "folder_one")
+# --- Startup daily spoons grant (once per real date) ---
+try:
+    # last_save_date is "YYYY-MM-DD" or None
+    last_date = datetime.strptime(last_save_date, "%Y-%m-%d").date() if last_save_date else None
+except Exception:
+    last_date = None
 
+today = datetime.now().date()
+if (last_date is None) or (today > last_date):
+    # how many midnights have passed since last save? (>= 1)
+    delta_days = (today - last_date).days if last_date else 1
+
+    # grant today’s daily spoons
+    current_weekday = today.strftime("%a")
+    spoons = daily_spoons.get(current_weekday, spoons)
+
+    # reset daily streak flag and decrement "days_till_due_date" by the gap
+    streak_task_completed = False
+    _decrement_days(homework_tasks_list,  delta_days)
+    _decrement_days(chores_tasks_list,    delta_days)
+    _decrement_days(work_tasks_list,      delta_days)
+    _decrement_days(misc_tasks_list,      delta_days)
+    _decrement_days(exams_tasks_list,     delta_days)
+    _decrement_days(projects_tasks_list,  delta_days)
+
+    # persist immediately so we won't re-grant until tomorrow
+    save_data(
+        spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
+        exams_tasks_list, projects_tasks_list, daily_spoons, theme, icon_image,
+        spoon_name_input, folder_one, folder_two, folder_three, folder_four,
+        folder_five, folder_six, streak_dates,
+        border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
+        scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, level, coins
+    )
+else:
+    # make sure it's defined for the loop below
+    streak_task_completed = False
 
 # ----------------------------------------------------------------------------------------------------
 # Main loop
@@ -189,31 +269,8 @@ while running:
     delta_time = clock.tick(60) / 1000.0
     max_days = calendar.monthrange(datetime.now().year, task_month)[1]
     mouse_pos = pygame.mouse.get_pos()
-    current_month = datetime.now().month
-    current_day = datetime.now().day
-    if int(current_day) > int(previous_day) or int(current_month) > int(previous_month):
-        current_weekday = datetime.now().strftime("%a")
-        spoons = daily_spoons.get(current_weekday, spoons)
-        streak_task_completed = False #reset streak task completion for new day
-        if homework_tasks_list:
-            for task in homework_tasks_list:
-                if task[3] > 0:
-                    task[3] -= 1
-        if chores_tasks_list:
-            for task in chores_tasks_list:
-                if task[3] > 0:
-                    task[3] -= 1
-        if work_tasks_list:
-            for task in work_tasks_list:
-                if task[3] > 0:
-                    task[3] -= 1
-        if misc_tasks_list:
-            for task in misc_tasks_list:
-                if task[3] > 0:
-                    task[3] -= 1
-        previous_day = current_day
-        previous_month = current_month
-        print(f"Date changed: {current_month}/{current_day}. Days left updated and spoons reset to {spoons}.")
+
+    spoons_needed_today = compute_spoons_needed_today(homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list)
 
     if background_color == (-1,-1,-1):
             screen.blit(light_academia_background, (0,0))
@@ -307,7 +364,7 @@ while running:
         draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
 
     if page not in ("calendar", "stats"):
-        draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page)
+        draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page, spoons_needed_today)
         draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
         
     for event in pygame.event.get():
@@ -318,7 +375,7 @@ while running:
             spoon_name_input, folder_one, folder_two, folder_three, folder_four,
             folder_five, folder_six, streak_dates,
             border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
-            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, level, coins)
+            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, level, coins, last_save_date)
 
             running = False
                 
@@ -335,7 +392,7 @@ while running:
                         spoon_name_input, folder_one, folder_two, folder_three, folder_four,
                         folder_five, folder_six, streak_dates,
                         border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
-                        scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, level, coins)
+                        scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, level, coins, last_save_date)
                         prev_page = page
                         if page_key == "manage_tasks":
                             scroll_offset = 0

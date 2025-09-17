@@ -15,6 +15,8 @@ avatar_x = 860
 avatar_y = 60
 avatar_speed = 1
 
+spoons_needed_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.050))
+
 def get_alpha(time):
     """
     Returns an alpha 0–255 that is 0 at midnight (0:00), 255 at noon (12:00),
@@ -216,7 +218,7 @@ def draw_shadow(screen,
 
 
 
-def draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page):
+def draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page, today_needed):
 
     # 1) draw your existing spoons UI
     draw_spoons(screen, spoons, icon_image, spoon_name_input)
@@ -230,26 +232,38 @@ def draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coin
     else:
         current_streak = 0
 
-    # 3) render text surfaces
-    coin = pygame.transform.scale(coin_image, (coin_image.get_width() * coin_scale, coin_image.get_height() * coin_scale))
-    xp_bar = pygame.transform.scale(xp_bar_image, (xp_bar_image.get_width() * xp_scale * 1.2, xp_bar_image.get_height() * xp_scale))
-    coins_label  = f"{coins}"
+    # 3) render level + xp bar
+    xp_bar = pygame.transform.scale(xp_bar_image, (xp_bar_image.get_width() * xp_scale * 1.2,
+                                                   xp_bar_image.get_height() * xp_scale))
     level_label = f"Lvl: {math.floor(level)}"
-
-    coins_surf  = font.render(coins_label,  True, YELLOW) #type: ignore
-    level_surf  = font.render(level_label,  True, WHITE) #type: ignore
+    level_surf  = font.render(level_label,  True, WHITE)  # type: ignore
 
     text_x = 115
     text_y = 30
-    
-    # xp bar
-    screen.blit(level_surf, (text_x, text_y))
-    pygame.draw.rect(screen, (63, 44, 27), (text_x + level_surf.get_width() + 10, text_y, xp_bar.get_width() - 10, xp_bar.get_height() - 10))  # background
-    pygame.draw.rect(screen, (20, 150, 20), (text_x + level_surf.get_width() + 10, text_y, (xp_bar.get_width() - 10) * (level - math.floor(level)), xp_bar.get_height() - 10))  # experience
-    screen.blit(xp_bar, (text_x + level_surf.get_width() + 5, text_y - 5))
 
-    screen.blit(coins_surf,  (420 + xp_bar.get_width() - coins_surf.get_width(), text_y))
-    screen.blit(coin, (425 + xp_bar.get_width(), text_y))
+    screen.blit(level_surf, (text_x, text_y))
+
+    # XP fill
+    xp_x = text_x + level_surf.get_width() + 10
+    xp_y = text_y
+    xp_w = xp_bar.get_width() - 10
+    xp_h = xp_bar.get_height() - 10
+
+    pygame.draw.rect(screen, (63, 44, 27), (xp_x, xp_y, xp_w, xp_h))  # background
+    pygame.draw.rect(
+        screen, (20, 150, 20),
+        (xp_x, xp_y, xp_w * (level - math.floor(level)), xp_h)        # experience
+    )
+    screen.blit(xp_bar, (xp_x - 5, xp_y - 5))
+
+    # 4) NEW: “{icon}s needed for today: {num}” to the right of the XP bar
+    msg = f"'s needed for today: {today_needed}"
+    msg_surf = spoons_needed_font.render(msg, True, WHITE)  # type: ignore
+
+    screen.blit(icon_image, (xp_x + xp_w + 10 , text_y - 3))
+    msg_x = xp_x + xp_w + 7 + icon_image.width  # start from the right edge of the bar with a little padding
+    msg_y = text_y
+    screen.blit(msg_surf, (msg_x, msg_y))
 
     # ------------------------------------------------------------------------------
     # Draw the avatar background, furniture, windows, etc.

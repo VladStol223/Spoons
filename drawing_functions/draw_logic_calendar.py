@@ -1,6 +1,7 @@
 import pygame
 from datetime import datetime, timedelta
 import calendar
+import random
 from config import *
 from drawing_functions.draw_rounded_button import draw_rounded_button
 
@@ -26,6 +27,33 @@ def blend(c1, c2):
         (c1[1] + c2[1]*3) // 4,
         (c1[2] + c2[2]*3) // 4,)
 
+NO_TASK_MESSAGES = [
+    "No tasks... relax!",
+    "Clear skies on your schedule.",
+    "Nothing on deck. breathe easy.",
+    "Free day. treat yourself!",
+    "Quiet calendar. Cozy vibes.",
+    "You did it! nothing for today!",
+    "Open lane. follow your curiosity.",
+    "Blank slate. Paint it how you like.",
+    "Cruise mode engaged.",
+    "Rest is productive too."
+]
+
+def _weekly_message_picker(week_start_date, spoon_name=""):
+    """
+    Returns a function(day_index) -> message that is stable for the given ISO week.
+    Ensures each weekday gets a unique message from the pool.
+    """
+    iso_year, iso_week, _ = week_start_date.isocalendar()
+    seed_val = hash((iso_year, iso_week, spoon_name)) & 0xFFFFFFFF
+    rng = random.Random(seed_val)
+    order = list(range(len(NO_TASK_MESSAGES)))
+    rng.shuffle(order)
+
+    def pick(day_index_0_to_6):
+        return NO_TASK_MESSAGES[order[day_index_0_to_6 % len(NO_TASK_MESSAGES)]]
+    return pick
 
 def draw_calendar(screen, spoon_name_input, displayed_week_offset, day_range_index, 
                   homework_tasks_list, chores_tasks_list, work_tasks_list,
@@ -265,12 +293,44 @@ def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offse
             lines.append(' '.join(current_line))
         return lines
 
+    def extract_start_time(task):
+        """
+        Returns 'HH:MM' (24h) or '' if no/zero time.
+        Supports both dict and tuple/list task shapes.
+        """
+        try:
+            if isinstance(task, dict):
+                # Accept a few shapes: 'start_time' as 'HHMM' or [HH,MM,...]
+                st = task.get('start_time', '')
+                if isinstance(st, (list, tuple)) and len(st) >= 2:
+                    hh, mm = int(st[0]), int(st[1])
+                elif isinstance(st, str) and st.isdigit():
+                    s = st.zfill(4)[:4]; hh, mm = int(s[:2]), int(s[2:])
+                else:
+                    return ''
+            else:
+                # tuple/list: index 5 is start_time like [hh, mm, ...] in your model
+                st = task[5] if len(task) > 5 else None
+                if isinstance(st, (list, tuple)) and len(st) >= 2:
+                    hh, mm = int(st[0]), int(st[1])
+                else:
+                    return ''
+            if hh == 0 and mm == 0:
+                return ''
+            return f"{hh:02d}:{mm:02d}"
+        except Exception:
+            return ''
+
+
     # calculate current week start/end based on offset
     today = datetime.now().date()
     mid = today + timedelta(weeks=displayed_week_offset)
     days_from_sunday = (mid.weekday() + 1) % 7
     week_start = mid - timedelta(days=days_from_sunday)
     week_end = week_start + timedelta(days=6)
+
+    # Stable, non-duplicated "no tasks" messages for this week
+    pick_msg = _weekly_message_picker(week_start, spoon_name_input or "")
 
     # draw navigation buttons and header
     draw_rounded_button(screen, previous_month_button, lighter_background, lighter_background, 0)
@@ -340,6 +400,7 @@ def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offse
             (folder_five, exams_tasks_list),
             (folder_six, projects_tasks_list),
         ]
+        any_tasks_today = False
         for folder_label, lst in folder_map:
             # Filter tasks for current day - handle both dict and list formats
             day_tasks = []
@@ -358,59 +419,133 @@ def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offse
 
             if not day_tasks:
                 continue
+            any_tasks_today = True
                 
-            # Render folder name
-            label_surf = smaller_font.render(f"{folder_label}:", True, BLACK)#type: ignore
-            label_pos = (x + indent, ty)
-            screen.blit(label_surf, label_pos)
-            
-            # Underline folder name
+            # Centered folder name
+            label_surf = smaller_font.render(f"{folder_label}:", True, BLACK)  # type: ignore
             lw, lh = label_surf.get_width(), label_surf.get_height()
-            underline_y = ty + lh - 3
-            pygame.draw.line(screen, BLACK, (x + indent, underline_y), (x + indent + lw, underline_y), 1)#type: ignore
-            ty += lh + 2
+            cx = x + day_box_width // 2
+            label_rect = label_surf.get_rect(midtop=(cx, ty))
+            screen.blit(label_surf, label_rect.topleft)
+
+            # Centered underline
+            underline_y = label_rect.bottom - 3
+            pygame.draw.line(
+                screen, BLACK, #type: ignore
+                (cx - lw // 2, underline_y),
+                (cx + lw // 2, underline_y),
+                1
+            )  # type: ignore
+            ty = label_rect.bottom + 2
+
             
             # Render each task with line wrapping
             max_width = day_box_width - 15  # Allow padding on both sides
             for task in day_tasks:
-                # Get task name and completion status - handle both formats
+                # Get task name + completion, then time
                 try:
                     if isinstance(task, dict):
                         name = task['task_name']
                         is_complete = task['done'] >= task['spoons_needed']
-                    else:  # Assume list/tuple format
+                    else:
                         name = task[0]
-                        is_complete = task[2] >= task[1]  # done >= spoons_needed
+                        is_complete = task[2] >= task[1]
                 except (TypeError, IndexError, KeyError):
                     continue
-                
-                # Wrap long task names
-                wrapped_lines = wrap_text(name, smaller_font, max_width)
-                for line in wrapped_lines:
+
+                time_text = extract_start_time(task)
+
+                # Layout: time pill (if present) right-aligned; name wraps to left area
+                left_pad = indent
+                right_pad = 4
+                gap = 6
+
+                pill_w = pill_h = 0
+                if time_text:
+                    pill_surf = smaller_font.render(time_text, True, BLACK)  # type: ignore
+                    pill_w = pill_surf.get_width() + 8   # horizontal padding inside pill
+                    pill_h = pill_surf.get_height() - 2  # slight tuck so it fits the row
+
+                # Compute name area width (don’t let text run under the pill)
+                if time_text:
+                    name_max_w = (day_box_width - right_pad) - (x + left_pad) - pill_w - gap + x
+                else:
+                    name_max_w = day_box_width - left_pad - right_pad
+
+                name_max_w = max(20, name_max_w)  # safety
+
+                # Wrap and draw
+                wrapped_lines = wrap_text(name, smaller_font, name_max_w)
+                if not wrapped_lines:
+                    wrapped_lines = ['']
+
+                # If a time pill exists, draw it on the FIRST line only
+                if time_text:
+                    pill_x = x + day_box_width - right_pad - pill_w
+                    pill_y = ty  # align with first line
+                    # simple rounded pill: rect + text
+                    pygame.draw.rect(
+                        screen, (255, 255, 255),  # pill bg; tweak if you want theme-aware
+                        (pill_x, pill_y, pill_w, pill_h),
+                        border_radius=6
+                    )
+                    pygame.draw.rect(
+                        screen, BLACK,  #type: ignore
+                        (pill_x, pill_y, pill_w, pill_h),
+                        1, border_radius=6
+                    )
+                    pill_text_rect = pill_surf.get_rect(center=(pill_x + pill_w // 2, (pill_y + pill_h // 2) + 1))
+                    screen.blit(pill_surf, pill_text_rect.topleft)
+
+                # Draw wrapped name lines
+                for li, line in enumerate(wrapped_lines):
                     if ty + line_height > body_rect_y + day_box_height * 3 - 5:
-                        break  # Stop if we run out of vertical space
-                    
-                    # Render task text
-                    text_color = BLACK  #type: ignore
-                    task_surf = smaller_font.render(line, True, text_color)#type: ignore
-                    screen.blit(task_surf, (x + indent, ty))
-                    
-                    # Add strikethrough for completed tasks
+                        break
+
+                    text_color = BLACK  # type: ignore
+                    line_surf = smaller_font.render(line, True, text_color)  # type: ignore
+
+                    # horizontally: keep left aligned in its area
+                    screen.blit(line_surf, (x + left_pad, ty))
+
+                    # strike through completed task lines
                     if is_complete:
-                        # Get width of rendered text
-                        line_width = task_surf.get_width()
-                        # Calculate vertical position for strikethrough (middle of text height)
+                        lw = line_surf.get_width()
                         strike_y = ty + line_height // 2
-                        # Draw slightly crooked line (start 2px higher, end 2px lower)
                         pygame.draw.line(
-                            screen, 
-                            text_color, 
-                            (x + indent, strike_y - 2), 
-                            (x + indent + line_width, strike_y + 2), 
-                            2  # Line thickness
+                            screen, text_color,
+                            (x + left_pad, strike_y - 2),
+                            (x + left_pad + lw, strike_y + 2),
+                            2
                         )
-                    
+
                     ty += line_height
+
+
+        if not any_tasks_today:
+            # Center a stable, unique weekly message in the body area — with wrapping
+            msg = pick_msg(i)  # i is 0..6 for weekday column
+            max_width = day_box_width - 14
+            lines = wrap_text(msg, smaller_font, max_width)
+
+            line_height = smaller_font.get_height() - 2
+            total_h = len(lines) * line_height
+
+            body_top = body_rect_y
+            body_h = day_box_height * 3
+            cx = x + day_box_width // 2
+
+            # vertically center the block of wrapped lines
+            start_y = body_top + (body_h - total_h) // 2
+
+            for line in lines:
+                surf = smaller_font.render(line, True, BLACK)  # type: ignore
+                # horizontally center each line
+                rect = surf.get_rect(midtop=(cx, start_y))
+                screen.blit(surf, rect.topleft)
+                start_y += line_height
+
+
 
 def draw_month_mode(screen, font, bigger_font, smaller_font, darker_background, lighter_background,
                   homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,
@@ -516,35 +651,64 @@ def draw_month_mode(screen, font, bigger_font, smaller_font, darker_background, 
             screen.blit(s_text, (x + day_box_width - 33, y + 1))
 
         # Task listing
-        slice_top = slice_top
         line_height = smaller_font.get_height() - 2
         text_y = slice_top + 2
         folders = [
             (homework_tasks_list, BLACK), #type: ignore
-            (chores_tasks_list, BLACK), #type: ignore
-            (work_tasks_list, BLACK), #type: ignore
-            (misc_tasks_list, BLACK), #type: ignore
-            (exams_tasks_list, BLACK), #type: ignore
+            (chores_tasks_list,   BLACK), #type: ignore
+            (work_tasks_list,     BLACK), #type: ignore
+            (misc_tasks_list,     BLACK), #type: ignore
+            (exams_tasks_list,    BLACK), #type: ignore
             (projects_tasks_list, BLACK), #type: ignore
         ]
+
+        # Gather all due tasks for this day (name, color, is_complete)
         all_due = []
         for lst, col in folders:
             for t in lst:
-                if t[4] == slot_date:
-                    all_due.append((t[0], col))
+                try:
+                    # Support both dict and tuple formats
+                    due_dt = (t['due_date'] if isinstance(t, dict) else t[4])
+                    if isinstance(due_dt, datetime):
+                        is_same_day = (due_dt.date() == slot_date.date())
+                    else:
+                        # if it's already a date/datetime aligned to midnight
+                        is_same_day = (due_dt == slot_date)
+                    if not is_same_day:
+                        continue
+
+                    if isinstance(t, dict):
+                        name = t['task_name']
+                        is_complete = t['done'] >= t['spoons_needed']
+                    else:
+                        name = t[0]
+                        # tuple/list: done >= spoons_needed
+                        is_complete = t[2] >= t[1]
+                    all_due.append((name, col, is_complete))
+                except Exception:
+                    continue
+
         total = len(all_due)
+        def _blit_task_line(name, col, is_complete, x_left, y_top):
+            surf = smaller_font.render(name, True, col)  # type: ignore
+            screen.blit(surf, (x_left, y_top))
+            if is_complete:
+                # strike through the rendered text (slight angle)
+                lw = surf.get_width()
+                mid_y = y_top + line_height // 2
+                pygame.draw.line(screen, col, (x_left, mid_y - 2), (x_left + lw, mid_y + 2), 2)
+
         if total <= 3:
-            for name, col in all_due:
-                surf = smaller_font.render(name, True, col)
-                screen.blit(surf, (x + 5, text_y))
+            for name, col, done_flag in all_due:
+                _blit_task_line(name, col, done_flag, x + 5, text_y)
                 text_y += line_height
         else:
-            for name, col in all_due[:2]:
-                surf = smaller_font.render(name, True, col)
-                screen.blit(surf, (x + 5, text_y))
+            for name, col, done_flag in all_due[:2]:
+                _blit_task_line(name, col, done_flag, x + 5, text_y)
                 text_y += line_height
-            more = smaller_font.render(f"{total-2} other tasks", True, BLACK) #type: ignore
+            more = smaller_font.render(f"{total-2} other tasks", True, BLACK)  # type: ignore
             screen.blit(more, (x + 5, text_y))
+
 
 
 def draw_year_mode(
