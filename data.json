@@ -1,11 +1,11 @@
 {
-  "spoons": 5,
+  "spoons": 13,
   "homework_tasks_list": [
     {
       "task_name": "Quiz",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 2,
+      "days_till_due_date": 1,
       "due_date": "2025-09-18T00:00:00",
       "start_time": [
         15,
@@ -28,7 +28,7 @@
       "task_name": "Lab 4",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 2,
+      "days_till_due_date": 1,
       "due_date": "2025-09-18T00:00:00",
       "start_time": [
         15,
@@ -51,7 +51,7 @@
       "task_name": "Project Proposal Due",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 5,
+      "days_till_due_date": 4,
       "due_date": "2025-09-21T00:00:00",
       "start_time": [
         22,
@@ -74,7 +74,7 @@
       "task_name": "Lab 5",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 9,
+      "days_till_due_date": 8,
       "due_date": "2025-09-25T00:00:00",
       "start_time": [
         0,
@@ -97,7 +97,7 @@
       "task_name": "Quiz 4",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 9,
+      "days_till_due_date": 8,
       "due_date": "2025-09-25T00:00:00",
       "start_time": [
         0,
@@ -120,7 +120,7 @@
       "task_name": "Problem Set 3",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 12,
+      "days_till_due_date": 11,
       "due_date": "2025-09-28T00:00:00",
       "start_time": [
         0,
@@ -143,7 +143,7 @@
       "task_name": "Exam 1 (Units 1-5)",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 16,
+      "days_till_due_date": 15,
       "due_date": "2025-10-02T00:00:00",
       "start_time": [
         0,
@@ -166,7 +166,7 @@
       "task_name": "Lab 6",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 16,
+      "days_till_due_date": 15,
       "due_date": "2025-10-02T00:00:00",
       "start_time": [
         0,
@@ -189,7 +189,7 @@
       "task_name": "Quiz 5",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 16,
+      "days_till_due_date": 15,
       "due_date": "2025-10-02T00:00:00",
       "start_time": [
         0,
@@ -212,7 +212,7 @@
       "task_name": "Lab 7",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 23,
+      "days_till_due_date": 22,
       "due_date": "2025-10-09T00:00:00",
       "start_time": [
         0,
@@ -235,7 +235,7 @@
       "task_name": "Quiz 6",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 23,
+      "days_till_due_date": 22,
       "due_date": "2025-10-09T00:00:00",
       "start_time": [
         0,
@@ -258,7 +258,7 @@
       "task_name": "Problem Set 4",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 26,
+      "days_till_due_date": 25,
       "due_date": "2025-10-12T00:00:00",
       "start_time": [
         0,
@@ -281,7 +281,7 @@
       "task_name": "Midsemester Eval",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 26,
+      "days_till_due_date": 25,
       "due_date": "2025-10-12T00:00:00",
       "start_time": [
         0,
@@ -304,7 +304,7 @@
       "task_name": "Lab 8",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 30,
+      "days_till_due_date": 29,
       "due_date": "2025-10-16T00:00:00",
       "start_time": [
         0,
@@ -327,7 +327,7 @@
       "task_name": "Quiz 7",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 30,
+      "days_till_due_date": 29,
       "due_date": "2025-10-16T00:00:00",
       "start_time": [
         0,
@@ -350,7 +350,7 @@
       "task_name": "Project Midterm Rep",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 33,
+      "days_till_due_date": 32,
       "due_date": "2025-10-19T00:00:00",
       "start_time": [
         0,
@@ -373,7 +373,7 @@
       "task_name": "Proj Mid Peer Eval",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 33,
+      "days_till_due_date": 32,
       "due_date": "2025-10-19T00:00:00",
       "start_time": [
         0,
@@ -396,7 +396,7 @@
       "task_name": "Lab 9",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 37,
+      "days_till_due_date": 36,
       "due_date": "2025-10-23T00:00:00",
       "start_time": [
         0,
@@ -419,7 +419,7 @@
       "task_name": "Quiz 8",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 37,
+      "days_till_due_date": 36,
       "due_date": "2025-10-23T00:00:00",
       "start_time": [
         0,
@@ -442,7 +442,7 @@
       "task_name": "Lab 10",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 44,
+      "days_till_due_date": 43,
       "due_date": "2025-10-30T00:00:00",
       "start_time": [
         0,
@@ -465,7 +465,7 @@
       "task_name": "Quiz 9",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 44,
+      "days_till_due_date": 43,
       "due_date": "2025-10-30T00:00:00",
       "start_time": [
         0,
@@ -488,7 +488,7 @@
       "task_name": "Lab 11 (prac exam)",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 51,
+      "days_till_due_date": 50,
       "due_date": "2025-11-06T00:00:00",
       "start_time": [
         0,
@@ -511,7 +511,7 @@
       "task_name": "Quiz 10",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 51,
+      "days_till_due_date": 50,
       "due_date": "2025-11-06T00:00:00",
       "start_time": [
         0,
@@ -534,7 +534,7 @@
       "task_name": "Lab Exam",
       "spoons_needed": 5,
       "done": 0,
-      "days_till_due_date": 58,
+      "days_till_due_date": 57,
       "due_date": "2025-11-13T00:00:00",
       "start_time": [
         0,
@@ -557,7 +557,7 @@
       "task_name": "Problem Set 5",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 61,
+      "days_till_due_date": 60,
       "due_date": "2025-11-16T00:00:00",
       "start_time": [
         0,
@@ -580,7 +580,7 @@
       "task_name": "Exam 2 (6-11)",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 63,
+      "days_till_due_date": 62,
       "due_date": "2025-11-18T00:00:00",
       "start_time": [
         0,
@@ -603,7 +603,7 @@
       "task_name": "Project Final Report",
       "spoons_needed": 5,
       "done": 0,
-      "days_till_due_date": 75,
+      "days_till_due_date": 74,
       "due_date": "2025-11-30T00:00:00",
       "start_time": [
         0,
@@ -626,7 +626,7 @@
       "task_name": "Proj Final Peer Evl",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 75,
+      "days_till_due_date": 74,
       "due_date": "2025-11-30T00:00:00",
       "start_time": [
         0,
@@ -1158,5 +1158,5 @@
   },
   "level": 8.132051282051291,
   "coins": 9999,
-  "last_save_date": "2025-09-16"
+  "last_save_date": "2025-09-17"
 }

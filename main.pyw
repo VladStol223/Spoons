@@ -250,7 +250,7 @@ if (last_date is None) or (today > last_date):
         spoon_name_input, folder_one, folder_two, folder_three, folder_four,
         folder_five, folder_six, streak_dates,
         border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
-        scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, level, coins
+        scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, level, coins, last_save_date
     )
 else:
     # make sure it's defined for the loop below
