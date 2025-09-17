@@ -260,8 +260,9 @@ def draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coin
     msg = f"'s needed for today: {today_needed}"
     msg_surf = spoons_needed_font.render(msg, True, WHITE)  # type: ignore
 
-    screen.blit(icon_image, (xp_x + xp_w + 10 , text_y - 3))
-    msg_x = xp_x + xp_w + 7 + icon_image.width  # start from the right edge of the bar with a little padding
+    screen.blit(icon_image, (xp_x + xp_w + 10 , text_y - 3
+                             ))
+    msg_x = xp_x + xp_w + 7 + 33  # start from the right edge of the bar with a little padding
     msg_y = text_y
     screen.blit(msg_surf, (msg_x, msg_y))
 
