@@ -113,7 +113,8 @@ def save_data(
     folder_five, folder_six, streak_dates,
     border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder,
     taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, label_favorites,
-    level, coins, last_save_date):
+    spoons_used_today):
+
 
     # resolve icon file name
     global icon_image_name
@@ -151,7 +152,6 @@ def save_data(
         "folder_four": folder_four,
         "folder_five": folder_five,
         "folder_six": folder_six,
-        "streak_dates": streak_dates,
         "assets": {
             "border": border,
             "hubIcons": hubIcons,
@@ -166,9 +166,7 @@ def save_data(
             "intro": intro
         },
         "label_favorites": label_favorites,
-        "level": level,
-        "coins": coins,
-        "last_save_date": date.today().isoformat()
+        "last_save_date": [date.today().isoformat(), int(spoons_used_today)]
     }
 
     try:
@@ -252,7 +250,7 @@ def load_data():
     global border_name, hubIcons_name, spoonIcons_name, restIcons_name
     global hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name
     global calendarImages_name, themeBackgroundsImages_name, intro_name
-    global label_favorites, level, coins
+    global label_favorites, spoons_used_today
 
     try:
         with open("data.json", "r") as f:
@@ -296,10 +294,20 @@ def load_data():
         folder_five  = data.get("folder_five","Exams")
         folder_six   = data.get("folder_six","Projects")
 
-        streak_dates = data.get("streak_dates", [])
-
-        level = data.get("level", 0)
-        coins = data.get("coins", 0)
+        # Accept either "YYYY-MM-DD" or ["YYYY-MM-DD", count] for backward compatibility
+        ls = data.get("last_save_date")
+        if isinstance(ls, list) and len(ls) == 2:
+            last_save_date = ls[0]
+            try:
+                spoons_used_today = int(ls[1])
+            except Exception:
+                spoons_used_today = 0
+        elif isinstance(ls, str):
+            last_save_date = ls
+            spoons_used_today = 0
+        else:
+            last_save_date = None
+            spoons_used_today = 0
 
         last_save_date = data.get("last_save_date")  # may be None on first run / old saves
 
@@ -397,5 +405,5 @@ def load_data():
         border_name, hubIcons_name, spoonIcons_name, restIcons_name,
         hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
         calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites,
-        level, coins, last_save_date
+        last_save_date, spoons_used_today
     )

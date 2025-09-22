@@ -35,12 +35,26 @@ def draw_manage_tasks_hub(
         # Sort: incomplete (done_count < cost) first, then by days_left
         lst.sort(key=lambda t: (t[2] >= t[1], t[3]))
 
-    # --- 2) Summaries ---
+    # --- 2) Summaries (only overdue, today, and next 7 days) ---
     def summarize(lst):
-        # Sum up how many spoons remain undone and how many tasks are not yet fully done
-        total_spoons = sum((cost - done) for _, cost, done, *_ in lst if done < cost)
-        total_tasks  = sum(1 for _, cost, done, *_ in lst if done < cost)
+        total_spoons = 0
+        total_tasks  = 0
+        for t in lst:
+            try:
+                name, cost, done, days_left = t[0], int(t[1]), int(t[2]), int(t[3])
+            except Exception:
+                # fallback if tuple shape is off
+                try:
+                    cost = int(t[1]); done = int(t[2]); days_left = int(t[3])
+                except Exception:
+                    continue
+
+            if done < cost and days_left <= 7:  # includes overdue (negative), today (0), and 1..7
+                total_tasks  += 1
+                total_spoons += (cost - done)
+
         return total_spoons, total_tasks
+
 
     hw_spoons, hw_tasks = summarize(homework_tasks_list)
     ch_spoons, ch_tasks = summarize(chores_tasks_list)
@@ -91,7 +105,7 @@ def draw_manage_tasks_hub(
 
         # Content
         if len(raw_list) == 0:
-            msg = "No Tasks"
+            msg = " "
             surf = small_font.render(msg, True, BLACK) #type: ignore
             screen.blit(surf, (x + (folder_w - surf.get_width())//2,
                                y + (folder_h - surf.get_height())//2 + 5))
@@ -127,17 +141,33 @@ def draw_manage_tasks_hub(
 
 def logic_manage_tasks_hub(event, old_page, folder_rects):
     page = old_page
+    page_map = {
+        1: "complete_homework_tasks",
+        2: "complete_chores_tasks",
+        3: "complete_work_tasks",
+        4: "complete_misc_tasks",
+        5: "complete_exams_tasks",
+        6: "complete_projects_tasks",
+    }
+
+    # Mouse clicks
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-        page_map = {
-            1: "complete_homework_tasks",
-            2: "complete_chores_tasks",
-            3: "complete_work_tasks",
-            4: "complete_misc_tasks",
-            5: "complete_exams_tasks",
-            6: "complete_projects_tasks",
-        }
         for idx, rect in folder_rects.items():
             if rect.collidepoint(event.pos):
-                page = page_map[idx]
-                break
+                return page_map[idx]
+
+    # Keyboard shortcuts (q w e / a s d)
+    if event.type == pygame.KEYDOWN:
+        key_to_folder = {
+            pygame.K_q: 1,
+            pygame.K_w: 2,
+            pygame.K_e: 3,
+            pygame.K_a: 4,
+            pygame.K_s: 5,
+            pygame.K_d: 6,
+        }
+        idx = key_to_folder.get(event.key)
+        if idx and idx in page_map:
+            return page_map[idx]
+
     return page

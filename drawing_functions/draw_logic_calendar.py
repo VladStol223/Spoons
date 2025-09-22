@@ -292,6 +292,62 @@ def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offse
         if current_line:
             lines.append(' '.join(current_line))
         return lines
+    
+    def wrap_text_two_widths(text, font, first_width, rest_width):
+        """
+        Wrap `text` so that the FIRST line uses `first_width`,
+        and all subsequent lines use `rest_width`.
+        """
+        words = text.split()
+        lines = []
+        space_w = font.size(' ')[0]
+
+        def wrap_with_width(words_iter, max_w):
+            line_words = []
+            cur_w = 0
+            for w in words_iter:
+                ww = font.size(w)[0]
+                if line_words:
+                    if cur_w + space_w + ww > max_w:
+                        # emit this line and keep the word for the next pass
+                        return ' '.join(line_words), [w] + list(words_iter)
+                    else:
+                        cur_w += space_w + ww
+                        line_words.append(w)
+                else:
+                    if ww > max_w:
+                        # hard-break ultra-long word into characters to fit in max_w
+                        chars = list(w)
+                        part = ""
+                        width = 0
+                        for ch in chars:
+                            cw = font.size(ch)[0]
+                            if width + cw > max_w and part:
+                                # emit the piece so far
+                                return part, [w[len(part):]] + list(words_iter)
+                            part += ch
+                            width += cw
+                        # whole word fits as one part
+                        line_words.append(part)
+                        cur_w = width
+                    else:
+                        line_words.append(w)
+                        cur_w = ww
+            # finished all words
+            return ' '.join(line_words), []
+
+        # first line
+        if not words:
+            return ['']
+        line, leftover = wrap_with_width(iter(words), first_width)
+        lines.append(line)
+
+        # remaining lines
+        rest = leftover
+        while rest:
+            line, rest = wrap_with_width(iter(rest), rest_width)
+            lines.append(line if line else '')
+        return lines
 
     def extract_start_time(task):
         """
@@ -466,16 +522,16 @@ def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offse
                     pill_w = pill_surf.get_width() + 8   # horizontal padding inside pill
                     pill_h = pill_surf.get_height() - 2  # slight tuck so it fits the row
 
-                # Compute name area width (don’t let text run under the pill)
+                # Compute widths:
+                first_line_w = day_box_width - left_pad - right_pad
+                rest_lines_w = first_line_w
+
                 if time_text:
-                    name_max_w = (day_box_width - right_pad) - (x + left_pad) - pill_w - gap + x
-                else:
-                    name_max_w = day_box_width - left_pad - right_pad
+                    # subtract the pill + gap ONLY for the first line
+                    first_line_w = max(20, first_line_w - (pill_w + gap))
 
-                name_max_w = max(20, name_max_w)  # safety
-
-                # Wrap and draw
-                wrapped_lines = wrap_text(name, smaller_font, name_max_w)
+                # Wrap with two widths
+                wrapped_lines = wrap_text_two_widths(name, smaller_font, first_line_w, rest_lines_w)
                 if not wrapped_lines:
                     wrapped_lines = ['']
 

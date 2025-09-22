@@ -1356,7 +1356,7 @@ def handle_task_scroll(event, scroll_offset_px, total_content_height):
     return max(0, min(scroll_offset_px, max_scroll))
 
 
-def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confetti_particles, level):
+def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confetti_particles, level, spoons_used_today):
     """
     Handles clicks and key events for both list and edit form.
     """
@@ -1436,13 +1436,13 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
                 # activate the inline editor for that task
                 new_label_active_task = t_idx
                 new_label_text = ""
-                return False, spoons, confetti_particles, streak_dates, level
+                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
         # 0b) If we were typing and clicked somewhere else (not on the active chip), commit
         if new_label_active_task is not None:
             # If there's an active chip, and we clicked outside it, commit
             if not (new_label_rect and new_label_rect.collidepoint(event.pos)):
                 _commit_new_label()
-                return False, spoons, confetti_particles, streak_dates, level
+                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
         # 1) Start dragging a label chip (check this BEFORE other click targets)
         for rect, t_idx, l_idx in label_chip_buttons:
@@ -1450,13 +1450,13 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
                 # Start drag: store the chip info; it will be hidden from its slot while dragging
                 lab_text = task_list[t_idx][7][l_idx]  # labels list at index 7
                 dragging_label = {"source": "task", "task_idx": t_idx, "label_idx": l_idx, "text": lab_text}
-                return False, spoons, confetti_particles, streak_dates, level
+                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
         # 1b) Start dragging from Favorites panel
         for rect, fav_idx in favorites_chip_buttons:
             if rect.collidepoint(event.pos):
                 lab_text = favorites_labels[fav_idx]
                 dragging_label = {"source": "fav", "fav_idx": fav_idx, "text": lab_text}
-                return False, spoons, confetti_particles, streak_dates, level
+                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
     if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
         if dragging_label is not None:
@@ -1476,7 +1476,7 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
                 if label_text not in favorites_labels:
                     favorites_labels.append(label_text)
                 dragging_label = None
-                return False, spoons, confetti_particles, streak_dates, level
+                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
             # B) favorites -> task
             if dragging_label.get("source") == "fav" and in_task_area and open_task_idx is not None:
@@ -1491,7 +1491,7 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
                 if label_text not in labels_ref:
                     labels_ref.insert(insert_pos, label_text)
                 dragging_label = None
-                return False, spoons, confetti_particles, streak_dates, level
+                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
             # C) reorder within same task
             if (dragging_label.get("source") == "task"
@@ -1519,7 +1519,7 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
                 labels_ref.insert(insert_pos, label_text)
 
                 dragging_label = None
-                return False, spoons, confetti_particles, streak_dates, level
+                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
             # NEW D1) delete from TASK if dropped outside dropdown
             if dragging_label.get("source") == "task" and open_task_idx is not None and outside_dropdown:
@@ -1530,7 +1530,7 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
                     if 0 <= l_idx < len(labels_ref) and labels_ref[l_idx] == dragging_label.get("text"):
                         del labels_ref[l_idx]
                 dragging_label = None
-                return False, spoons, confetti_particles, streak_dates, level
+                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
             # NEW D2) delete from FAVORITES if dropped outside dropdown
             if dragging_label.get("source") == "fav" and outside_dropdown:
@@ -1538,11 +1538,11 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
                 if f_idx is not None and 0 <= f_idx < len(favorites_labels) and favorites_labels[f_idx] == dragging_label.get("text"):
                     del favorites_labels[f_idx]
                 dragging_label = None
-                return False, spoons, confetti_particles, streak_dates, level
+                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
             # Fallback: cancel drag
             dragging_label = None
-            return False, spoons, confetti_particles, streak_dates, level
+            return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
     # --- Edit mode ---
     if currently_editing is not None:
@@ -1559,7 +1559,7 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
                         # hide inputs → drop focus so typing doesn’t go to hidden fields
                         input_active = None
                         edit_buttons.clear()
-                    return False, spoons, confetti_particles, streak_dates, level
+                    return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
             # Cancel edit
             if cancel_button_rect and cancel_button_rect.collidepoint(event.pos):
                 currently_editing = None
@@ -1578,7 +1578,7 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
                 new_label_text = ""
                 new_label_rect = None
 
-                return False, spoons, confetti_particles, streak_dates, level
+                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
             # Save edits
             if done_button_rect and done_button_rect.collidepoint(event.pos):
@@ -1655,7 +1655,7 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
                 edit_state.pop("_month_suggestion_full", None)
                 edit_state.pop("_month_orig_pretty", None)
                 input_active = None
-                return False, spoons, confetti_particles, streak_dates, level
+                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
             # Clicked on a field or arrow
             for rect, key in edit_buttons:
@@ -1767,17 +1767,17 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
                 elif input_active == "start_time":
                     _begin_start_time_typing()
 
-                return False, spoons, confetti_particles, streak_dates, level
+                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
             # Enter does nothing
             if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                return False, spoons, confetti_particles, streak_dates, level
+                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
             cur = edit_state.get(input_active, "")
 
             if event.key == pygame.K_BACKSPACE:
                 edit_state[input_active] = cur[:-1]
-                return False, spoons, confetti_particles, streak_dates, level
+                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
             ch = event.unicode or ""
             if input_active == "name":
@@ -1808,15 +1808,15 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
     if new_label_active_task is not None and event.type == pygame.KEYDOWN:
         if event.key == pygame.K_RETURN:
             _commit_new_label()
-            return False, spoons, confetti_particles, streak_dates, level
+            return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
         elif event.key == pygame.K_ESCAPE:
             # cancel
             new_label_active_task = None
             new_label_text = ""
-            return False, spoons, confetti_particles, streak_dates, level
+            return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
         elif event.key == pygame.K_BACKSPACE:
             new_label_text = new_label_text[:-1]
-            return False, spoons, confetti_particles, streak_dates, level
+            return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
         else:
             ch = event.unicode
             if ch:
@@ -1826,7 +1826,7 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
                 test = new_label_text + ch
                 if inner_font.size(test)[0] <= (lbw - 12):  # light padding
                     new_label_text = test
-            return False, spoons, confetti_particles, streak_dates, level
+            return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
     # --- List mode: handle remove/edit icon and spoon-frame clicks ---
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -1865,7 +1865,7 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
                         "start_time": _st_to_digits(st),
                     }
                     currently_editing = idx
-                return False, spoons, confetti_particles, streak_dates, level
+                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
         # Spoon-frame clicks
         for rect, idx, frame_i in frame_buttons:
@@ -1876,6 +1876,7 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
                 if to_fill > 0 and spoons >= to_fill:
                     task_list[idx][2] = min(cost, new_done)
                     spoons -= to_fill
+                    spoons_used_today += to_fill
 
                     # Fractional level-up: each spoon gives 1/threshold
                     for _ in range(to_fill):
@@ -1885,4 +1886,4 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
 
                 break
 
-    return False, spoons, confetti_particles, streak_dates, level
+    return False, spoons, confetti_particles, streak_dates, level, spoons_used_today

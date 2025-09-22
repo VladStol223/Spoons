@@ -101,36 +101,34 @@ scale_factor = get_scale_factor()
 
 ####################################################################################################################################
 def compute_spoons_needed_today(*task_lists):
-    """Sum remaining spoons for tasks due today (across all folders)."""
+    """Sum remaining spoons for tasks due today or overdue (across all folders)."""
     today = datetime.now().date()
     total_needed = 0
-
     for lst in task_lists:
         for t in lst:
             try:
                 if isinstance(t, dict):
                     due = t.get("due_date")
                     if isinstance(due, str):
-                        # tolerate ISO with/without time
                         due_dt = datetime.fromisoformat(due.replace("Z", ""))
                     else:
                         due_dt = due
-                    if hasattr(due_dt, "date") and due_dt.date() == today:
-                        need = int(t.get("spoons_needed", 0)) - int(t.get("done", 0))
-                        if need > 0:
-                            total_needed += need
+                    if hasattr(due_dt, "date"):
+                        due_day = due_dt.date()
+                        if due_day <= today:
+                            need = int(t.get("spoons_needed", 0)) - int(t.get("done", 0))
+                            if need > 0:
+                                total_needed += need
                 else:
                     # tuple/list: [name, spoons_needed, done, days_left, due_dt, ...]
                     due_dt = t[4]
                     due_day = due_dt.date() if hasattr(due_dt, "date") else due_dt
-                    if due_day == today:
+                    if due_day and due_day <= today:
                         need = int(t[1]) - int(t[2])
                         if need > 0:
                             total_needed += need
             except Exception:
-                # ignore malformed tasks
                 pass
-
     return total_needed
 
 def _decrement_days(lst, n_days):
@@ -177,7 +175,7 @@ def hub_buttons(event):
             spoon_name_input, folder_one, folder_two, folder_three, folder_four,
             folder_five, folder_six, streak_dates,
             border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
-            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, level, coins, last_save_date)
+            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today)
 
             if page == "manage_tasks":
                 scroll_offset = 0
@@ -215,7 +213,7 @@ taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro,
 border_name, hubIcons_name, spoonIcons_name, restIcons_name,
 hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
 calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites,
-level, coins, last_save_date) = load_data()
+last_save_date ,spoons_used_today) = load_data()
 current_theme = switch_theme(loaded_theme, globals())
 
 # --- Startup daily spoons grant (once per real date) ---
@@ -250,7 +248,7 @@ if (last_date is None) or (today > last_date):
         spoon_name_input, folder_one, folder_two, folder_three, folder_four,
         folder_five, folder_six, streak_dates,
         border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
-        scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, level, coins, last_save_date
+        scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today
     )
 else:
     # make sure it's defined for the loop below
@@ -364,7 +362,7 @@ while running:
         draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
 
     if page not in ("calendar", "stats"):
-        draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page, spoons_needed_today)
+        draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page, spoons_needed_today, spoons_used_today)
         draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
         
     for event in pygame.event.get():
@@ -375,7 +373,7 @@ while running:
             spoon_name_input, folder_one, folder_two, folder_three, folder_four,
             folder_five, folder_six, streak_dates,
             border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
-            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, level, coins, last_save_date)
+            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today)
 
             running = False
                 
@@ -392,7 +390,7 @@ while running:
                         spoon_name_input, folder_one, folder_two, folder_three, folder_four,
                         folder_five, folder_six, streak_dates,
                         border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
-                        scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, level, coins, last_save_date)
+                        scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today)
                         prev_page = page
                         if page_key == "manage_tasks":
                             scroll_offset = 0
@@ -406,24 +404,53 @@ while running:
                         page = page_key
                     break
 
-        elif event.type == pygame.KEYDOWN and event.key == pygame.K_F11:
-            scale_factor = get_scale_factor()
-            if not is_maximized:
-                if IS_WINDOWS:
-                    screen = pygame.display.set_mode(get_true_screen_size(), pygame.NOFRAME)
-                    move_window(0, 0)
+        elif event.type == pygame.KEYDOWN:
+            # --- F11 toggle fullscreen ---
+            if event.key == pygame.K_F11:
+                scale_factor = get_scale_factor()
+                if not is_maximized:
+                    if IS_WINDOWS:
+                        screen = pygame.display.set_mode(get_true_screen_size(), pygame.NOFRAME)
+                        move_window(0, 0)
+                    else:
+                        screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+                    is_maximized = True
                 else:
-                    screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-                is_maximized = True
+                    screen = pygame.display.set_mode(WINDOWED_SIZE)
+                    if IS_WINDOWS:
+                        move_window(0, 5)
+                    is_maximized = False
+                UI_elements_initialized = False
+                scale = max(3, (6 / scale_factor)) if is_maximized else 3
+                print(f"Scale factor: {scale_factor} - Border scale: {scale} - Maximized: {is_maximized}")
+            # --- 1–7 quick navigation: 1=Calendar, 2=Inventory, 3=Manage, 4=Add Tasks, 5=Add Spoons, 6=Shop, 7=Stats ---
             else:
-                screen = pygame.display.set_mode(WINDOWED_SIZE)
-                if IS_WINDOWS:
-                    move_window(0, 5)
-                is_maximized = False
-            UI_elements_initialized = False
-            scale = max(3, (6 / scale_factor)) if is_maximized else 3
-            print(f"Scale factor: {scale_factor} - Border scale: {scale} - Maximized: {is_maximized}")
-
+                ctrl_held = bool(event.mod & (pygame.KMOD_CTRL | pygame.KMOD_LCTRL | pygame.KMOD_RCTRL))
+                if ctrl_held:
+                    key_to_page = {
+                        pygame.K_1: "calendar",
+                        pygame.K_2: "input_spoons",
+                        pygame.K_3: "input_tasks",
+                        pygame.K_4: "manage_tasks",
+                        pygame.K_5: "inventory",
+                        pygame.K_6: "shop",
+                        pygame.K_7: "stats",
+                    }
+                    new_page_key = key_to_page.get(event.key)
+                    if new_page_key:
+                        if new_page_key == "stats" and page != "stats" and settings_button_click_sfx:
+                            settings_button_click_sfx.play()
+                        save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, daily_spoons, theme, icon_image, spoon_name_input, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, streak_dates, border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today)
+                        prev_page = page
+                        if new_page_key == "manage_tasks":
+                            scroll_offset = 0
+                        if new_page_key == "input_tasks" and prev_page != "input_tasks":
+                            now = datetime.now()
+                            task_month = now.month
+                            task_day = now.day
+                            max_days = calendar.monthrange(now.year, task_month)[1]
+                            input_active = False
+                        page = new_page_key
         new_page = hub_buttons(event)
 
         page = logic_task_toggle(event, page) #handle clicks with task toggles
@@ -437,27 +464,27 @@ while running:
             page = logic_manage_tasks_hub(event, page, folder_rects)
         elif page == "complete_homework_tasks":
             scroll_offset = handle_task_scroll(event, scroll_offset, total_content_height, scroll_multiplier=17)
-            task_completed, spoons, confetti_particles, streak_dates, level = logic_complete_tasks(homework_tasks_list, task_buttons_homework, event, spoons, streak_dates, streak_task_completed, level)
+            task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(homework_tasks_list, task_buttons_homework, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
         elif page == "complete_chores_tasks":
             scroll_limit = max(0, len(chores_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            task_completed, spoons, confetti_particles, streak_dates, level = logic_complete_tasks(chores_tasks_list, task_buttons_chores, event, spoons, streak_dates, streak_task_completed, level)
+            task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(chores_tasks_list, task_buttons_chores, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
         elif page == "complete_work_tasks":
             scroll_limit = max(0, len(work_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            task_completed, spoons, confetti_particles, streak_dates, level = logic_complete_tasks(work_tasks_list, task_buttons_work, event, spoons, streak_dates, streak_task_completed, level)
+            task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(work_tasks_list, task_buttons_work, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
         elif page == "complete_misc_tasks":
             scroll_limit = max(0, len(misc_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            task_completed, spoons, confetti_particles, streak_dates, level = logic_complete_tasks(misc_tasks_list, task_buttons_misc, event, spoons, streak_dates, streak_task_completed, level)
+            task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(misc_tasks_list, task_buttons_misc, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
         elif page == "complete_exams_tasks":
             scroll_limit = max(0, len(exams_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            task_completed, spoons, confetti_particles, streak_dates, level = logic_complete_tasks(exams_tasks_list, task_buttons_exams, event, spoons, streak_dates, streak_task_completed, level)
+            task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(exams_tasks_list, task_buttons_exams, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
         elif page == "complete_projects_tasks":
             scroll_limit = max(0, len(projects_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
-            task_completed, spoons, confetti_particles, streak_dates, level = logic_complete_tasks(projects_tasks_list, task_buttons_projects, event, spoons, streak_dates, streak_task_completed, level)
+            task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(projects_tasks_list, task_buttons_projects, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
         elif page == "inventory":
             (inventory_tab, spoon_name_input, input_active, icon_image, 
              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open,

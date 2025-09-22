@@ -15,8 +15,6 @@ avatar_x = 860
 avatar_y = 60
 avatar_speed = 1
 
-spoons_needed_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.050))
-
 def get_alpha(time):
     """
     Returns an alpha 0–255 that is 0 at midnight (0:00), 255 at noon (12:00),
@@ -218,53 +216,33 @@ def draw_shadow(screen,
 
 
 
-def draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page, today_needed):
+def draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page, today_needed, spoons_used_today):
 
     # 1) draw your existing spoons UI
     draw_spoons(screen, spoons, icon_image, spoon_name_input)
 
-    # 2) compute current streak length
-    if streak_dates:
-        start_str, end_str = streak_dates[-1]
-        start_dt = datetime.strptime(start_str, "%Y-%m-%d")
-        end_dt   = datetime.strptime(end_str,   "%Y-%m-%d")
-        current_streak = (end_dt - start_dt).days + 1
-    else:
-        current_streak = 0
-
-    # 3) render level + xp bar
-    xp_bar = pygame.transform.scale(xp_bar_image, (xp_bar_image.get_width() * xp_scale * 1.2,
-                                                   xp_bar_image.get_height() * xp_scale))
-    level_label = f"Lvl: {math.floor(level)}"
-    level_surf  = font.render(level_label,  True, WHITE)  # type: ignore
-
+    # 2) “Spoons used today” (replaces XP bar)
     text_x = 115
     text_y = 30
 
-    screen.blit(level_surf, (text_x, text_y))
+    used_msg = f"'s used today: {int(spoons_used_today)}"
+    used_surf = font.render(used_msg, True, WHITE)  # type: ignore
+    icon_x = text_x 
+    screen.blit(icon_image, (icon_x, text_y - 3))
+    msg_x = icon_x + 30
+    msg_y = text_y
+    screen.blit(used_surf, (msg_x, msg_y))
 
-    # XP fill
-    xp_x = text_x + level_surf.get_width() + 10
-    xp_y = text_y
-    xp_w = xp_bar.get_width() - 10
-    xp_h = xp_bar.get_height() - 10
-
-    pygame.draw.rect(screen, (63, 44, 27), (xp_x, xp_y, xp_w, xp_h))  # background
-    pygame.draw.rect(
-        screen, (20, 150, 20),
-        (xp_x, xp_y, xp_w * (level - math.floor(level)), xp_h)        # experience
-    )
-    screen.blit(xp_bar, (xp_x - 5, xp_y - 5))
-
-    # 4) NEW: “{icon}s needed for today: {num}” to the right of the XP bar
+    # 3) “{icon}s needed for today: {num}” to the right of the used-today text
     msg = f"'s needed for today: {today_needed}"
-    msg_surf = spoons_needed_font.render(msg, True, WHITE)  # type: ignore
+    msg_surf = font.render(msg, True, WHITE)  # type: ignore
 
-    screen.blit(icon_image, (xp_x + xp_w + 10 , text_y - 3
-                             ))
-    msg_x = xp_x + xp_w + 7 + 33  # start from the right edge of the bar with a little padding
+    icon_x = text_x + used_surf.get_width() + 90
+    screen.blit(icon_image, (icon_x, text_y - 3))
+    msg_x = icon_x + 30
     msg_y = text_y
     screen.blit(msg_surf, (msg_x, msg_y))
+
 
     # ------------------------------------------------------------------------------
     # Draw the avatar background, furniture, windows, etc.

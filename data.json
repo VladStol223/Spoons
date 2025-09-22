@@ -1,12 +1,72 @@
 {
-  "spoons": 13,
+  "spoons": 1,
   "homework_tasks_list": [
     {
-      "task_name": "Quiz",
+      "task_name": "make latex crib def bod",
+      "spoons_needed": 4,
+      "done": 0,
+      "days_till_due_date": 0,
+      "due_date": "2025-09-22T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "hw 4 thermo",
       "spoons_needed": 3,
       "done": 0,
       "days_till_due_date": 1,
-      "due_date": "2025-09-18T00:00:00",
+      "due_date": "2025-09-23T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "make ECE quizlet 4 nat",
+      "spoons_needed": 3,
+      "done": 0,
+      "days_till_due_date": 1,
+      "due_date": "2025-09-23T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "hw 3 and 4 fluids",
+      "spoons_needed": 3,
+      "done": 0,
+      "days_till_due_date": 2,
+      "due_date": "2025-09-24T00:00:00",
       "start_time": [
         15,
         30,
@@ -19,62 +79,13 @@
         0,
         0
       ],
-      "labels": [
-        "Quiz",
-        "ECE 3741"
-      ]
-    },
-    {
-      "task_name": "Lab 4",
-      "spoons_needed": 3,
-      "done": 0,
-      "days_till_due_date": 1,
-      "due_date": "2025-09-18T00:00:00",
-      "start_time": [
-        15,
-        30,
-        0,
-        0
-      ],
-      "end_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "labels": [
-        "Lab",
-        "ECE 3741"
-      ]
-    },
-    {
-      "task_name": "Project Proposal Due",
-      "spoons_needed": 3,
-      "done": 0,
-      "days_till_due_date": 4,
-      "due_date": "2025-09-21T00:00:00",
-      "start_time": [
-        22,
-        45,
-        0,
-        0
-      ],
-      "end_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "labels": [
-        "Homework",
-        "COE 3001"
-      ]
+      "labels": []
     },
     {
       "task_name": "Lab 5",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 8,
+      "days_till_due_date": 3,
       "due_date": "2025-09-25T00:00:00",
       "start_time": [
         0,
@@ -97,7 +108,7 @@
       "task_name": "Quiz 4",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 8,
+      "days_till_due_date": 3,
       "due_date": "2025-09-25T00:00:00",
       "start_time": [
         0,
@@ -120,7 +131,7 @@
       "task_name": "Problem Set 3",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 11,
+      "days_till_due_date": 6,
       "due_date": "2025-09-28T00:00:00",
       "start_time": [
         0,
@@ -140,33 +151,10 @@
       ]
     },
     {
-      "task_name": "Exam 1 (Units 1-5)",
-      "spoons_needed": 3,
-      "done": 0,
-      "days_till_due_date": 15,
-      "due_date": "2025-10-02T00:00:00",
-      "start_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "end_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "labels": [
-        "Exams",
-        "COE 3001"
-      ]
-    },
-    {
       "task_name": "Lab 6",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 15,
+      "days_till_due_date": 10,
       "due_date": "2025-10-02T00:00:00",
       "start_time": [
         0,
@@ -189,7 +177,7 @@
       "task_name": "Quiz 5",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 15,
+      "days_till_due_date": 10,
       "due_date": "2025-10-02T00:00:00",
       "start_time": [
         0,
@@ -212,7 +200,7 @@
       "task_name": "Lab 7",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 22,
+      "days_till_due_date": 17,
       "due_date": "2025-10-09T00:00:00",
       "start_time": [
         0,
@@ -235,7 +223,7 @@
       "task_name": "Quiz 6",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 22,
+      "days_till_due_date": 17,
       "due_date": "2025-10-09T00:00:00",
       "start_time": [
         0,
@@ -258,7 +246,7 @@
       "task_name": "Problem Set 4",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 25,
+      "days_till_due_date": 20,
       "due_date": "2025-10-12T00:00:00",
       "start_time": [
         0,
@@ -281,7 +269,7 @@
       "task_name": "Midsemester Eval",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 25,
+      "days_till_due_date": 20,
       "due_date": "2025-10-12T00:00:00",
       "start_time": [
         0,
@@ -304,7 +292,7 @@
       "task_name": "Lab 8",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 29,
+      "days_till_due_date": 24,
       "due_date": "2025-10-16T00:00:00",
       "start_time": [
         0,
@@ -327,7 +315,7 @@
       "task_name": "Quiz 7",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 29,
+      "days_till_due_date": 24,
       "due_date": "2025-10-16T00:00:00",
       "start_time": [
         0,
@@ -350,7 +338,7 @@
       "task_name": "Project Midterm Rep",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 32,
+      "days_till_due_date": 27,
       "due_date": "2025-10-19T00:00:00",
       "start_time": [
         0,
@@ -373,7 +361,7 @@
       "task_name": "Proj Mid Peer Eval",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 32,
+      "days_till_due_date": 27,
       "due_date": "2025-10-19T00:00:00",
       "start_time": [
         0,
@@ -396,7 +384,7 @@
       "task_name": "Lab 9",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 36,
+      "days_till_due_date": 31,
       "due_date": "2025-10-23T00:00:00",
       "start_time": [
         0,
@@ -419,7 +407,7 @@
       "task_name": "Quiz 8",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 36,
+      "days_till_due_date": 31,
       "due_date": "2025-10-23T00:00:00",
       "start_time": [
         0,
@@ -442,7 +430,7 @@
       "task_name": "Lab 10",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 43,
+      "days_till_due_date": 38,
       "due_date": "2025-10-30T00:00:00",
       "start_time": [
         0,
@@ -465,7 +453,7 @@
       "task_name": "Quiz 9",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 43,
+      "days_till_due_date": 38,
       "due_date": "2025-10-30T00:00:00",
       "start_time": [
         0,
@@ -488,7 +476,7 @@
       "task_name": "Lab 11 (prac exam)",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 50,
+      "days_till_due_date": 45,
       "due_date": "2025-11-06T00:00:00",
       "start_time": [
         0,
@@ -511,7 +499,7 @@
       "task_name": "Quiz 10",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 50,
+      "days_till_due_date": 45,
       "due_date": "2025-11-06T00:00:00",
       "start_time": [
         0,
@@ -534,7 +522,7 @@
       "task_name": "Lab Exam",
       "spoons_needed": 5,
       "done": 0,
-      "days_till_due_date": 57,
+      "days_till_due_date": 52,
       "due_date": "2025-11-13T00:00:00",
       "start_time": [
         0,
@@ -557,7 +545,7 @@
       "task_name": "Problem Set 5",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 60,
+      "days_till_due_date": 55,
       "due_date": "2025-11-16T00:00:00",
       "start_time": [
         0,
@@ -580,7 +568,7 @@
       "task_name": "Exam 2 (6-11)",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 62,
+      "days_till_due_date": 57,
       "due_date": "2025-11-18T00:00:00",
       "start_time": [
         0,
@@ -603,7 +591,7 @@
       "task_name": "Project Final Report",
       "spoons_needed": 5,
       "done": 0,
-      "days_till_due_date": 74,
+      "days_till_due_date": 69,
       "due_date": "2025-11-30T00:00:00",
       "start_time": [
         0,
@@ -626,7 +614,7 @@
       "task_name": "Proj Final Peer Evl",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 74,
+      "days_till_due_date": 69,
       "due_date": "2025-11-30T00:00:00",
       "start_time": [
         0,
@@ -649,7 +637,7 @@
       "task_name": "Lab 01",
       "spoons_needed": 4,
       "done": 4,
-      "days_till_due_date": -19,
+      "days_till_due_date": -25,
       "due_date": "2025-08-28T00:00:00",
       "start_time": [
         0,
@@ -672,7 +660,7 @@
       "task_name": "Problem Set 1",
       "spoons_needed": 3,
       "done": 3,
-      "days_till_due_date": -16,
+      "days_till_due_date": -22,
       "due_date": "2025-08-31T00:00:00",
       "start_time": [
         0,
@@ -695,7 +683,7 @@
       "task_name": "Quiz 01",
       "spoons_needed": 2,
       "done": 2,
-      "days_till_due_date": -12,
+      "days_till_due_date": -18,
       "due_date": "2025-09-04T00:00:00",
       "start_time": [
         0,
@@ -718,7 +706,7 @@
       "task_name": "make fluids quizlet",
       "spoons_needed": 2,
       "done": 2,
-      "days_till_due_date": -6,
+      "days_till_due_date": -12,
       "due_date": "2025-09-10T00:00:00",
       "start_time": [
         0,
@@ -738,7 +726,7 @@
       "task_name": "fluids quiz",
       "spoons_needed": 2,
       "done": 2,
-      "days_till_due_date": -6,
+      "days_till_due_date": -12,
       "due_date": "2025-09-10T00:00:00",
       "start_time": [
         0,
@@ -758,7 +746,7 @@
       "task_name": "fluids hw 2",
       "spoons_needed": 3,
       "done": 3,
-      "days_till_due_date": -6,
+      "days_till_due_date": -12,
       "due_date": "2025-09-10T00:00:00",
       "start_time": [
         0,
@@ -778,7 +766,7 @@
       "task_name": "make ece quizlet",
       "spoons_needed": 3,
       "done": 3,
-      "days_till_due_date": -6,
+      "days_till_due_date": -12,
       "due_date": "2025-09-10T00:00:00",
       "start_time": [
         0,
@@ -798,7 +786,7 @@
       "task_name": "ece quiz 2",
       "spoons_needed": 2,
       "done": 2,
-      "days_till_due_date": -5,
+      "days_till_due_date": -11,
       "due_date": "2025-09-11T00:00:00",
       "start_time": [
         0,
@@ -818,7 +806,7 @@
       "task_name": "Lab 3",
       "spoons_needed": 3,
       "done": 3,
-      "days_till_due_date": -5,
+      "days_till_due_date": -11,
       "due_date": "2025-09-11T00:00:00",
       "start_time": [
         0,
@@ -841,7 +829,7 @@
       "task_name": "def bods hw 2",
       "spoons_needed": 3,
       "done": 3,
-      "days_till_due_date": -4,
+      "days_till_due_date": -10,
       "due_date": "2025-09-12T00:00:00",
       "start_time": [
         0,
@@ -861,7 +849,7 @@
       "task_name": "Problem Set 2",
       "spoons_needed": 3,
       "done": 3,
-      "days_till_due_date": -1,
+      "days_till_due_date": -7,
       "due_date": "2025-09-15T00:00:00",
       "start_time": [
         0,
@@ -879,6 +867,175 @@
         "Homework",
         "COE 3001"
       ]
+    },
+    {
+      "task_name": "join fluids class",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": -5,
+      "due_date": "2025-09-17T00:00:00",
+      "start_time": [
+        15,
+        30,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "send PDF of lab to DJ",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": -5,
+      "due_date": "2025-09-17T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "Quiz",
+      "spoons_needed": 3,
+      "done": 3,
+      "days_till_due_date": -4,
+      "due_date": "2025-09-18T00:00:00",
+      "start_time": [
+        15,
+        30,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [
+        "Quiz",
+        "ECE 3741"
+      ]
+    },
+    {
+      "task_name": "Lab 4",
+      "spoons_needed": 3,
+      "done": 3,
+      "days_till_due_date": -4,
+      "due_date": "2025-09-18T00:00:00",
+      "start_time": [
+        15,
+        30,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [
+        "Lab",
+        "ECE 3741"
+      ]
+    },
+    {
+      "task_name": "proofread sys dyn PP",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": -2,
+      "due_date": "2025-09-20T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "def bods hw",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": -2,
+      "due_date": "2025-09-20T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "Project Proposal Due",
+      "spoons_needed": 3,
+      "done": 3,
+      "days_till_due_date": -1,
+      "due_date": "2025-09-21T00:00:00",
+      "start_time": [
+        22,
+        45,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [
+        "Homework",
+        "COE 3001"
+      ]
+    },
+    {
+      "task_name": "hw 4 reading thermo",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": 0,
+      "due_date": "2025-09-22T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
     }
   ],
   "chores_tasks_list": [
@@ -886,7 +1043,7 @@
       "task_name": "DPO stuff code",
       "spoons_needed": 3,
       "done": 3,
-      "days_till_due_date": -21,
+      "days_till_due_date": -27,
       "due_date": "2025-08-26T00:00:00",
       "start_time": [
         0,
@@ -908,7 +1065,7 @@
       "task_name": "F&M Bank codw",
       "spoons_needed": 1,
       "done": 1,
-      "days_till_due_date": -21,
+      "days_till_due_date": -27,
       "due_date": "2025-08-26T00:00:00",
       "start_time": [
         0,
@@ -930,7 +1087,7 @@
       "task_name": "DPO Project",
       "spoons_needed": 2,
       "done": 2,
-      "days_till_due_date": -21,
+      "days_till_due_date": -27,
       "due_date": "2025-08-26T00:00:00",
       "start_time": [
         0,
@@ -952,7 +1109,7 @@
       "task_name": "F&M Banking Coding",
       "spoons_needed": 3,
       "done": 3,
-      "days_till_due_date": -21,
+      "days_till_due_date": -27,
       "due_date": "2025-08-26T00:00:00",
       "start_time": [
         0,
@@ -969,15 +1126,75 @@
       "labels": [
         "F&M Bank Proj"
       ]
+    },
+    {
+      "task_name": "work on DPO project",
+      "spoons_needed": 4,
+      "done": 4,
+      "days_till_due_date": -5,
+      "due_date": "2025-09-17T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "map all out APIs DPO",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": -3,
+      "due_date": "2025-09-19T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
     }
   ],
   "work_tasks_list": [
     {
-      "task_name": "finish vaccuuming",
-      "spoons_needed": 1,
+      "task_name": "complete spoons to-do",
+      "spoons_needed": 3,
+      "done": 2,
+      "days_till_due_date": 2,
+      "due_date": "2025-09-24T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "make rush fitness logo",
+      "spoons_needed": 4,
       "done": 0,
-      "days_till_due_date": -4,
-      "due_date": "2025-09-12T00:00:00",
+      "days_till_due_date": 5,
+      "due_date": "2025-09-27T00:00:00",
       "start_time": [
         0,
         0,
@@ -995,8 +1212,8 @@
     {
       "task_name": "put away catan",
       "spoons_needed": 1,
-      "done": 0,
-      "days_till_due_date": -4,
+      "done": 1,
+      "days_till_due_date": -10,
       "due_date": "2025-09-12T00:00:00",
       "start_time": [
         0,
@@ -1016,7 +1233,7 @@
       "task_name": "take out dishes",
       "spoons_needed": 1,
       "done": 1,
-      "days_till_due_date": -4,
+      "days_till_due_date": -10,
       "due_date": "2025-09-12T00:00:00",
       "start_time": [
         0,
@@ -1036,7 +1253,7 @@
       "task_name": "clean counters off",
       "spoons_needed": 1,
       "done": 1,
-      "days_till_due_date": -4,
+      "days_till_due_date": -10,
       "due_date": "2025-09-12T00:00:00",
       "start_time": [
         0,
@@ -1056,8 +1273,368 @@
       "task_name": "take out trash",
       "spoons_needed": 1,
       "done": 1,
-      "days_till_due_date": -4,
+      "days_till_due_date": -10,
       "due_date": "2025-09-12T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "throw trash out",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": -5,
+      "due_date": "2025-09-17T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "vaccuum",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": -5,
+      "due_date": "2025-09-17T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "clean up corner a tad",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": -5,
+      "due_date": "2025-09-17T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "dishes",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": -5,
+      "due_date": "2025-09-17T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "scrape dookie off wall",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": -5,
+      "due_date": "2025-09-17T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "counters",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": -5,
+      "due_date": "2025-09-17T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "shave",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": -5,
+      "due_date": "2025-09-17T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "order bg lazer parts",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": -4,
+      "due_date": "2025-09-18T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "Get ready for dinner",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": -2,
+      "due_date": "2025-09-20T00:00:00",
+      "start_time": [
+        15,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "Make Bed",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": -2,
+      "due_date": "2025-09-20T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "Dishes",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": -2,
+      "due_date": "2025-09-20T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "Counters",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": -2,
+      "due_date": "2025-09-20T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "take out trash",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": -2,
+      "due_date": "2025-09-20T00:00:00",
+      "start_time": [
+        15,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "cleanup react frontend",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": -1,
+      "due_date": "2025-09-21T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "wipe mirror",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": -1,
+      "due_date": "2025-09-21T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "source lamp arm 4 bg",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": 0,
+      "due_date": "2025-09-22T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "dishes",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": 0,
+      "due_date": "2025-09-22T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "trash",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": 0,
+      "due_date": "2025-09-22T00:00:00",
       "start_time": [
         0,
         0,
@@ -1073,14 +1650,75 @@
       "labels": []
     }
   ],
-  "misc_tasks_list": [],
+  "misc_tasks_list": [
+    {
+      "task_name": "fliuds exam 1",
+      "spoons_needed": 2,
+      "done": 0,
+      "days_till_due_date": 2,
+      "due_date": "2025-09-24T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "system dynamics exam 1",
+      "spoons_needed": 2,
+      "done": 0,
+      "days_till_due_date": 10,
+      "due_date": "2025-10-02T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    },
+    {
+      "task_name": "test",
+      "spoons_needed": 5,
+      "done": 5,
+      "days_till_due_date": 0,
+      "due_date": "2025-09-22T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": []
+    }
+  ],
   "exams_tasks_list": [],
   "projects_tasks_list": [
     {
       "task_name": "study session w/alex",
       "spoons_needed": 3,
       "done": 3,
-      "days_till_due_date": -22,
+      "days_till_due_date": -28,
       "due_date": "2025-08-25T00:00:00",
       "start_time": [
         0,
@@ -1107,7 +1745,8 @@
     "Thu": 12,
     "Fri": 10,
     "Sat": 15,
-    "Sun": 15
+    "Sun": 15,
+    "spoons": 22
   },
   "theme": "foresty",
   "icon_image": "strawberry.png",
@@ -1115,10 +1754,9 @@
   "folder_one": "School",
   "folder_two": "Work",
   "folder_three": "Chores",
-  "folder_four": "Exercise",
+  "folder_four": "Exams",
   "folder_five": "Olivia",
   "folder_six": "Events",
-  "streak_dates": [],
   "assets": {
     "border": "spruceWood",
     "hubIcons": "default",
@@ -1156,7 +1794,8 @@
       "MRDC"
     ]
   },
-  "level": 8.132051282051291,
-  "coins": 9999,
-  "last_save_date": "2025-09-17"
+  "last_save_date": [
+    "2025-09-22",
+    9
+  ]
 }
