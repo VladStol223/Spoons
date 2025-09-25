@@ -661,4 +661,3 @@ def load_sfx(name, ext="mp3"):
 
 # now load all your effects:
 settings_button_click_sfx = load_sfx("settingsClick")
-

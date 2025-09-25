@@ -49,6 +49,10 @@ import pygame
 import sys
 import calendar
 
+import subprocess
+import os
+from copyparty_sync import upload_data_json, download_data_json_if_present
+
 IS_WINDOWS = platform.system() == "Windows"
 IS_LINUX   = platform.system() == "Linux"
 IS_MAC     = platform.system() == "Darwin"
@@ -183,6 +187,23 @@ def hub_buttons(event):
 
     return None
 
+def spawn_background_upload():
+    """Close the window instantly; run upload in a detached Python process."""
+    try:
+        py = sys.executable
+        cmd = [py, "-u", "-c", "import copyparty_sync as cps; cps.upload_data_json()"]
+        kwargs = {"close_fds": True}
+        if IS_WINDOWS:
+            DETACHED_PROCESS = 0x00000008
+            CREATE_NEW_PROCESS_GROUP = 0x00000200
+            kwargs["creationflags"] = DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
+        else:
+            kwargs["start_new_session"] = True
+        subprocess.Popen(cmd, **kwargs)
+        print("[copyparty] background uploader spawned")
+    except Exception as e:
+        print(f"[copyparty] failed to spawn background uploader: {e}")
+
 #drawing / logic functions
 from drawing_functions.draw_hub_buttons import draw_hub_buttons
 from drawing_functions.draw_logic_input_spoons import draw_input_spoons, logic_input_spoons
@@ -202,7 +223,9 @@ from load_save import save_data, load_data
 from switch_themes import switch_theme
 from handle_scroll import handle_task_scroll
 
-#draw_intro_sequence(screen, clock)
+# optional: try to fetch freshest remote copy before loading
+download_data_json_if_present()
+
 #loading save data
 (spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,  
 exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image,
@@ -216,23 +239,33 @@ calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites,
 last_save_date ,spoons_used_today) = load_data()
 current_theme = switch_theme(loaded_theme, globals())
 
-# --- Startup daily spoons grant (once per real date) ---
+# --- Startup daily spoons grant + per-day counter reset ---
 try:
-    # last_save_date is "YYYY-MM-DD" or None
-    last_date = datetime.strptime(last_save_date, "%Y-%m-%d").date() if last_save_date else None
+    # last_save_date is either "YYYY-MM-DD" or ["YYYY-MM-DD", spoons_used_today]
+    if isinstance(last_save_date, list) and len(last_save_date) == 2:
+        last_date_str = last_save_date[0]
+        try:
+            spoons_used_today = int(last_save_date[1])
+        except Exception:
+            spoons_used_today = 0
+    else:
+        last_date_str = last_save_date
+    last_date = datetime.strptime(last_date_str, "%Y-%m-%d").date() if last_date_str else None
 except Exception:
     last_date = None
 
 today = datetime.now().date()
 if (last_date is None) or (today > last_date):
-    # how many midnights have passed since last save? (>= 1)
     delta_days = (today - last_date).days if last_date else 1
 
     # grant today’s daily spoons
     current_weekday = today.strftime("%a")
     spoons = daily_spoons.get(current_weekday, spoons)
 
-    # reset daily streak flag and decrement "days_till_due_date" by the gap
+    # reset daily counter
+    spoons_used_today = 0
+
+    # decrement days_till_due_date by the gap
     streak_task_completed = False
     _decrement_days(homework_tasks_list,  delta_days)
     _decrement_days(chores_tasks_list,    delta_days)
@@ -241,18 +274,18 @@ if (last_date is None) or (today > last_date):
     _decrement_days(exams_tasks_list,     delta_days)
     _decrement_days(projects_tasks_list,  delta_days)
 
-    # persist immediately so we won't re-grant until tomorrow
+    # persist immediately with the pair
     save_data(
-        spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
-        exams_tasks_list, projects_tasks_list, daily_spoons, theme, icon_image,
-        spoon_name_input, folder_one, folder_two, folder_three, folder_four,
-        folder_five, folder_six, streak_dates,
-        border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
-        scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today
-    )
+            spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
+            exams_tasks_list, projects_tasks_list, daily_spoons, theme, icon_image,
+            spoon_name_input, folder_one, folder_two, folder_three, folder_four,
+            folder_five, folder_six, streak_dates,
+            border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
+            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today)
 else:
-    # make sure it's defined for the loop below
     streak_task_completed = False
+
+current_date_str = datetime.now().strftime("%Y-%m-%d")
 
 # ----------------------------------------------------------------------------------------------------
 # Main loop
@@ -267,6 +300,35 @@ while running:
     delta_time = clock.tick(60) / 1000.0
     max_days = calendar.monthrange(datetime.now().year, task_month)[1]
     mouse_pos = pygame.mouse.get_pos()
+
+    # ---- live midnight rollover ----
+    new_date_str = datetime.now().strftime("%Y-%m-%d")
+    if new_date_str != current_date_str:
+        current_date_str = new_date_str
+
+        # grant today’s daily spoons
+        today = datetime.now().date()
+        current_weekday = today.strftime("%a")
+        spoons = daily_spoons.get(current_weekday, spoons)
+
+        # reset per-day counter
+        spoons_used_today = 0
+
+        # decrement days by 1
+        _decrement_days(homework_tasks_list,  1)
+        _decrement_days(chores_tasks_list,    1)
+        _decrement_days(work_tasks_list,      1)
+        _decrement_days(misc_tasks_list,      1)
+        _decrement_days(exams_tasks_list,     1)
+        _decrement_days(projects_tasks_list,  1)
+
+        save_data(
+            spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
+            exams_tasks_list, projects_tasks_list, daily_spoons, theme, icon_image,
+            spoon_name_input, folder_one, folder_two, folder_three, folder_four,
+            folder_five, folder_six, streak_dates,
+            border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
+            scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today)
 
     spoons_needed_today = compute_spoons_needed_today(homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list)
 
@@ -374,6 +436,15 @@ while running:
             folder_five, folder_six, streak_dates,
             border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
             scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today)
+
+            # make the window vanish instantly
+            try:
+                pygame.display.quit()
+            except Exception:
+                pass
+
+            # kick off the uploader in the background (fire-and-forget)
+            spawn_background_upload()
 
             running = False
                 

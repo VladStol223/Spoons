@@ -294,22 +294,17 @@ def load_data():
         folder_five  = data.get("folder_five","Exams")
         folder_six   = data.get("folder_six","Projects")
 
-        # Accept either "YYYY-MM-DD" or ["YYYY-MM-DD", count] for backward compatibility
-        ls = data.get("last_save_date")
-        if isinstance(ls, list) and len(ls) == 2:
-            last_save_date = ls[0]
+        # last_save_date can be legacy string or new pair ["YYYY-MM-DD", spoons_used_today]
+        lsd = data.get("last_save_date")
+        spoons_used_today = 0
+        if isinstance(lsd, list) and len(lsd) == 2:
+            last_save_date = lsd[0]
             try:
-                spoons_used_today = int(ls[1])
+                spoons_used_today = int(lsd[1])
             except Exception:
                 spoons_used_today = 0
-        elif isinstance(ls, str):
-            last_save_date = ls
-            spoons_used_today = 0
         else:
-            last_save_date = None
-            spoons_used_today = 0
-
-        last_save_date = data.get("last_save_date")  # may be None on first run / old saves
+            last_save_date = lsd
 
         # NEW: load per-folder favorites (with migration & sane defaults)
         default_slots = ["folder_one", "folder_two", "folder_three", "folder_four", "folder_five", "folder_six"]

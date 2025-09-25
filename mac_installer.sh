@@ -24,6 +24,6 @@ python3 -m pip install --upgrade pip
 
 # Install dependencies
 echo "Installing required Python packages..."
-python3 -m pip install pygame
+python3 -m pip install pygame requests
 
 echo "Installation complete!"

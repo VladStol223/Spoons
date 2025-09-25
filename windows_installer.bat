@@ -17,6 +17,6 @@ echo Upgrading pip...
 python -m ensurepip --default-pip
 python -m pip install --upgrade pip
 echo Installing required Python packages...
-pip install pygame-ce pygame_gui
+pip install pygame-ce pygame_gui requests
 echo Installation complete!
 pause
