@@ -1,12 +1,12 @@
 
 [Desktop Entry]
-#Save this to within your directory "~/.local/share/applications" to run spoons
+#Save this to within your directory /home/.local/share/applications to run spoons
 Type=Application
 Terminal=false
 Exec=python3 main.pyw
-#Path of your spoons folder. Example "/home/jason/Documents/Spoons"
-Path=
+#Path of your spoons folder. Example /home/jason/Documents/Spoons-main/
+Path=/home/jason/Documents/Spoons-main/
 Name=Spoons
 Comment=Get your shit together
-#Path of your spoon icon. Should be within same folder. Example "/home/jason/Documents/Spoons/images/hubIcons/default/addSpoonsIcon.png"
-Icon=
+#Path of your spoon icon. Should be within same folder. Example /home/jason/Documents/Spoons-main/images/hubIcons/default/addSpoonsIcon.png
+Icon=/home/jason/Documents/Spoons-main/images/hubIcons/default/addSpoonsIcon.png
