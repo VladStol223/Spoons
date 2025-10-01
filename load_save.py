@@ -14,6 +14,18 @@ Parameters:
 Returns:
     dict: A dictionary representation of the taskv.
 """
+# Internal variable → Generic JSON key
+TASK_CATEGORY_JSON_MAP = {
+    "homework_tasks_list": "folder_1_tasks",
+    "chores_tasks_list": "folder_2_tasks",
+    "work_tasks_list": "folder_3_tasks",
+    "misc_tasks_list": "folder_4_tasks",
+    "exams_tasks_list": "folder_5_tasks",
+    "projects_tasks_list": "folder_6_tasks"
+}
+
+# Reverse mapping: JSON key → internal variable
+TASK_CATEGORY_JSON_REVERSE = {v: k for k, v in TASK_CATEGORY_JSON_MAP.items()}
 
 def task_to_serializable(task):
     """
@@ -136,12 +148,14 @@ def save_data(
 
     payload = {
         "spoons": spoons,
-        "homework_tasks_list": [task_to_serializable(t) for t in homework_tasks_list],
-        "chores_tasks_list":   [task_to_serializable(t) for t in chores_tasks_list],
-        "work_tasks_list":     [task_to_serializable(t) for t in work_tasks_list],
-        "misc_tasks_list":     [task_to_serializable(t) for t in misc_tasks_list],
-        "exams_tasks_list":    [task_to_serializable(t) for t in exams_tasks_list],
-        "projects_tasks_list": [task_to_serializable(t) for t in projects_tasks_list],
+        **{
+        TASK_CATEGORY_JSON_MAP["homework_tasks_list"]: [task_to_serializable(t) for t in homework_tasks_list],
+        TASK_CATEGORY_JSON_MAP["chores_tasks_list"]:   [task_to_serializable(t) for t in chores_tasks_list],
+        TASK_CATEGORY_JSON_MAP["work_tasks_list"]:     [task_to_serializable(t) for t in work_tasks_list],
+        TASK_CATEGORY_JSON_MAP["misc_tasks_list"]:     [task_to_serializable(t) for t in misc_tasks_list],
+        TASK_CATEGORY_JSON_MAP["exams_tasks_list"]:    [task_to_serializable(t) for t in exams_tasks_list],
+        TASK_CATEGORY_JSON_MAP["projects_tasks_list"]: [task_to_serializable(t) for t in projects_tasks_list],
+    	},
         "daily_spoons": daily_spoons,
         "theme": theme,
         "icon_image": icon_image_name,
@@ -258,12 +272,10 @@ def load_data():
 
         # — your existing field loading —
         spoons = data.get("spoons", 0)
-        homework_tasks_list = [task_from_serializable(t) for t in data.get("homework_tasks_list", [])]
-        chores_tasks_list   = [task_from_serializable(t) for t in data.get("chores_tasks_list", [])]
-        work_tasks_list     = [task_from_serializable(t) for t in data.get("work_tasks_list", [])]
-        misc_tasks_list     = [task_from_serializable(t) for t in data.get("misc_tasks_list", [])]
-        exams_tasks_list    = [task_from_serializable(t) for t in data.get("exams_tasks_list", [])]
-        projects_tasks_list = [task_from_serializable(t) for t in data.get("projects_tasks_list", [])]
+        for var_name, json_key in TASK_CATEGORY_JSON_MAP.items():
+    	    globals()[var_name] = [
+                task_from_serializable(t) for t in data.get(json_key, [])
+            ]
 
         daily_spoons = data.get("daily_spoons", {"Mon":0,"Tue":0,"Wed":0,"Thu":0,"Fri":0,"Sat":0,"Sun":0})
         loaded_theme = data.get("theme", "")
