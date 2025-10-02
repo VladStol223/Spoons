@@ -68,8 +68,10 @@ button_widths = {}
 hub_closing = False
 UI_elements_initialized = False
 clock = pygame.time.Clock()
-screen = pygame.display.set_mode(WINDOWED_SIZE)
+icon_surface = pygame.image.load("icon.png")
+pygame.display.set_icon(icon_surface)
 pygame.display.set_caption("Spoons")
+screen = pygame.display.set_mode(WINDOWED_SIZE)
 
 SWP_NOSIZE   = 0x0001
 SWP_NOZORDER = 0x0004
