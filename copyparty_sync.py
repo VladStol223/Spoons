@@ -330,3 +330,43 @@ def clear_credentials(remove_active_file: bool = True) -> bool:
         except Exception:
             pass
     return ok
+
+# --- precise login probe ---
+
+def probe_login_status(username: str, password: str) -> str:
+    """
+    Return one of: "ok", "wrong_password", "no_such_user",
+    "http_<code>", or "network_error".
+    Uses a direct PROPFIND against /<username>/ with the given creds.
+    """
+    if not (username and password):
+        return "network_error"
+
+    cfg = _load_cfg()
+    url = _dav_url(username).rstrip("/") + "/"
+
+    # Build a one-off Basic header with provided creds (not from saved config)
+    token = base64.b64encode(f"{username}:{password}".encode("utf-8")).decode("ascii")
+    hdr = {
+        "Authorization": f"Basic {token}",
+        "Depth": "0",
+        "Content-Type": "text/xml",
+    }
+    body = '<?xml version="1.0" encoding="utf-8"?><propfind xmlns="DAV:"><prop><resourcetype/></prop></propfind>'
+
+    try:
+        r = requests.request("PROPFIND", url, headers=hdr, data=body, timeout=cfg["COPYPARTY_TIMEOUT_S"])
+        sc = r.status_code
+        if sc in (200, 207):
+            return "ok"
+        if sc == 401:
+            return "wrong_password"
+        if sc == 404:
+            return "no_such_user"
+        if sc == 403:
+            # forbidden usually means auth failed anyway
+            return "wrong_password"
+        return f"http_{sc}"
+    except Exception as e:
+        print(f"[copyparty] probe_login_status error: {e}")
+        return "network_error"

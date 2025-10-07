@@ -1,19 +1,24 @@
 import pygame
-import os, json
+import os, json, time
 from config import *
 from drawing_functions.draw_input_box import draw_input_box
-from copyparty_sync import put_user_json, set_credentials, set_user_folder, download_data_json_if_present, put_new_user_cred
+from copyparty_sync import (
+    put_user_json, set_credentials, set_user_folder,
+    download_data_json_if_present, put_new_user_cred, upload_data_json,
+    verify_credentials_and_access, probe_login_status,
+)
 
 # Globals for UI hitboxes so logic() can read what draw() laid out
 _main_choice_rects = {}
 _form_rects = {}
 _title_cache = None
+_status_msg = ""   # <-- NEW: shows errors to the user (e.g., registration failed)
 
 def _font(size): return pygame.font.Font("fonts/Stardew_Valley.ttf", size)
 
 
 def draw_login(screen, login_mode, username_text, password_text, input_active, background_color):
-    global _main_choice_rects, _form_rects, _title_cache
+    global _main_choice_rects, _form_rects, _title_cache, _status_msg
     sw, sh = screen.get_size()
     screen_w, screen_h = sw, sh
     screen_w -= 0  # keep parity with other draw fns
@@ -40,8 +45,14 @@ def draw_login(screen, login_mode, username_text, password_text, input_active, b
 
     # Form mode (register or login)
     form_title = "Register New Account" if login_mode == "register" else "Login to Your Account"
-    form_title_surf = label_font.render(form_title, True, (255, 255, 255))
-    screen.blit(form_title_surf, ((screen_w - form_title_surf.get_width()) // 2, int(screen_h * 0.36)))
+    title_surf = label_font.render(form_title, True, (255, 255, 255))
+    screen.blit(title_surf, ((screen_w - title_surf.get_width()) // 2, int(screen_h * 0.30)))
+
+    # --- NEW: error/status banner ---
+    if _status_msg:
+        err_font = _font(int(screen_h * 0.04))
+        err_surf = err_font.render(_status_msg, True, (230, 80, 80))
+        screen.blit(err_surf, ((screen_w - err_surf.get_width()) // 2, int(screen_h * 0.36)))
 
     # Labels
     field_w, field_h = int(screen_w * 0.40), int(screen_h * 0.07)
@@ -79,16 +90,21 @@ def draw_login(screen, login_mode, username_text, password_text, input_active, b
     _form_rects = {"user": user_rect, "pass": pass_rect, "confirm": confirm_rect, "back": back_rect}
     return login_mode, username_text, password_text, input_active
 
+
 def logic_login(event, login_mode, username_text, password_text, input_active):
+    global _status_msg
     page = "login"
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
         # choice buttons
         if not login_mode and _main_choice_rects:
             if _main_choice_rects.get("register") and _main_choice_rects["register"].collidepoint(event.pos):
+                _status_msg = ""  # clear any old errors on mode switch
                 return "register", username_text, password_text, None, page
             if _main_choice_rects.get("login") and _main_choice_rects["login"].collidepoint(event.pos):
+                _status_msg = ""  # clear any old errors on mode switch
                 return "login", username_text, password_text, None, page
             if _main_choice_rects.get("offline") and _main_choice_rects["offline"].collidepoint(event.pos):
+                _status_msg = ""
                 return login_mode, username_text, password_text, None, "input_spoons"
 
         # form
@@ -98,10 +114,13 @@ def logic_login(event, login_mode, username_text, password_text, input_active):
             if _form_rects.get("pass") and _form_rects["pass"].collidepoint(event.pos):
                 return login_mode, username_text, password_text, "password", page
             if _form_rects.get("back") and _form_rects["back"].collidepoint(event.pos):
+                _status_msg = ""  # clear error when backing out
                 return None, "", "", None, page
+
             if _form_rects.get("confirm") and _form_rects["confirm"].collidepoint(event.pos):
                 u, p = username_text.strip(), password_text
                 if not u:
+                    _status_msg = "Please enter a username."
                     return login_mode, username_text, password_text, "username", page
 
                 ok = True
@@ -113,24 +132,81 @@ def logic_login(event, login_mode, username_text, password_text, input_active):
                         set_credentials(u, p)
 
                 elif login_mode == "login":
-                    # For login, just store typed creds locally
+                    # Store typed creds locally (so later code can use them if probe succeeds)
                     set_credentials(u, p)
 
+                    # NEW: precise probe to distinguish wrong username vs wrong password
+                    status = probe_login_status(u, p)
+
+                    if status == "ok":
+                        set_user_folder(u)
+
+                        # remember last user for next startup pull
+                        try:
+                            os.makedirs("spoons", exist_ok=True)
+                            with open("spoons/active_user.txt", "w", encoding="utf-8") as f:
+                                f.write(u)
+                        except Exception:
+                            pass
+
+                        _status_msg = ""
+                        # Pull remote if present (ok if missing—fresh account with no upload yet)
+                        download_data_json_if_present()
+                        return login_mode, username_text, password_text, None, "input_spoons"
+
+                    if status == "wrong_password":
+                        _status_msg = "Wrong password. Please try again."
+                        return login_mode, username_text, "", "password", page  # clear/focus password
+
+                    if status == "no_such_user":
+                        _status_msg = "Cannot find Username. Please try again."
+                        return login_mode, username_text, password_text, "username", page
+
+                    # Any other HTTP / network issue
+                    _status_msg = "Couldn’t reach the server. Please try again."
+                    return login_mode, username_text, password_text, input_active, page
+
                 if ok:
-                    set_user_folder(u)  # future syncs go to /spoons/<u>
+                    set_user_folder(u)  # make sure sync uses this user
+
+                    # remember last user for next startup pull
                     try:
-                        import os
                         os.makedirs("spoons", exist_ok=True)
                         with open("spoons/active_user.txt", "w", encoding="utf-8") as f:
                             f.write(u)
                     except Exception:
                         pass
-                    download_data_json_if_present()  # pull user's data.json if present
+
+                    if login_mode == "register":
+                        # Ensure the new home dir is reachable before first upload
+                        access_ok = verify_credentials_and_access()
+                        if not access_ok:
+                            pygame.time.wait(1000)  # pause 1s then retry
+                            access_ok = verify_credentials_and_access()
+
+                        if not access_ok:
+                            print("registration failed")
+                            _status_msg = "Registration failed. Please choose a different username and password."
+                            return login_mode, username_text, password_text, "username", page
+
+                        # home is reachable -> push local data to the cloud
+                        try:
+                            upload_data_json()
+                            _status_msg = ""  # success
+                        except Exception as e:
+                            _status_msg = "Upload failed after registration. Try again from Settings later."
+                            print(f"[copyparty] initial upload after register failed: {e}")
+                            # still move on to the app
+                    else:
+                        # login path keeps the existing behavior (pull if present)
+                        _status_msg = ""
+                        download_data_json_if_present()
+
                     return login_mode, username_text, password_text, None, "input_spoons"
 
-                # failed; stay on the login page
-                return login_mode, username_text, password_text, input_active, page
-
+                # Backend said “no” (e.g., dup username/password or other issue)
+                _status_msg = "Registration failed. Please choose a different username and password."
+                return login_mode, username_text, password_text, "username", page
 
         if login_mode:
             return login_mode, username_text, password_text, None, page
@@ -145,6 +221,7 @@ def logic_login(event, login_mode, username_text, password_text, input_active):
                 # let the mouse path handle confirm; do nothing here
                 return login_mode, username_text, password_text, None, page
             elif event.key == pygame.K_ESCAPE:
+                _status_msg = ""
                 return None, "", "", None, page
             else:
                 if target == "username":
