@@ -50,8 +50,13 @@ import sys
 import calendar
 
 import subprocess
+from copyparty_sync import (
+    set_user_folder,
+    download_data_json_if_present,
+    verify_credentials_and_access,
+    get_current_user,
+)
 import os
-from copyparty_sync import upload_data_json, download_data_json_if_present
 
 IS_WINDOWS = platform.system() == "Windows"
 IS_LINUX   = platform.system() == "Linux"
@@ -190,21 +195,31 @@ def hub_buttons(event):
     return None
 
 def spawn_background_upload():
-    """Close the window instantly; run upload in a detached Python process."""
+    """Fire-and-forget upload in a detached Python process (logs to file)."""
     try:
         py = sys.executable
-        cmd = [py, "-u", "-c", "import copyparty_sync as cps; cps.upload_data_json()"]
-        kwargs = {"close_fds": True}
+        code = (
+            "import copyparty_sync as cps, traceback, os\n"
+            "with open('copyparty_upload.log','a',encoding='utf-8') as f:\n"
+            "    print('[child] start', file=f)\n"
+            "    try:\n"
+            "        cps.upload_data_json()\n"
+            "        print('[child] success', file=f)\n"
+            "    except Exception:\n"
+            "        traceback.print_exc(file=f)\n"
+        )
+        kwargs = {"close_fds": True, "cwd": os.getcwd()}
         if IS_WINDOWS:
             DETACHED_PROCESS = 0x00000008
             CREATE_NEW_PROCESS_GROUP = 0x00000200
             kwargs["creationflags"] = DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
         else:
             kwargs["start_new_session"] = True
-        subprocess.Popen(cmd, **kwargs)
+        subprocess.Popen([py, "-u", "-c", code], **kwargs)
         print("[copyparty] background uploader spawned")
     except Exception as e:
         print(f"[copyparty] failed to spawn background uploader: {e}")
+
 
 #drawing / logic functions
 from drawing_functions.draw_hub_buttons import draw_hub_buttons
@@ -219,14 +234,23 @@ from drawing_functions.draw_logic_inventory import draw_inventory, logic_invento
 from drawing_functions.draw_logic_stats import draw_stats, logic_stats
 from drawing_functions.draw_border import draw_border
 from drawing_functions.draw_hotbar import draw_hotbar
+from drawing_functions.draw_logic_login import draw_login, logic_login
 
 # Miscellanous Functions
 from load_save import save_data, load_data
 from switch_themes import switch_theme
 from handle_scroll import handle_task_scroll
 
-# optional: try to fetch freshest remote copy before loading
-download_data_json_if_present()
+# remember last signed-in user (written by login screen)
+active_user_folder = None
+try:
+    with open(os.path.join("spoons","active_user.txt"), "r", encoding="utf-8") as f:
+        active_user_folder = (f.read().strip() or None)
+except Exception:
+    pass
+
+if active_user_folder:
+    set_user_folder(active_user_folder)
 
 #loading save data
 (spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,  
@@ -289,6 +313,13 @@ else:
 
 current_date_str = datetime.now().strftime("%Y-%m-%d")
 
+# If creds are present and the user folder is reachable, skip login
+if verify_credentials_and_access():
+    u = get_current_user()
+    set_user_folder(u)                 # make sure sync uses the same user
+    download_data_json_if_present()    # pull /<u>/data.json if it exists
+    page = "input_spoons"
+
 # ----------------------------------------------------------------------------------------------------
 # Main loop
 # ----------------------------------------------------------------------------------------------------
@@ -344,9 +375,11 @@ while running:
                                   add_spoons_color, add_tasks_color,
                                   manage_tasks_color, inventory_color, calendar_color,
                                   shop_color, stats_color, button_widths, hub_closing, delta_time, is_maximized, scale_factor)
+    
+    if page == "login":
+        login_mode, login_username, login_password, login_input_active = draw_login(screen, login_mode, login_username, login_password, login_input_active, background_color)
 
-
-    if page == "input_spoons":
+    elif page == "input_spoons":
         if not UI_elements_initialized:
             draw_input_spoons(screen, daily_spoons, spoons, delta_time, icon_image, input_active, background_color, x_offset=40)
             UI_elements_initialized = True
@@ -528,7 +561,10 @@ while running:
 
         page = logic_task_toggle(event, page) #handle clicks with task toggles
 
-        if page == "input_spoons" and UI_elements_initialized:
+        if page == "login":
+            login_mode, login_username, login_password, login_input_active, page = logic_login(event, login_mode, login_username, login_password, login_input_active)
+
+        elif page == "input_spoons" and UI_elements_initialized:
             spoons, daily_spoons, page, input_active = logic_input_spoons(event, daily_spoons, spoons, input_active)
             
         elif page == "input_tasks":
@@ -571,7 +607,7 @@ while running:
             border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name = logic_change_image(event, border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name)
             switch_theme(current_theme, globals())
         elif page == "stats":
-            logic_stats(event)
+            page = logic_stats(event, page)
     pygame.display.flip()
 
 pygame.quit()

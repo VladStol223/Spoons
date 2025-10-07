@@ -555,7 +555,7 @@ full_rest_amount = 10
 tool_tips = False
 icon_image = spoon_image
 spoon_name = "Spoons"
-page = "input_spoons"
+page = "login"
 folder = "homework"
 running = True
 time_toggle_on = False
@@ -661,3 +661,8 @@ def load_sfx(name, ext="mp3"):
 
 # now load all your effects:
 settings_button_click_sfx = load_sfx("settingsClick")
+
+login_mode = None
+login_username = ""
+login_password = ""
+login_input_active = None
