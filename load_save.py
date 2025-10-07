@@ -201,12 +201,17 @@ def load_data():
 
         # — your existing field loading —
         spoons = data.get("spoons", 0)
+<<<<<<< Updated upstream
         homework_tasks_list = [task_from_serializable(t) for t in data.get("homework_tasks_list", [])]
         chores_tasks_list   = [task_from_serializable(t) for t in data.get("chores_tasks_list", [])]
         work_tasks_list     = [task_from_serializable(t) for t in data.get("work_tasks_list", [])]
         misc_tasks_list     = [task_from_serializable(t) for t in data.get("misc_tasks_list", [])]
         exams_tasks_list    = [task_from_serializable(t) for t in data.get("exams_tasks_list", [])]
         projects_tasks_list = [task_from_serializable(t) for t in data.get("projects_tasks_list", [])]
+=======
+        for var_name, json_key in TASK_CATEGORY_JSON_MAP.items():
+          globals()[var_name] = [task_from_serializable(t) for t in data.get(json_key, [])]
+>>>>>>> Stashed changes
 
         daily_spoons = data.get("daily_spoons", {"Mon":0,"Tue":0,"Wed":0,"Thu":0,"Fri":0,"Sat":0,"Sun":0})
         loaded_theme = data.get("theme", "")

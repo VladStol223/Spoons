@@ -13,3 +13,4 @@ from .draw_intro_sequence import draw_intro_sequence
 from .logic_task_toggle import logic_task_toggle
 from .draw_border import draw_border
 from .draw_hotbar import draw_hotbar
+from .draw_logic_login import draw_login, logic_login

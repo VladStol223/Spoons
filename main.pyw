@@ -48,7 +48,15 @@ for name, value in COLORS.items():
 import pygame
 import sys
 import calendar
+import json
 
+<<<<<<< Updated upstream
+=======
+import subprocess
+import os
+from copyparty_access import upload_data_json, download_data_json_if_present, username_taken, register_and_write_username
+
+>>>>>>> Stashed changes
 IS_WINDOWS = platform.system() == "Windows"
 IS_LINUX   = platform.system() == "Linux"
 IS_MAC     = platform.system() == "Darwin"
@@ -190,9 +198,92 @@ def get_scale_factor() -> float:
 
 scale_factor = get_scale_factor()
 
+<<<<<<< Updated upstream
 _apply_window_size()
 
 ####################################################################################################################################
+=======
+#################################################################################################################################### 
+def ensure_username_registered():
+    cfg_path = os.path.join("spoons","copyparty_config.json")
+    try:
+        with open(cfg_path,"r",encoding="utf-8") as f: cfg = json.load(f)
+    except Exception:
+        print("[login] missing spoons/copyparty_config.json; please create it first"); return
+    if cfg.get("username"):
+        print(f"[login] username already set: {cfg.get('username')}")
+        return
+    print("Login or register? (type 'register' for now)")
+    choice = input("> ").strip().lower()
+    if choice != "register":
+        print("[login] Only 'register' supported right now. Switching to register.")
+    while True:
+        uname = input("Choose a username: ").strip()
+        if not uname:
+            print("Please enter a non-empty username."); continue
+        if username_taken(uname):
+            print("That username is taken. Try another.")
+            continue
+        # provision user remotely; also writes username into copyparty_config.json
+        uid = register_and_write_username(uname, "data.json")
+        if not uid:
+            print("Registration failed (network/auth?). Try again.")
+            continue
+        print(f"Registered '{uname}' with user_id={uid}. Loading Spoons...")
+        break
+
+def compute_spoons_needed_today(*task_lists):
+    """Sum remaining spoons for tasks due today or overdue (across all folders)."""
+    today = datetime.now().date()
+    total_needed = 0
+    for lst in task_lists:
+        for t in lst:
+            try:
+                if isinstance(t, dict):
+                    due = t.get("due_date")
+                    if isinstance(due, str):
+                        due_dt = datetime.fromisoformat(due.replace("Z", ""))
+                    else:
+                        due_dt = due
+                    if hasattr(due_dt, "date"):
+                        due_day = due_dt.date()
+                        if due_day <= today:
+                            need = int(t.get("spoons_needed", 0)) - int(t.get("done", 0))
+                            if need > 0:
+                                total_needed += need
+                else:
+                    # tuple/list: [name, spoons_needed, done, days_left, due_dt, ...]
+                    due_dt = t[4]
+                    due_day = due_dt.date() if hasattr(due_dt, "date") else due_dt
+                    if due_day and due_day <= today:
+                        need = int(t[1]) - int(t[2])
+                        if need > 0:
+                            total_needed += need
+            except Exception:
+                pass
+    return total_needed
+
+def _decrement_days(lst, n_days):
+    if not lst or n_days <= 0:
+        return
+    for task in lst:
+        try:
+            if task[3] > 0:
+                task[3] = max(0, task[3] - n_days)
+        except Exception:
+            pass
+
+def slot_key_for_page(p: str) -> str:
+    return {
+        "complete_homework_tasks": "folder_one",
+        "complete_chores_tasks":   "folder_two",
+        "complete_work_tasks":     "folder_three",
+        "complete_misc_tasks":     "folder_four",
+        "complete_exams_tasks":    "folder_five",
+        "complete_projects_tasks": "folder_six",
+    }.get(p, "folder_one")
+
+>>>>>>> Stashed changes
 def hub_buttons(event):
     global scroll_offset
 
@@ -225,6 +316,26 @@ def hub_buttons(event):
 
     return None
 
+<<<<<<< Updated upstream
+=======
+def spawn_background_upload():
+    """Close the window instantly; run upload in a detached Python process."""
+    try:
+        py = sys.executable
+        cmd = [py, "-u", "-c", "import copyparty_access as cps; cps.upload_data_json('data.json')"]
+        kwargs = {"close_fds": True}
+        if IS_WINDOWS:
+            DETACHED_PROCESS = 0x00000008
+            CREATE_NEW_PROCESS_GROUP = 0x00000200
+            kwargs["creationflags"] = DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
+        else:
+            kwargs["start_new_session"] = True
+        subprocess.Popen(cmd, **kwargs)
+        print("[copyparty] background uploader spawned")
+    except Exception as e:
+        print(f"[copyparty] failed to spawn background uploader: {e}")
+
+>>>>>>> Stashed changes
 #drawing / logic functions
 from drawing_functions.draw_hub_buttons import draw_hub_buttons
 from drawing_functions.draw_logic_input_spoons import draw_input_spoons, logic_input_spoons
@@ -238,13 +349,22 @@ from drawing_functions.draw_logic_inventory import draw_inventory, logic_invento
 from drawing_functions.draw_logic_stats import draw_stats, logic_stats
 from drawing_functions.draw_border import draw_border
 from drawing_functions.draw_hotbar import draw_hotbar
+from drawing_functions.draw_logic_login import draw_login, logic_login
 
 # Miscellanous Functions
 from load_save import save_data, load_data
 from switch_themes import switch_theme
 from handle_scroll import handle_task_scroll
 
+<<<<<<< Updated upstream
 #draw_intro_sequence(screen, clock)
+=======
+# --- one-time register flow (console) if username is not set yet ---
+ensure_username_registered()
+
+download_data_json_if_present("data.json")
+
+>>>>>>> Stashed changes
 #loading save data
 (spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,  
 exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image,
@@ -317,10 +437,16 @@ while running:
     hub_icon_rects = draw_hub_buttons(screen, page, tool_tips, background_color,
                                   add_spoons_color, add_tasks_color,
                                   manage_tasks_color, inventory_color, calendar_color,
+<<<<<<< Updated upstream
                                   shop_color, stats_color, button_widths, hub_closing, delta_time, False, scale_factor)
+=======
+                                  shop_color, stats_color, button_widths, hub_closing, delta_time, is_maximized, scale_factor)
+    
+    if page == "login":
+        login_mode, login_username, login_password, login_input_active = draw_login(screen, login_mode, login_username, login_password, input_active, background_color)
+>>>>>>> Stashed changes
 
-
-    if page == "input_spoons":
+    elif page == "input_spoons":
         if not UI_elements_initialized:
             draw_input_spoons(screen, daily_spoons, spoons, delta_time, icon_image, input_active, background_color, x_offset=40)
             UI_elements_initialized = True
@@ -492,7 +618,10 @@ while running:
 
         page = logic_task_toggle(event, page) #handle clicks with task toggles
 
-        if page == "input_spoons" and UI_elements_initialized:
+        if page == "login":
+            login_mode, login_username, login_password, login_input_active, page = logic_login(event, login_mode, login_username, login_password, input_active)
+
+        elif page == "input_spoons" and UI_elements_initialized:
             spoons, daily_spoons, page, input_active = logic_input_spoons(event, daily_spoons, spoons, input_active)
             
         elif page == "input_tasks":
@@ -503,6 +632,7 @@ while running:
             scroll_offset = handle_task_scroll(event, scroll_offset, total_content_height, scroll_multiplier=17)
             task_completed, spoons, confetti_particles, streak_dates, level = logic_complete_tasks(homework_tasks_list, task_buttons_homework, event, spoons, streak_dates, streak_task_completed, level)
         elif page == "complete_chores_tasks":
+<<<<<<< Updated upstream
             scroll_limit = max(0, len(chores_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             task_completed, spoons, confetti_particles, streak_dates, level = logic_complete_tasks(chores_tasks_list, task_buttons_chores, event, spoons, streak_dates, streak_task_completed, level)
@@ -522,6 +652,22 @@ while running:
             scroll_limit = max(0, len(projects_tasks_list) - 8)
             scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             task_completed, spoons, confetti_particles, streak_dates, level = logic_complete_tasks(projects_tasks_list, task_buttons_projects, event, spoons, streak_dates, streak_task_completed, level)
+=======
+            scroll_offset = handle_task_scroll(event, scroll_offset, total_content_height, scroll_multiplier=17)
+            task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(chores_tasks_list, task_buttons_chores, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
+        elif page == "complete_work_tasks":
+            scroll_offset = handle_task_scroll(event, scroll_offset, total_content_height, scroll_multiplier=17)
+            task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(work_tasks_list, task_buttons_work, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
+        elif page == "complete_misc_tasks":
+            scroll_offset = handle_task_scroll(event, scroll_offset, total_content_height, scroll_multiplier=17)
+            task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(misc_tasks_list, task_buttons_misc, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
+        elif page == "complete_exams_tasks":
+            scroll_offset = handle_task_scroll(event, scroll_offset, total_content_height, scroll_multiplier=17)
+            task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(exams_tasks_list, task_buttons_exams, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
+        elif page == "complete_projects_tasks":
+            scroll_offset = handle_task_scroll(event, scroll_offset, total_content_height, scroll_multiplier=17)
+            task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(projects_tasks_list, task_buttons_projects, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
+>>>>>>> Stashed changes
         elif page == "inventory":
             (inventory_tab, spoon_name_input, input_active, icon_image, 
              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open,

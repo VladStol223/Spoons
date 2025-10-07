@@ -1,0 +1,8 @@
+{
+  "base_url": "https://jasondarby.comE",
+  "dav_prefix": "",
+  "timeout_s": 10,
+  "verify_tls": true,
+  "remote_root": "spoons",
+  "username": "vlad"
+}
