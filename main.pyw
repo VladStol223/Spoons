@@ -1,7 +1,7 @@
 #Vladislav Stolbennikov
 #8/7/2024
 #Spoons App
-#VS1.25
+#VS1.26
 
 '''
 Total pages:
@@ -55,6 +55,7 @@ from copyparty_sync import (
     download_data_json_if_present,
     verify_credentials_and_access,
     get_current_user,
+    upload_data_json,
 )
 import os
 
@@ -111,6 +112,31 @@ def get_scale_factor() -> float:
 scale_factor = get_scale_factor()
 
 ####################################################################################################################################
+def sync_and_reload():
+    global spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list
+    global exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image
+    global spoon_name_input, folder_one, folder_two, folder_three, folder_four
+    global folder_five, folder_six, streak_dates, border, hubIcons, spoonIcons, restIcons
+    global hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages
+    global intro, border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name
+    global manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name
+    global intro_name, label_favorites, last_save_date, spoons_used_today
+    print(f"[copyparty] fetching online data.json")
+    download_data_json_if_present()
+    print(f"[copyparty] refreshing local data with downloaded data.json")
+    (
+        spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,  
+        exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image,
+        spoon_name_input, folder_one, folder_two, folder_three, folder_four,
+        folder_five, folder_six, streak_dates,
+        border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder,
+        taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro,
+        border_name, hubIcons_name, spoonIcons_name, restIcons_name,
+        hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
+        calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites,
+        last_save_date ,spoons_used_today
+    ) = load_data()
+
 def compute_spoons_needed_today(*task_lists):
     """Sum remaining spoons for tasks due today or overdue (across all folders)."""
     today = datetime.now().date()
@@ -194,6 +220,7 @@ def hub_buttons(event):
 
     return None
 
+# will not be using this
 def spawn_background_upload():
     """Fire-and-forget upload in a detached Python process (logs to file)."""
     try:
@@ -317,7 +344,7 @@ current_date_str = datetime.now().strftime("%Y-%m-%d")
 if verify_credentials_and_access():
     u = get_current_user()
     set_user_folder(u)                 # make sure sync uses the same user
-    download_data_json_if_present()    # pull /<u>/data.json if it exists
+    sync_and_reload()    # pull /<u>/data.json if it exists
     page = "input_spoons"
 
 # ----------------------------------------------------------------------------------------------------
@@ -479,7 +506,8 @@ while running:
                 pass
 
             # kick off the uploader in the background (fire-and-forget)
-            spawn_background_upload()
+            upload_data_json()
+            # notdoing this till it works spawn_background_upload()
 
             running = False
                 
