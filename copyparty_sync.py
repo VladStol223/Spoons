@@ -190,7 +190,7 @@ def upload_data_json():
         """Dear user,
 
         If you are ever so unfortunate as to find yourself seeing this message, I am sorry.
-        This error implies that you have somehow deleted the encripton behavior or possible managed to bypass the password check meaning encrytiption cannot function.
+        This error implies that you have somehow deleted the encripton behavior or managed to bypass the password check meaning encrytiption cannot function.
         How you got into this situation is beyond my understanding, and I can only imagine what horrors await you.
         May God have mercy on your soul."""
         )
