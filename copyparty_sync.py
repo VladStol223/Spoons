@@ -351,11 +351,6 @@ def clear_credentials(remove_active_file: bool = True) -> bool:
     cfg["COPYPARTY_USERNAME"] = ""
     cfg["COPYPARTY_PASSWORD"] = ""
     ok = _save_cfg(cfg)
-    if remove_active_file:
-        try:
-            os.remove(os.path.join("spoons", "active_user.txt"))
-        except Exception:
-            pass
     return ok
 
 # --- precise login probe ---

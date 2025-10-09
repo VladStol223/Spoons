@@ -220,33 +220,6 @@ def hub_buttons(event):
 
     return None
 
-# will not be using this
-def spawn_background_upload():
-    """Fire-and-forget upload in a detached Python process (logs to file)."""
-    try:
-        py = sys.executable
-        code = (
-            "import copyparty_sync as cps, traceback, os\n"
-            "with open('copyparty_upload.log','a',encoding='utf-8') as f:\n"
-            "    print('[child] start', file=f)\n"
-            "    try:\n"
-            "        cps.upload_data_json()\n"
-            "        print('[child] success', file=f)\n"
-            "    except Exception:\n"
-            "        traceback.print_exc(file=f)\n"
-        )
-        kwargs = {"close_fds": True, "cwd": os.getcwd()}
-        if IS_WINDOWS:
-            DETACHED_PROCESS = 0x00000008
-            CREATE_NEW_PROCESS_GROUP = 0x00000200
-            kwargs["creationflags"] = DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
-        else:
-            kwargs["start_new_session"] = True
-        subprocess.Popen([py, "-u", "-c", code], **kwargs)
-        print("[copyparty] background uploader spawned")
-    except Exception as e:
-        print(f"[copyparty] failed to spawn background uploader: {e}")
-
 
 #drawing / logic functions
 from drawing_functions.draw_hub_buttons import draw_hub_buttons
@@ -267,17 +240,6 @@ from drawing_functions.draw_logic_login import draw_login, logic_login
 from load_save import save_data, load_data
 from switch_themes import switch_theme
 from handle_scroll import handle_task_scroll
-
-# remember last signed-in user (written by login screen)
-active_user_folder = None
-try:
-    with open(os.path.join("spoons","active_user.txt"), "r", encoding="utf-8") as f:
-        active_user_folder = (f.read().strip() or None)
-except Exception:
-    pass
-
-if active_user_folder:
-    set_user_folder(active_user_folder)
 
 #loading save data
 (spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,  
@@ -507,7 +469,6 @@ while running:
 
             # kick off the uploader in the background (fire-and-forget)
             upload_data_json()
-            # notdoing this till it works spawn_background_upload()
 
             running = False
                 

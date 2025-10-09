@@ -148,6 +148,9 @@ image_categories = {
         'timeButton': ('timeToggleButton.png', (40,40)),
         'ConfirmButton': ('confirmButton.png', (120,40)),
         'CancelButton': ('cancelButton.png', (120,40)),
+        'floppyDiskUpload': ('floppyDiskUpload.png', (60,60)),
+        'floppyDiskUploadCheckmark': ('floppyDiskUploadCheckmark.png', (60,60)),
+        'floppyDiskUploadDots': ('floppyDiskUploadDots.png', (60,60)),
     },
 }
 
@@ -359,6 +362,11 @@ recurring_button = toggleButtons['recurringButton']
 time_button = toggleButtons['timeButton']
 confirm_edit_button = toggleButtons['ConfirmButton']
 cancel_edit_button = toggleButtons['CancelButton']
+
+#floppy disk upload buttons
+floppy_disk_upload = toggleButtons['floppyDiskUpload']
+floppy_disk_checkmark = toggleButtons['floppyDiskUploadCheckmark']
+floppy_disk_dots = toggleButtons['floppyDiskUploadDots']
 
 def set_image(category: str, theme_name: str):
     """

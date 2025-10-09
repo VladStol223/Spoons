@@ -74,7 +74,7 @@ def draw_login(screen, login_mode, username_text, password_text, input_active, b
     draw_input_box(screen, pass_rect, input_active == "password", masked, LIGHT_GRAY, DARK_SLATE_GRAY, True, background_color, "light", 12, 0.050) #type: ignore
 
     # Buttons (Confirm / Back) as images from config
-    btn_size = (int(screen_h * 0.10), int(screen_h * 0.10))
+    btn_size = (120, 40)
     gap = int(screen_w * 0.02)
     confirm_img = pygame.transform.smoothscale(confirm_edit_button, btn_size)
     back_img = pygame.transform.smoothscale(cancel_edit_button, btn_size)
@@ -141,14 +141,6 @@ def logic_login(event, login_mode, username_text, password_text, input_active):
                     if status == "ok":
                         set_user_folder(u)
 
-                        # remember last user for next startup pull
-                        try:
-                            os.makedirs("spoons", exist_ok=True)
-                            with open("spoons/active_user.txt", "w", encoding="utf-8") as f:
-                                f.write(u)
-                        except Exception:
-                            pass
-
                         _status_msg = ""
                         # Pull remote if present (ok if missing—fresh account with no upload yet)
                         download_data_json_if_present()
@@ -168,14 +160,6 @@ def logic_login(event, login_mode, username_text, password_text, input_active):
 
                 if ok:
                     set_user_folder(u)  # make sure sync uses this user
-
-                    # remember last user for next startup pull
-                    try:
-                        os.makedirs("spoons", exist_ok=True)
-                        with open("spoons/active_user.txt", "w", encoding="utf-8") as f:
-                            f.write(u)
-                    except Exception:
-                        pass
 
                     if login_mode == "register":
                         # Ensure the new home dir is reachable before first upload
