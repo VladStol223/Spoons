@@ -1,6 +1,16 @@
 # copyparty_sync.py
 import base64, time, hashlib, requests, re, os, json
 
+_orig_request = requests.Session.request
+
+def _debug_request(self, method, url, **kwargs):
+    print(f"[copyparty][HTTP] {method.upper()} {url}")
+    r = _orig_request(self, method, url, **kwargs)
+    print(f"[copyparty][HTTP] -> {r.status_code}")
+    return r
+
+requests.Session.request = _debug_request
+
 CONFIG_JSON_PATH = "copyparty_config.json"
 
 _DEFAULT_CFG = {
@@ -173,6 +183,16 @@ def upload_data_json():
         upload_body = plain
         ctype = "application/json"
         print("[copyparty] WARNING: no password set; uploading PLAINTEXT")
+        # I think we might be solving for an impossible edge case here
+        # That is to say copy party should not accept an upload without a password besides account creation
+        # so if this does happen you are fucked and idk what to do.
+        print(
+        """Dear user,
+
+        If you are ever so unfortunate as to find yourself seeing this message, I am sorry.
+        How you got into this situation is beyond my understanding, and I can only imagine what horrors await you.
+        May God have mercy on your soul."""
+        )
 
     target_hash = _sha256_bytes(upload_body)
 
@@ -198,7 +218,7 @@ def upload_data_json():
             time.sleep(0.5)
             st, body = _fresh_get(url, cfg["COPYPARTY_TIMEOUT_S"])
         if st == 200 and _sha256_bytes(body) == target_hash:
-            print("[copyparty] verify ok")
+            print("[copyparty] Upload integrity verified!")
         elif st == 200:
             time.sleep(0.6)
             st2, body2 = _fresh_get(url, cfg["COPYPARTY_TIMEOUT_S"])
@@ -284,14 +304,20 @@ def put_new_user_cred(file_stem: str, username: str, password: str) -> bool:
         r = requests.put(url, data=body, headers=hdr, timeout=cfg["COPYPARTY_TIMEOUT_S"])
         if r.status_code in (200, 201, 204):
             print(f"[copyparty] wrote {url}")
+            time.sleep(3)  # <-- give backend time to process new user
             return True
         if r.status_code in (404, 409):
-            try: _ensure_dir("new_users")
-            except Exception: pass
+            try:
+                _ensure_dir("new_users")
+            except Exception:
+                pass
             r2 = requests.put(url, data=body, headers=hdr, timeout=cfg["COPYPARTY_TIMEOUT_S"])
             ok = r2.status_code in (200, 201, 204)
-            if ok: print(f"[copyparty] wrote {url}")
-            else:  print(f"[copyparty] put_new_user_cred failed {r2.status_code}: {r2.text[:200]}")
+            if ok:
+                print(f"[copyparty] wrote {url}")
+                time.sleep(3)  # <-- also delay here after successful retry
+            else:
+                print(f"[copyparty] put_new_user_cred failed {r2.status_code}: {r2.text[:200]}")
             return ok
         print(f"[copyparty] put_new_user_cred failed {r.status_code}: {r.text[:200]}")
         return False
