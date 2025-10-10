@@ -94,20 +94,20 @@ def draw_stats(screen, font, big_font, *_unused):
     sw, sh = screen.get_size()
 
     # Title
-    title = big_font.render("Settings", True, (255, 255, 255))
-    screen.blit(title, ((sw - title.get_width()) // 2, int(sh * 0.18)))
+    title = bigger_font.render("Settings", True, (255, 255, 255))
+    screen.blit(title, (((sw+82) - title.get_width()) // 2, int(sh * 0.05)))
 
     # Signed-in username
     username = get_current_user() or "(not signed in)"
     user_surf = font.render(f"Signed in as: {username}", True, (200, 200, 200))
-    screen.blit(user_surf, ((sw - user_surf.get_width()) // 2, int(sh * 0.28)))
+    screen.blit(user_surf, (((sw+82)  - user_surf.get_width()) // 2, int(sh * 0.4)))
 
     # Toggle: Auto-download at startup
     toggle_y = int(sh * 0.90) - 5
-    label = font.render("Auto-download", True, (200, 200, 200))
-    screen.blit(label, (sw*0.8, toggle_y))
+    label = font.render("Auto-Sync", True, (200, 200, 200))
+    screen.blit(label, (sw*0.85, toggle_y))
     box_size = int(sh * 0.06)
-    _auto_rect = pygame.Rect(sw * 0.75, toggle_y, box_size, box_size)
+    _auto_rect = pygame.Rect(sw * 0.81, toggle_y, box_size, box_size)
     pygame.draw.rect(screen, (180, 180, 180), _auto_rect, width=3, border_radius=6)
     # icon inside
     inner = pygame.Rect(_auto_rect.x, _auto_rect.y, _auto_rect.w, _auto_rect.h)
@@ -121,7 +121,7 @@ def draw_stats(screen, font, big_font, *_unused):
 
     # Log out / Log in button
     btn_w, btn_h = int(sw * 0.28), int(sh * 0.10)
-    _logout_rect = pygame.Rect((sw - btn_w) // 2, int(sh * 0.48), btn_w, btn_h)
+    _logout_rect = pygame.Rect(((sw+82)  - btn_w) // 2, int(sh * 0.5), btn_w, btn_h)
     if username == "(not signed in)":
         pygame.draw.rect(screen, (70, 200, 70), _logout_rect, border_radius=16)
         label = font.render("Log In", True, (255, 255, 255))
