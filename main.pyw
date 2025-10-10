@@ -56,6 +56,7 @@ from copyparty_sync import (
     verify_credentials_and_access,
     get_current_user,
     upload_data_json,
+    get_auto_download_flag,
 )
 import os
 
@@ -112,7 +113,7 @@ def get_scale_factor() -> float:
 scale_factor = get_scale_factor()
 
 ####################################################################################################################################
-def sync_and_reload():
+def sync_and_reload(flag):
     global spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list
     global exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image
     global spoon_name_input, folder_one, folder_two, folder_three, folder_four
@@ -121,9 +122,11 @@ def sync_and_reload():
     global intro, border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name
     global manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name
     global intro_name, label_favorites, last_save_date, spoons_used_today
-    print(f"[copyparty] fetching online data.json")
-    download_data_json_if_present()
-    print(f"[copyparty] refreshing local data with downloaded data.json")
+    if flag:
+        print(f"[copyparty] fetching online data.json")
+        download_data_json_if_present()
+        print(f"[copyparty] refreshing local data with downloaded data.json")
+    print(f"[local] loading data.json")
     (
         spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,  
         exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image,
@@ -305,8 +308,8 @@ current_date_str = datetime.now().strftime("%Y-%m-%d")
 # If creds are present and the user folder is reachable, skip login
 if verify_credentials_and_access():
     u = get_current_user()
-    set_user_folder(u)                 # make sure sync uses the same user
-    sync_and_reload()    # pull /<u>/data.json if it exists
+    set_user_folder(u)
+    sync_and_reload(get_auto_download_flag())               # pulls /<u>/data.json if it exists
     page = "input_spoons"
 
 # ----------------------------------------------------------------------------------------------------

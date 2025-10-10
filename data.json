@@ -1,11 +1,11 @@
 {
-  "spoons": 13,
+  "spoons": 15,
   "folder_1_tasks": [
     {
       "task_name": "lab stuff",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 1,
+      "days_till_due_date": 0,
       "due_date": "2025-10-09T00:00:00",
       "start_time": [
         0,
@@ -84,7 +84,7 @@
     ]
   },
   "last_save_date": [
-    "2025-10-08",
+    "2025-10-09",
     0
   ]
 }

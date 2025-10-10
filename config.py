@@ -149,8 +149,10 @@ image_categories = {
         'ConfirmButton': ('confirmButton.png', (120,40)),
         'CancelButton': ('cancelButton.png', (120,40)),
         'floppyDiskUpload': ('floppyDiskUpload.png', (60,60)),
-        'floppyDiskUploadCheckmark': ('floppyDiskUploadCheckmark.png', (60,60)),
-        'floppyDiskUploadDots': ('floppyDiskUploadDots.png', (60,60)),
+        'floppyDiskDownload': ('floppyDiskDownload.png', (60,60)),
+        'floppyDiskCheckmark': ('floppyDiskUploadCheckmark.png', (60,60)),
+        'floppyDiskRedX': ('floppyDiskUploadRedX.png', (60,60)),
+        'floppyDiskDots': ('floppyDiskUploadDots.png', (60,60)),
     },
 }
 
@@ -365,8 +367,10 @@ cancel_edit_button = toggleButtons['CancelButton']
 
 #floppy disk upload buttons
 floppy_disk_upload = toggleButtons['floppyDiskUpload']
-floppy_disk_checkmark = toggleButtons['floppyDiskUploadCheckmark']
-floppy_disk_dots = toggleButtons['floppyDiskUploadDots']
+floppy_disk_download = toggleButtons['floppyDiskDownload']
+floppy_disk_checkmark = toggleButtons['floppyDiskCheckmark']
+floppy_disk_dots = toggleButtons['floppyDiskDots']
+floppy_disk_redx = toggleButtons['floppyDiskRedX']
 
 def set_image(category: str, theme_name: str):
     """

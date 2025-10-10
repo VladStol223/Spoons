@@ -1,7 +1,8 @@
 {
   "COPYPARTY_BASE_URL": "https://jasondarby.com",
-  "COPYPARTY_USERNAME": "vlad.stol",
-  "COPYPARTY_PASSWORD": "password",
+  "COPYPARTY_USERNAME": "",
+  "COPYPARTY_PASSWORD": "",
   "COPYPARTY_DAV_PREFIX": "",
-  "COPYPARTY_TIMEOUT_S": 10
+  "COPYPARTY_TIMEOUT_S": 10,
+  "COPYPARTY_AUTO_DOWNLOAD": false
 }
