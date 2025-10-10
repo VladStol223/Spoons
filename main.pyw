@@ -126,7 +126,7 @@ def sync_and_reload(flag):
         print(f"[copyparty] fetching online data.json")
         download_data_json_if_present()
         print(f"[copyparty] refreshing local data with downloaded data.json")
-    print(f"[local] loading data.json")
+
     (
         spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,  
         exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image,
@@ -139,6 +139,7 @@ def sync_and_reload(flag):
         calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites,
         last_save_date ,spoons_used_today
     ) = load_data()
+    print(f"[local] loaded data.json")
 
 def compute_spoons_needed_today(*task_lists):
     """Sum remaining spoons for tasks due today or overdue (across all folders)."""
