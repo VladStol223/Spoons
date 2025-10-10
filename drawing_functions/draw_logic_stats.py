@@ -200,11 +200,11 @@ def logic_stats(event, page):
             _download_state["done_started_at"] = None
             print("[settings] manual sync triggered")
             from copyparty_sync import download_data_json_if_present
-            download_data_json_if_present()
+            download_data_json_if_present() # I am doing this here so that sync and reload will not have to do the download
 
             try:
                 from main import sync_and_reload
-                sync_and_reload(True)  # True = force download + reload
+                sync_and_reload(False)  # True = force download + reload however this does not work. It will only do the reload part because the force true flag is being held false by some startup logic
                 _download_state["ok"] = True
             except Exception as e:
                 print(f"[settings] sync failed: {e}")
