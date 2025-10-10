@@ -50,11 +50,13 @@ def _start_upload_thread():
             _upload_state["done_started_at"] = None
     threading.Thread(target=_worker, daemon=True).start()
 
-def _start_download_thread():
+def _start_download_thread(): # STOP FUCKING MAKING DAEMON
     def _worker():
         ok = False
         try:
-            ok = download_data_json_if_present()  # True if decoded JSON written
+            from main import sync_and_reload
+            sync_and_reload(True)  # force download + reload
+            ok = True
         except Exception:
             ok = False
         finally:
@@ -190,12 +192,29 @@ def logic_stats(event, page):
             return page
 
         # Start download
-        if _download_rect and _download_rect.collidepoint(event.pos) and not _download_state["downloading"]:
+        if _download_rect and _download_rect.collidepoint(event.pos):
+            # Force the download state to "ready"
             _download_state["downloading"] = True
             _download_state["done"] = False
             _download_state["ok"] = False
             _download_state["done_started_at"] = None
-            _start_download_thread()
+            print("[settings] manual sync triggered")
+            from copyparty_sync import download_data_json_if_present
+            download_data_json_if_present()
+
+            try:
+                from main import sync_and_reload
+                sync_and_reload(True)  # True = force download + reload
+                _download_state["ok"] = True
+            except Exception as e:
+                print(f"[settings] sync failed: {e}")
+                _download_state["ok"] = False
+            finally:
+                _download_state["downloading"] = False
+                _download_state["done"] = True
+                _download_state["done_started_at"] = None
+
             return page
 
     return page
+    
