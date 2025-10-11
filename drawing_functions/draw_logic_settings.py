@@ -6,7 +6,6 @@ from copyparty_sync import (
     clear_credentials,
     get_current_user,
     upload_data_json,
-    download_data_json_if_present,
     get_auto_download_flag,
     set_auto_download_flag,
 )
@@ -50,22 +49,6 @@ def _start_upload_thread():
             _upload_state["done_started_at"] = None
     threading.Thread(target=_worker, daemon=True).start()
 
-def _start_download_thread(): # STOP FUCKING MAKING DAEMON
-    def _worker():
-        ok = False
-        try:
-            from main import sync_and_reload
-            sync_and_reload(True)  # force download + reload
-            ok = True
-        except Exception:
-            ok = False
-        finally:
-            _download_state["downloading"] = False
-            _download_state["done"] = True
-            _download_state["ok"] = bool(ok)
-            _download_state["done_started_at"] = None
-    threading.Thread(target=_worker, daemon=True).start()
-
 def _update_upload_anim(now_ms):
     if now_ms >= _upload_state["next_tick_ms"]:
         _upload_state["anim_step"] = (_upload_state["anim_step"] + 1) % 4
@@ -91,7 +74,7 @@ def _draw_result_overlay(screen, ok: bool, pos: tuple, started_at_key: str):
         started["done"] = False
         started[key] = None
 
-def draw_stats(screen, font, big_font, *_unused):
+def draw_settings(screen, font):
     global _logout_rect, _upload_rect, _upload_pos, _download_rect, _download_pos, _auto_rect
     sw, sh = screen.get_size()
 
@@ -167,7 +150,7 @@ def draw_stats(screen, font, big_font, *_unused):
     elif _download_state["done"]:
         _draw_result_overlay(screen, _download_state["ok"], _download_pos, "download")
 
-def logic_stats(event, page):
+def logic_settings(event, page):
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
         # Toggle auto-download
         if _auto_rect and _auto_rect.collidepoint(event.pos):

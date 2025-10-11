@@ -205,7 +205,7 @@ def hub_buttons(event):
         "inventory":    hub_inventory,
         "calendar":     hub_calendar,
         "shop":         hub_shop,
-        "stats":        hub_stats,
+        "settings":     hub_settings,
     }
 
     for page, rect in button_actions.items():
@@ -235,7 +235,7 @@ from drawing_functions.draw_logic_calendar import draw_calendar, logic_calendar
 from drawing_functions.draw_logic_shop import draw_shop, logic_shop, logic_change_image
 from drawing_functions.logic_task_toggle import logic_task_toggle
 from drawing_functions.draw_logic_inventory import draw_inventory, logic_inventory
-from drawing_functions.draw_logic_stats import draw_stats, logic_stats
+from drawing_functions.draw_logic_settings import draw_settings, logic_settings
 from drawing_functions.draw_border import draw_border
 from drawing_functions.draw_hotbar import draw_hotbar
 from drawing_functions.draw_logic_login import draw_login, logic_login
@@ -365,9 +365,7 @@ while running:
         hub_background_color = background_color
 
     hub_icon_rects = draw_hub_buttons(screen, page, tool_tips, background_color,
-                                  add_spoons_color, add_tasks_color,
-                                  manage_tasks_color, inventory_color, calendar_color,
-                                  shop_color, stats_color, button_widths, hub_closing, delta_time, is_maximized, scale_factor)
+                                  button_widths, hub_closing, delta_time, is_maximized, scale_factor)
     
     if page == "login":
         login_mode, login_username, login_password, login_input_active = draw_login(screen, login_mode, login_username, login_password, login_input_active, background_color)
@@ -447,11 +445,11 @@ while running:
         draw_shop(screen, tool_tips, spoon_name_input, icon_image, input_active, hub_background_color,
                   folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         
-    elif page == "stats":
-        draw_stats(screen, font, big_font, personal_stats, global_leaderboard)
+    elif page == "settings":
+        draw_settings(screen, font)
         draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
 
-    if page not in ("calendar", "stats"):
+    if page not in ("calendar", "settings"):
         draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page, spoons_needed_today, spoons_used_today)
         draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
         
@@ -480,7 +478,7 @@ while running:
             for page_key, icon_rect in hub_icon_rects.items():
                 if icon_rect.collidepoint(event.pos):
                     if event.type == pygame.MOUSEBUTTONDOWN:
-                        if page_key == "stats" and page != "stats" and settings_button_click_sfx: #####play the hub sounds
+                        if page_key == "settings" and page != "settings" and settings_button_click_sfx: #####play the hub sounds
                             settings_button_click_sfx.play()
 
                         save_data(
@@ -522,7 +520,7 @@ while running:
                 UI_elements_initialized = False
                 scale = max(3, (6 / scale_factor)) if is_maximized else 3
                 print(f"Scale factor: {scale_factor} - Border scale: {scale} - Maximized: {is_maximized}")
-            # --- 1–7 quick navigation: 1=Calendar, 2=Inventory, 3=Manage, 4=Add Tasks, 5=Add Spoons, 6=Shop, 7=Stats ---
+            # --- 1–7 quick navigation: 1=Calendar, 2=Inventory, 3=Manage, 4=Add Tasks, 5=Add Spoons, 6=Shop, 7=settings ---
             else:
                 ctrl_held = bool(event.mod & (pygame.KMOD_CTRL | pygame.KMOD_LCTRL | pygame.KMOD_RCTRL))
                 if ctrl_held:
@@ -533,11 +531,11 @@ while running:
                         pygame.K_4: "manage_tasks",
                         pygame.K_5: "inventory",
                         pygame.K_6: "shop",
-                        pygame.K_7: "stats",
+                        pygame.K_7: "settings",
                     }
                     new_page_key = key_to_page.get(event.key)
                     if new_page_key:
-                        if new_page_key == "stats" and page != "stats" and settings_button_click_sfx:
+                        if new_page_key == "settings" and page != "settings" and settings_button_click_sfx:
                             settings_button_click_sfx.play()
                         save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, daily_spoons, theme, icon_image, spoon_name_input, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, streak_dates, border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today)
                         prev_page = page
@@ -599,8 +597,8 @@ while running:
             tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_shop(event, tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
             border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name = logic_change_image(event, border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name)
             switch_theme(current_theme, globals())
-        elif page == "stats":
-            page = logic_stats(event, page)
+        elif page == "settings":
+            page = logic_settings(event, page)
     pygame.display.flip()
 
 pygame.quit()

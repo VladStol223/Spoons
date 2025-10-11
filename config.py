@@ -441,7 +441,7 @@ hub_manage_task   = pygame.Rect(0, 172, 250, 86)
 hub_inventory         = pygame.Rect(0, 258, 250, 86)
 hub_calendar      = pygame.Rect(0, 344, 250, 85)
 hub_shop         = pygame.Rect(0, 429, 250, 85)
-hub_stats         = pygame.Rect(0, 514, 250, 86)
+hub_settings         = pygame.Rect(0, 514, 250, 86)
 
 hub_toggle = pygame.Rect(0,0,5,600)
 hub_menu1 = pygame.Rect(0,0,0,0) # Needs to be removed in all files
