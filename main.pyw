@@ -1,7 +1,7 @@
 #Vladislav Stolbennikov
 #8/7/2024
 #Spoons App
-#VS1.25
+#VS1.26
 
 '''
 Total pages:
@@ -50,8 +50,15 @@ import sys
 import calendar
 
 import subprocess
+from copyparty_sync import (
+    set_user_folder,
+    download_data_json_if_present,
+    verify_credentials_and_access,
+    get_current_user,
+    upload_data_json,
+    get_auto_download_flag,
+)
 import os
-from copyparty_sync import upload_data_json, download_data_json_if_present
 
 IS_WINDOWS = platform.system() == "Windows"
 IS_LINUX   = platform.system() == "Linux"
@@ -106,6 +113,34 @@ def get_scale_factor() -> float:
 scale_factor = get_scale_factor()
 
 ####################################################################################################################################
+def sync_and_reload(flag):
+    global spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list
+    global exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image
+    global spoon_name_input, folder_one, folder_two, folder_three, folder_four
+    global folder_five, folder_six, streak_dates, border, hubIcons, spoonIcons, restIcons
+    global hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages
+    global intro, border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name
+    global manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name
+    global intro_name, label_favorites, last_save_date, spoons_used_today
+    if flag:
+        print(f"[copyparty] fetching online data.json")
+        download_data_json_if_present()
+        print(f"[copyparty] refreshing local data with downloaded data.json")
+
+    (
+        spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,  
+        exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image,
+        spoon_name_input, folder_one, folder_two, folder_three, folder_four,
+        folder_five, folder_six, streak_dates,
+        border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder,
+        taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro,
+        border_name, hubIcons_name, spoonIcons_name, restIcons_name,
+        hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
+        calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites,
+        last_save_date ,spoons_used_today
+    ) = load_data()
+    print(f"[local] loaded data.json")
+
 def compute_spoons_needed_today(*task_lists):
     """Sum remaining spoons for tasks due today or overdue (across all folders)."""
     today = datetime.now().date()
@@ -170,7 +205,7 @@ def hub_buttons(event):
         "inventory":    hub_inventory,
         "calendar":     hub_calendar,
         "shop":         hub_shop,
-        "stats":        hub_stats,
+        "settings":     hub_settings,
     }
 
     for page, rect in button_actions.items():
@@ -189,22 +224,6 @@ def hub_buttons(event):
 
     return None
 
-def spawn_background_upload():
-    """Close the window instantly; run upload in a detached Python process."""
-    try:
-        py = sys.executable
-        cmd = [py, "-u", "-c", "import copyparty_sync as cps; cps.upload_data_json()"]
-        kwargs = {"close_fds": True}
-        if IS_WINDOWS:
-            DETACHED_PROCESS = 0x00000008
-            CREATE_NEW_PROCESS_GROUP = 0x00000200
-            kwargs["creationflags"] = DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
-        else:
-            kwargs["start_new_session"] = True
-        subprocess.Popen(cmd, **kwargs)
-        print("[copyparty] background uploader spawned")
-    except Exception as e:
-        print(f"[copyparty] failed to spawn background uploader: {e}")
 
 #drawing / logic functions
 from drawing_functions.draw_hub_buttons import draw_hub_buttons
@@ -216,17 +235,15 @@ from drawing_functions.draw_logic_calendar import draw_calendar, logic_calendar
 from drawing_functions.draw_logic_shop import draw_shop, logic_shop, logic_change_image
 from drawing_functions.logic_task_toggle import logic_task_toggle
 from drawing_functions.draw_logic_inventory import draw_inventory, logic_inventory
-from drawing_functions.draw_logic_stats import draw_stats, logic_stats
+from drawing_functions.draw_logic_settings import draw_settings, logic_settings
 from drawing_functions.draw_border import draw_border
 from drawing_functions.draw_hotbar import draw_hotbar
+from drawing_functions.draw_logic_login import draw_login, logic_login
 
 # Miscellanous Functions
 from load_save import save_data, load_data
 from switch_themes import switch_theme
 from handle_scroll import handle_task_scroll
-
-# optional: try to fetch freshest remote copy before loading
-download_data_json_if_present()
 
 #loading save data
 (spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,  
@@ -289,6 +306,13 @@ else:
 
 current_date_str = datetime.now().strftime("%Y-%m-%d")
 
+# If creds are present and the user folder is reachable, skip login
+if verify_credentials_and_access():
+    u = get_current_user()
+    set_user_folder(u)
+    sync_and_reload(get_auto_download_flag())               # pulls /<u>/data.json if it exists
+    page = "input_spoons"
+
 # ----------------------------------------------------------------------------------------------------
 # Main loop
 # ----------------------------------------------------------------------------------------------------
@@ -341,12 +365,12 @@ while running:
         hub_background_color = background_color
 
     hub_icon_rects = draw_hub_buttons(screen, page, tool_tips, background_color,
-                                  add_spoons_color, add_tasks_color,
-                                  manage_tasks_color, inventory_color, calendar_color,
-                                  shop_color, stats_color, button_widths, hub_closing, delta_time, is_maximized, scale_factor)
+                                  button_widths, hub_closing, delta_time, is_maximized, scale_factor)
+    
+    if page == "login":
+        login_mode, login_username, login_password, login_input_active = draw_login(screen, login_mode, login_username, login_password, login_input_active, background_color)
 
-
-    if page == "input_spoons":
+    elif page == "input_spoons":
         if not UI_elements_initialized:
             draw_input_spoons(screen, daily_spoons, spoons, delta_time, icon_image, input_active, background_color, x_offset=40)
             UI_elements_initialized = True
@@ -421,11 +445,11 @@ while running:
         draw_shop(screen, tool_tips, spoon_name_input, icon_image, input_active, hub_background_color,
                   folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         
-    elif page == "stats":
-        draw_stats(screen, font, big_font, personal_stats, global_leaderboard)
+    elif page == "settings":
+        draw_settings(screen, font)
         draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
 
-    if page not in ("calendar", "stats"):
+    if page not in ("calendar", "settings"):
         draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page, spoons_needed_today, spoons_used_today)
         draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
         
@@ -446,7 +470,7 @@ while running:
                 pass
 
             # kick off the uploader in the background (fire-and-forget)
-            spawn_background_upload()
+            upload_data_json()
 
             running = False
                 
@@ -454,7 +478,7 @@ while running:
             for page_key, icon_rect in hub_icon_rects.items():
                 if icon_rect.collidepoint(event.pos):
                     if event.type == pygame.MOUSEBUTTONDOWN:
-                        if page_key == "stats" and page != "stats" and settings_button_click_sfx: #####play the hub sounds
+                        if page_key == "settings" and page != "settings" and settings_button_click_sfx: #####play the hub sounds
                             settings_button_click_sfx.play()
 
                         save_data(
@@ -496,7 +520,7 @@ while running:
                 UI_elements_initialized = False
                 scale = max(3, (6 / scale_factor)) if is_maximized else 3
                 print(f"Scale factor: {scale_factor} - Border scale: {scale} - Maximized: {is_maximized}")
-            # --- 1–7 quick navigation: 1=Calendar, 2=Inventory, 3=Manage, 4=Add Tasks, 5=Add Spoons, 6=Shop, 7=Stats ---
+            # --- 1–7 quick navigation: 1=Calendar, 2=Inventory, 3=Manage, 4=Add Tasks, 5=Add Spoons, 6=Shop, 7=settings ---
             else:
                 ctrl_held = bool(event.mod & (pygame.KMOD_CTRL | pygame.KMOD_LCTRL | pygame.KMOD_RCTRL))
                 if ctrl_held:
@@ -507,11 +531,11 @@ while running:
                         pygame.K_4: "manage_tasks",
                         pygame.K_5: "inventory",
                         pygame.K_6: "shop",
-                        pygame.K_7: "stats",
+                        pygame.K_7: "settings",
                     }
                     new_page_key = key_to_page.get(event.key)
                     if new_page_key:
-                        if new_page_key == "stats" and page != "stats" and settings_button_click_sfx:
+                        if new_page_key == "settings" and page != "settings" and settings_button_click_sfx:
                             settings_button_click_sfx.play()
                         save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, daily_spoons, theme, icon_image, spoon_name_input, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, streak_dates, border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today)
                         prev_page = page
@@ -528,7 +552,10 @@ while running:
 
         page = logic_task_toggle(event, page) #handle clicks with task toggles
 
-        if page == "input_spoons" and UI_elements_initialized:
+        if page == "login":
+            login_mode, login_username, login_password, login_input_active, page = logic_login(event, login_mode, login_username, login_password, login_input_active)
+
+        elif page == "input_spoons" and UI_elements_initialized:
             spoons, daily_spoons, page, input_active = logic_input_spoons(event, daily_spoons, spoons, input_active)
             
         elif page == "input_tasks":
@@ -570,8 +597,8 @@ while running:
             tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_shop(event, tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
             border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name = logic_change_image(event, border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name)
             switch_theme(current_theme, globals())
-        elif page == "stats":
-            logic_stats(event)
+        elif page == "settings":
+            page = logic_settings(event, page)
     pygame.display.flip()
 
 pygame.quit()

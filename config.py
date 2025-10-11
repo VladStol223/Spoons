@@ -148,6 +148,11 @@ image_categories = {
         'timeButton': ('timeToggleButton.png', (40,40)),
         'ConfirmButton': ('confirmButton.png', (120,40)),
         'CancelButton': ('cancelButton.png', (120,40)),
+        'floppyDiskUpload': ('floppyDiskUpload.png', (60,60)),
+        'floppyDiskDownload': ('floppyDiskDownload.png', (60,60)),
+        'floppyDiskCheckmark': ('floppyDiskUploadCheckmark.png', (60,60)),
+        'floppyDiskRedX': ('floppyDiskUploadRedX.png', (60,60)),
+        'floppyDiskDots': ('floppyDiskUploadDots.png', (60,60)),
     },
 }
 
@@ -360,6 +365,13 @@ time_button = toggleButtons['timeButton']
 confirm_edit_button = toggleButtons['ConfirmButton']
 cancel_edit_button = toggleButtons['CancelButton']
 
+#floppy disk upload buttons
+floppy_disk_upload = toggleButtons['floppyDiskUpload']
+floppy_disk_download = toggleButtons['floppyDiskDownload']
+floppy_disk_checkmark = toggleButtons['floppyDiskCheckmark']
+floppy_disk_dots = toggleButtons['floppyDiskDots']
+floppy_disk_redx = toggleButtons['floppyDiskRedX']
+
 def set_image(category: str, theme_name: str):
     """
     Swaps the global dict for a multi-theme category, and remembers its name.
@@ -429,7 +441,7 @@ hub_manage_task   = pygame.Rect(0, 172, 250, 86)
 hub_inventory         = pygame.Rect(0, 258, 250, 86)
 hub_calendar      = pygame.Rect(0, 344, 250, 85)
 hub_shop         = pygame.Rect(0, 429, 250, 85)
-hub_stats         = pygame.Rect(0, 514, 250, 86)
+hub_settings         = pygame.Rect(0, 514, 250, 86)
 
 hub_toggle = pygame.Rect(0,0,5,600)
 hub_menu1 = pygame.Rect(0,0,0,0) # Needs to be removed in all files
@@ -555,7 +567,7 @@ full_rest_amount = 10
 tool_tips = False
 icon_image = spoon_image
 spoon_name = "Spoons"
-page = "input_spoons"
+page = "login"
 folder = "homework"
 running = True
 time_toggle_on = False
@@ -661,3 +673,8 @@ def load_sfx(name, ext="mp3"):
 
 # now load all your effects:
 settings_button_click_sfx = load_sfx("settingsClick")
+
+login_mode = None
+login_username = ""
+login_password = ""
+login_input_active = None

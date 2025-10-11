@@ -104,7 +104,7 @@ def draw_border(screen, rect, page, background_color, border, is_maximized, scal
     screen.blit(tcorner_s,
                 (hub_border_offset - half_w, sh - tc_h - edge_h//2))
 
-    if page not in ("calendar", "stats"):
+    if page not in ("calendar", "settings"):
         # y position of that border
         y_horiz = hotbar_border_offset
 

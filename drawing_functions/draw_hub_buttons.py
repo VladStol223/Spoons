@@ -24,7 +24,7 @@ icon_buttons = [
     ("manage_tasks", manage_task_icon,  "Manage Tasks"),
     ("inventory",    inventory_icon,    "Inventory"),
     ("shop",         shop_icon,         "Shop"),
-    ("stats",        settings_icon,     "Statistics"),
+    ("settings",        settings_icon,     "Settings"),
 ]
 
 def draw_hub_buttons(
@@ -32,13 +32,6 @@ def draw_hub_buttons(
     page,
     tool_tips,
     background_color,
-    add_spoons_color,
-    add_tasks_color,
-    manage_tasks_color,
-    inventory_color,
-    calendar_color,
-    shop_color,
-    stats_color,
     button_widths_dict,
     hub_closing,
     delta_time,
