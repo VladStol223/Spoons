@@ -66,7 +66,7 @@ image_categories = {
         'manage_task_icon': ('manageTasksIcon.png',(28,28)),
         'inventory_icon':   ('inventoryIcon.png',(28,28)),
         'calendar_icon':    ('calendarIcon.png',(42,42)),
-        'shop_icon':        ('shopIcon.png',(28,28)),
+        'social_icon':        ('socialIcon.png',(28,28)),
         'settings_icon':    ('settingsIcon.png',(28,28)),
     },
     'spoonIcons': {
@@ -277,7 +277,7 @@ add_task_icon     = hubIcons['add_task_icon']
 manage_task_icon  = hubIcons['manage_task_icon']
 inventory_icon    = hubIcons['inventory_icon']
 calendar_icon     = hubIcons['calendar_icon']
-shop_icon         = hubIcons['shop_icon']
+social_icon         = hubIcons['social_icon']
 settings_icon     = hubIcons['settings_icon']
 
 # — spoon icons —
@@ -440,7 +440,7 @@ hub_add_task      = pygame.Rect(0,  86, 250, 86)
 hub_manage_task   = pygame.Rect(0, 172, 250, 86)
 hub_inventory         = pygame.Rect(0, 258, 250, 86)
 hub_calendar      = pygame.Rect(0, 344, 250, 85)
-hub_shop         = pygame.Rect(0, 429, 250, 85)
+hub_social         = pygame.Rect(0, 429, 250, 85)
 hub_settings         = pygame.Rect(0, 514, 250, 86)
 
 hub_toggle = pygame.Rect(0,0,5,600)
@@ -517,7 +517,7 @@ add_spoons_color = GOLD# type: ignore
 add_tasks_color = LIME_GREEN# type: ignore
 manage_tasks_color = GREEN# type: ignore
 inventory_color = RED# type: ignore
-shop_color = LIGHT_BLUE# type: ignore
+social_color = LIGHT_BLUE# type: ignore
 calendar_color = BLUE# type: ignore
 stats_color = DARK_GRAY# type: ignore
 
@@ -678,3 +678,5 @@ login_mode = None
 login_username = ""
 login_password = ""
 login_input_active = None
+
+_active_settings_tab = "account"

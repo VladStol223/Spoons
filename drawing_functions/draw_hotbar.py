@@ -237,73 +237,12 @@ def draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coin
     msg = f"'s needed for today: {today_needed}"
     msg_surf = font.render(msg, True, WHITE)  # type: ignore
 
-    icon_x = text_x + used_surf.get_width() + 90
+    icon_x = text_x + used_surf.get_width() + 290
     screen.blit(icon_image, (icon_x, text_y - 3))
     msg_x = icon_x + 30
     msg_y = text_y
     screen.blit(msg_surf, (msg_x, msg_y))
 
-
-    # ------------------------------------------------------------------------------
-    # Draw the avatar background, furniture, windows, etc.
-    # ------------------------------------------------------------------------------
-
-    def draw_window(x):
-        pygame.draw.rect(screen, day_color, (x + 3, window_y + 3, 20, 20))
-        screen.blit(avatar_window, (x, window_y))
-        screen.blit(avatar_lit, (x - 25, window_y - 20))
-
-        dark_alpha = get_alpha("dark_night")
-        if dark_alpha > 0:
-            avatar_dark_flowers = avatar_window_flower.copy()
-            avatar_dark_flowers.set_alpha(dark_alpha)
-            screen.blit(avatar_dark_flowers, (x, window_y))
-
-    window1_x = 785
-    window_y   = 20
-    window2_x  = 885
-
-    bookshelf_x = 800
-
-    # ---------- daylight overlay (sunlight coming in) -----------------------------
-    light_alpha = get_alpha("day")
-    if light_alpha > 1:
-        avatar_lit = avatar_light.copy()         # don’t mutate original
-        avatar_lit.set_alpha(light_alpha)
-
-    day_color = get_day_color()
-
-    screen.blit(avatar_background, (735, 12))
-
-
-    draw_window(window1_x)
-    # draw_window(window2_x)   # second window, if needed
-
-    screen.blit(avatar_lamp, (window2_x, window_y))
-    screen.blit(avatar_light, (window2_x - 30, window_y - 25))
-    screen.blit(avatar_bookshelf, (bookshelf_x, window_y + 20))
-
-    # draw the avatar
-    handle_movement()
-    screen.blit(vlavatar, (avatar_x, avatar_y))
-
-    #draw the shadows
-
-    draw_shadow(screen, avatar_window, window1_x, window_y, avatar_bookshelf, bookshelf_x, window_y + 20, kind="variable")
-    draw_shadow(screen, avatar_lamp, window2_x, window_y, avatar_bookshelf, bookshelf_x, window_y + 20, kind="constant")
-
-    draw_shadow(screen, avatar_window, window1_x, window_y, vlavatar, avatar_x, avatar_y, kind="variable")
-    draw_shadow(screen, avatar_lamp, window2_x, window_y, vlavatar, avatar_x, avatar_y, kind="constant")
-
-    # ---------- night-time dark overlay ----------------
-    dark_alpha = get_alpha("night")
-    if dark_alpha > 0:
-        # create a temporary surface the same size as the avatar background
-        dark_overlay = pygame.Surface(avatar_background.get_size(), pygame.SRCALPHA)
-        # fill with black using per-pixel alpha
-        dark_overlay.fill((0, 0, 0, dark_alpha))   # (R, G, B, A)
-        # blit the overlay
-        screen.blit(dark_overlay, (735, 9))
 
 def draw_spoons(screen, spoons, icon_image, spoon_name):
     # 1) label
@@ -322,7 +261,7 @@ def draw_spoons(screen, spoons, icon_image, spoon_name):
     total_capacity = 20
 
     # 3) total region you want to occupy
-    total_icon_image_width = 600
+    total_icon_image_width = 800
     start_x = text_x + spoon_text.get_width() + 5
     region_width = total_icon_image_width - spoon_text.get_width()
     region_width = max(region_width, icon_w)
@@ -350,20 +289,3 @@ def draw_spoons(screen, spoons, icon_image, spoon_name):
             y = text_y + (icon_h - sh) // 2
         screen.blit(surf, (int(x), int(y)))
         x += full_step if i < spoons - 1 else ghost_step
-
-def handle_movement():
-    global avatar_x, avatar_y
-    keys = pygame.key.get_pressed()  # Get the current state of all keys
-    
-    if keys[pygame.K_LEFT]:
-        avatar_x -= avatar_speed  # Move left
-    if keys[pygame.K_RIGHT]:
-        avatar_x += avatar_speed  # Move right
-    if keys[pygame.K_UP]:
-        avatar_y -= avatar_speed  # Move up
-    if keys[pygame.K_DOWN]:
-        avatar_y += avatar_speed  # Move down
-
-    # Prevent avatar from going off screen (assuming screen width 1024px and height 768px)
-    avatar_x = max(745, min(avatar_x, 940 - vlavatar.get_width()))
-    avatar_y = max(40, min(avatar_y, 110 - vlavatar.get_height()))

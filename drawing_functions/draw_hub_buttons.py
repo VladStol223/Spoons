@@ -1,6 +1,7 @@
 from config import *
 import pygame
 from datetime import datetime
+from copyparty_sync import get_social_enabled_flag
 
 button_widths = {}  # no longer used, but left to avoid breaking interfaces
 
@@ -13,19 +14,9 @@ add_spoons_icon   = hubIcons['add_spoons_icon']
 add_task_icon     = hubIcons['add_task_icon']
 manage_task_icon  = hubIcons['manage_task_icon']
 inventory_icon    = hubIcons['inventory_icon']
-shop_icon         = hubIcons['shop_icon']
+social_icon         = hubIcons['social_icon']
 settings_icon     = hubIcons['settings_icon']
 
-# icon definitions
-icon_buttons = [
-    ("calendar",     calendar_icon,     "Calendar"),
-    ("input_spoons", add_spoons_icon,   "Add Spoons"),
-    ("input_tasks",  add_task_icon,     "Add Tasks"),
-    ("manage_tasks", manage_task_icon,  "Manage Tasks"),
-    ("inventory",    inventory_icon,    "Inventory"),
-    ("shop",         shop_icon,         "Shop"),
-    ("settings",        settings_icon,     "Settings"),
-]
 
 def draw_hub_buttons(
     screen,
@@ -41,14 +32,33 @@ def draw_hub_buttons(
     global hub_buttons_showing, button_widths
     hub_buttons_showing = True
 
+    social_button_enabled = get_social_enabled_flag()
 
+    # icon definitions
+    if social_button_enabled:
+        icon_buttons = [
+            ("calendar",     calendar_icon,     "Calendar"),
+            ("input_spoons", add_spoons_icon,   "Add Spoons"),
+            ("input_tasks",  add_task_icon,     "Add Tasks"),
+            ("manage_tasks", manage_task_icon,  "Manage Tasks"),
+            ("social",         social_icon,         "social"),
+            ("settings",        settings_icon,     "Settings"),
+        ]
+    else:
+        icon_buttons = [
+            ("calendar",     calendar_icon,     "Calendar"),
+            ("input_spoons", add_spoons_icon,   "Add Spoons"),
+            ("input_tasks",  add_task_icon,     "Add Tasks"),
+            ("manage_tasks", manage_task_icon,  "Manage Tasks"),
+            ("settings",        settings_icon,     "Settings"),
+        ]
 
     # sizes and spacing
     icon_size  = 112 if is_maximized else 56
     cal_size   = int(icon_size * 1.5)
-    y_spacing  = 20 if is_maximized else 10
+    y_spacing  = 25 if social_button_enabled else 35
     total_h    = cal_size + y_spacing + (len(icon_buttons)-1)*(icon_size + y_spacing)
-    start_y    = (screen.get_height() - total_h) // 2
+    start_y    = (screen.get_height() - total_h) // 2 + 10
     x_base     = 50 if is_maximized else 25
 
     button_rects = {}

@@ -72,9 +72,18 @@ def draw_border(screen, rect, page, background_color, border, is_maximized, scal
         edge_tile = rng.choice([edge1_s, edge2_s])
         top_tile  = pygame.transform.rotate(edge_tile, -90)
         bot_tile  = pygame.transform.rotate(edge_tile,  90)
-        screen.blit(top_tile, (tx,           y))
-        screen.blit(bot_tile, (tx,           y + h - top_tile.get_height()))
+
+        # Skip top edge between 390 and 626 when on the calendar page
+        if page == "calendar" and 390 <= tx <= 626:
+            # still draw the bottom edge, skip top
+            screen.blit(bot_tile, (tx, y + h - bot_tile.get_height()))
+        else:
+            # normal behavior
+            screen.blit(top_tile, (tx, y))
+            screen.blit(bot_tile, (tx, y + h - bot_tile.get_height()))
+
         tx += top_tile.get_width()
+
 
     # 3) left & right edges
     ty = y + sch
@@ -104,7 +113,9 @@ def draw_border(screen, rect, page, background_color, border, is_maximized, scal
     screen.blit(tcorner_s,
                 (hub_border_offset - half_w, sh - tc_h - edge_h//2))
 
-    if page not in ("calendar", "settings"):
+    right_x = sw - avatar_border_offset
+
+    if page not in ("calendar", "settings", "social"):
         # y position of that border
         y_horiz = hotbar_border_offset
 
@@ -144,48 +155,50 @@ def draw_border(screen, rect, page, background_color, border, is_maximized, scal
             )
             tx += ht.get_width()
 
-        # 5a-2) vertical slice at 150px from the right
-        right_x = sw - avatar_border_offset
-        y_start = tc_h//2 + edge_h//2              # same “hub” top
-        y_end   = hotbar_border_offset - edge_h//2
-        yv3 = y_start
-        while yv3 < y_end:
-            edge_tile = rng.choice([edge1_s, edge2_s])
-            screen.blit(
-                edge_tile,
-                (right_x + edge_tile.get_width()//2 + 3, yv3)
-            )
-            yv3 += edge_tile.get_height()
+        if page == "": #avatar border
+            # 5a-2) vertical slice at 150px from the right
+            y_start = tc_h//2 + edge_h//2              # same “hub” top
+            y_end   = hotbar_border_offset - edge_h//2
+            yv3 = y_start
+            while yv3 < y_end:
+                edge_tile = rng.choice([edge1_s, edge2_s])
+                screen.blit(
+                    edge_tile,
+                    (right_x + edge_tile.get_width()//2 + 3, yv3)
+                )
+                yv3 += edge_tile.get_height()
 
-            # top T-corner (flipped vertically)
-        screen.blit(pygame.transform.flip(tcorner_s, False, True),
-                    (right_x, edge_h//2))
-        # bottom T-corner
-        screen.blit(tcorner_s,
-                    (right_x, hub_border_offset - edge_h//4 - edge_h//2 + 3))
+                # top T-corner (flipped vertically)
+            screen.blit(pygame.transform.flip(tcorner_s, False, True),
+                        (right_x, edge_h//2))
+            # bottom T-corner
+            screen.blit(tcorner_s,
+                        (right_x, hub_border_offset - edge_h//4 - edge_h//2 + 3))
         
-    if page == "input_tasks" or page == "input_spoons":
-        # y start just below inventory border
-        y_start2 = hotbar_border_offset + edge_h//2
-        # y end matches hub bottom
-        y_end2   = sh - (tc_h//2 + edge_h//2)
-        yv4      = y_start2
+    if page in ("input_tasks"):
+        # Align with the same top/bottom bounds as hub border
+        y_start2 = hotbar_border_offset + edge_h // 2          # starts below inventory border
+        y_end2   = sh - (tc_h + edge_h // 2)                  # stop where hub border stops
+
+        yv4 = y_start2
         while yv4 < y_end2:
-            edge_tile = rng.choice([edge1_s,edge2_s])
-            screen.blit(edge_tile,(right_x+edge_tile.get_width()//2 + 3,yv4))
+            edge_tile = rng.choice([edge1_s, edge2_s])
+            screen.blit(edge_tile, (right_x + edge_tile.get_width() // 2 + 3, yv4))
             yv4 += edge_tile.get_height()
-        # top T-corner (stem pointing down) at inventory border
-        top_tc = pygame.transform.flip(tcorner_s,False,True)
-        screen.blit(top_tc,(right_x,hotbar_border_offset + edge_h//4))
-        # bottom T-corner at hub bottom
-        screen.blit(tcorner_s,(right_x,sh-tc_h-edge_h//2))
+
+        # --- Proper T-corners ---
+        # Top (stem down)
+        top_tc = pygame.transform.flip(tcorner_s, False, True)
+        screen.blit(top_tc, (right_x, hotbar_border_offset + edge_h//4))
+
+        # Bottom (stem up)
+        bottom_y = y_end2
+        screen.blit(tcorner_s, (right_x, bottom_y))
+
 
     if page == "calendar":
         left_border = 390
         right_border = 626
-        r, g, b = background_color
-        lighter_background = (min(r + 20, 255), min(g + 20, 255), min(b + 20, 255))
-        pygame.draw.rect(screen, lighter_background, (left_border, 0, right_border - left_border + 18, 50))
 
         # ── draw the horizontal “edge” border between them ──
         left_x  = left_border + calendar_s.get_width()
@@ -207,7 +220,7 @@ def draw_border(screen, rect, page, background_color, border, is_maximized, scal
         screen.blit(calendar_s, (left_border, -9))
         screen.blit(calendar_s_right, (right_border, -9))
 
-    if page == "inventory":
+    if page == "":  #inventory
         left_x = inventory_border_offset
         # y start just below inventory border
         y_start2 = hotbar_border_offset + edge_h//2

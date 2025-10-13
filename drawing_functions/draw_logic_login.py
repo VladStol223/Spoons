@@ -5,7 +5,7 @@ from drawing_functions.draw_input_box import draw_input_box
 from copyparty_sync import (
     put_user_json, set_credentials, set_user_folder,
     download_data_json_if_present, put_new_user_cred, upload_data_json,
-    verify_credentials_and_access, probe_login_status,
+    verify_credentials_and_access, probe_login_status, set_stay_offline_flag
 )
 
 # Globals for UI hitboxes so logic() can read what draw() laid out
@@ -105,6 +105,7 @@ def logic_login(event, login_mode, username_text, password_text, input_active):
                 return "login", username_text, password_text, None, page
             if _main_choice_rects.get("offline") and _main_choice_rects["offline"].collidepoint(event.pos):
                 _status_msg = ""
+                set_stay_offline_flag(True)
                 return login_mode, username_text, password_text, None, "input_spoons"
 
         # form
@@ -118,6 +119,7 @@ def logic_login(event, login_mode, username_text, password_text, input_active):
                 return None, "", "", None, page
 
             if _form_rects.get("confirm") and _form_rects["confirm"].collidepoint(event.pos):
+                set_stay_offline_flag(False)
                 u, p = username_text.strip(), password_text
                 if not u:
                     _status_msg = "Please enter a username."

@@ -22,7 +22,7 @@ Total pages:
 15.) Remove Folder 4 Tasks
 16.) inventory
 17.) Calendar
-18.) shop
+18.) social
 19.) Statistics
 
 To do:
@@ -57,6 +57,7 @@ from copyparty_sync import (
     get_current_user,
     upload_data_json,
     get_auto_download_flag,
+    get_stay_offline_flag
 )
 import os
 
@@ -204,7 +205,7 @@ def hub_buttons(event):
         "manage_tasks": hub_manage_task,
         "inventory":    hub_inventory,
         "calendar":     hub_calendar,
-        "shop":         hub_shop,
+        "social":         hub_social,
         "settings":     hub_settings,
     }
 
@@ -232,7 +233,7 @@ from drawing_functions.draw_logic_input_tasks import draw_input_tasks, logic_inp
 from drawing_functions.draw_logic_manage_tasks_hub import draw_manage_tasks_hub, logic_manage_tasks_hub
 from drawing_functions.draw_logic_manage_tasks import draw_complete_tasks, logic_complete_tasks, set_favorites_binding
 from drawing_functions.draw_logic_calendar import draw_calendar, logic_calendar
-from drawing_functions.draw_logic_shop import draw_shop, logic_shop, logic_change_image
+from drawing_functions.draw_logic_social import draw_social, logic_social
 from drawing_functions.logic_task_toggle import logic_task_toggle
 from drawing_functions.draw_logic_inventory import draw_inventory, logic_inventory
 from drawing_functions.draw_logic_settings import draw_settings, logic_settings
@@ -313,6 +314,9 @@ if verify_credentials_and_access():
     sync_and_reload(get_auto_download_flag())               # pulls /<u>/data.json if it exists
     page = "input_spoons"
 
+if get_stay_offline_flag():
+    page = "input_spoons"
+
 # ----------------------------------------------------------------------------------------------------
 # Main loop
 # ----------------------------------------------------------------------------------------------------
@@ -372,10 +376,10 @@ while running:
 
     elif page == "input_spoons":
         if not UI_elements_initialized:
-            draw_input_spoons(screen, daily_spoons, spoons, delta_time, icon_image, input_active, background_color, x_offset=40)
+            draw_input_spoons(screen, spoons, spoon_name_input, delta_time, icon_image, input_active, background_color, x_offset=140)
             UI_elements_initialized = True
         else:
-            draw_input_spoons(screen, daily_spoons, spoons, delta_time, icon_image, input_active, background_color, x_offset=40)
+            draw_input_spoons(screen, spoons, spoon_name_input, delta_time, icon_image, input_active, background_color, x_offset=140)
         
     elif page == "input_tasks":
         draw_input_tasks(screen, spoons, current_task, current_spoons, input_active, 
@@ -431,7 +435,6 @@ while running:
         draw_inventory(screen, spoon_name_input, inventory_tab, background_color, input_active, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open)
         
     elif page == "calendar":
-        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
         draw_calendar(screen, spoon_name_input, displayed_week_offset, day_range_index, 
                   homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,
                   displayed_month, displayed_year, background_color,
@@ -441,17 +444,17 @@ while running:
                   folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
                   streak_dates)
         
-    elif page == "shop":
-        draw_shop(screen, tool_tips, spoon_name_input, icon_image, input_active, hub_background_color,
+    elif page == "social":
+        draw_social(screen, tool_tips, spoon_name_input, icon_image, input_active, hub_background_color,
                   folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         
     elif page == "settings":
-        draw_settings(screen, font)
-        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
+        draw_settings(screen, font, daily_spoons, spoon_name_input, inventory_tab, background_color, input_active, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open)
 
-    if page not in ("calendar", "settings"):
+    if page not in ("calendar", "social", "settings"):
         draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page, spoons_needed_today, spoons_used_today)
-        draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
+
+    draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
         
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -520,7 +523,7 @@ while running:
                 UI_elements_initialized = False
                 scale = max(3, (6 / scale_factor)) if is_maximized else 3
                 print(f"Scale factor: {scale_factor} - Border scale: {scale} - Maximized: {is_maximized}")
-            # --- 1–7 quick navigation: 1=Calendar, 2=Inventory, 3=Manage, 4=Add Tasks, 5=Add Spoons, 6=Shop, 7=settings ---
+            # --- 1–7 quick navigation: 1=Calendar, 2=Inventory, 3=Manage, 4=Add Tasks, 5=Add Spoons, 6=social, 7=settings ---
             else:
                 ctrl_held = bool(event.mod & (pygame.KMOD_CTRL | pygame.KMOD_LCTRL | pygame.KMOD_RCTRL))
                 if ctrl_held:
@@ -530,7 +533,7 @@ while running:
                         pygame.K_3: "input_tasks",
                         pygame.K_4: "manage_tasks",
                         pygame.K_5: "inventory",
-                        pygame.K_6: "shop",
+                        pygame.K_6: "social",
                         pygame.K_7: "settings",
                     }
                     new_page_key = key_to_page.get(event.key)
@@ -593,12 +596,13 @@ while running:
             switch_theme(current_theme, globals())
         elif page == "calendar": 
             day_range_index, displayed_week_offset, displayed_month, displayed_year = logic_calendar(event, day_range_index, displayed_week_offset, displayed_month, displayed_year)
-        elif page == "shop":
-            tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_shop(event, tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
-            border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name = logic_change_image(event, border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder, taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name)
+        elif page == "social":
+            tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_social(event, tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
             switch_theme(current_theme, globals())
         elif page == "settings":
-            page = logic_settings(event, page)
+            (page, inventory_tab, spoon_name_input, input_active, icon_image, 
+             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open,
+            border, border_name, manillaFolder, manillaFolder_name, current_theme) = logic_settings(event, page, inventory_tab, spoon_name_input, input_active, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open, border, border_name, manillaFolder, manillaFolder_name, current_theme)
     pygame.display.flip()
 
 pygame.quit()

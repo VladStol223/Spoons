@@ -77,6 +77,10 @@ def draw_calendar(screen, spoon_name_input, displayed_week_offset, day_range_ind
     darker_background = (max(r - 40, 0), max(g - 40, 0), max(b - 40, 0))
     lighter_background = (min(r + 20, 255), min(g + 20, 255), min(b + 20, 255))
 
+    left_border = 390
+    right_border = 626
+    pygame.draw.rect(screen, lighter_background, (left_border, 0, right_border - left_border + 18, 50))
+
     # —— draw your mode buttons ——  
     for btn, label in [
         (day_mode_button,   "Range"),

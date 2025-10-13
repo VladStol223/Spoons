@@ -38,7 +38,7 @@ def tint_image(image, tint_color):
 def get_pulse_alpha(t, min_alpha=128, max_alpha=255, speed=4.0):
     return int(min_alpha + (max_alpha - min_alpha) * 0.3 * (1 + math.sin(t * speed)))
 
-def draw_input_spoons(screen, daily_spoons, spoons, delta_time, icon_image, input_active, background_color, x_offset=40):
+def draw_input_spoons(screen, spoons, spoon_name, delta_time, icon_image, input_active, background_color, x_offset=40):
     global spoon_rects, rest_icon_rects, rest_labels
 
     short_rest_amount = 2
@@ -50,8 +50,6 @@ def draw_input_spoons(screen, daily_spoons, spoons, delta_time, icon_image, inpu
     sw -= 200
 
     title_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(sh * 0.07))
-    prompt_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(sh * 0.045))
-    day_font = pygame.font.Font("fonts/Stardew_Valley.ttf",  int(sh * 0.045))
     rest_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(sh * 0.045))
 
     # — title & prompt —
@@ -59,29 +57,6 @@ def draw_input_spoons(screen, daily_spoons, spoons, delta_time, icon_image, inpu
     tx = ((sw - title_surf.get_width())//2) + x_offset
     ty = int(sh * layout_heights["spoon_label"])
     screen.blit(title_surf, (tx, ty))
-
-    prompts = [
-        prompt_font.render("Enter the number of", True, (255,255,255)),
-        prompt_font.render("spoons you start", True, (255,255,255)),
-        prompt_font.render("start with each day:", True, (255,255,255)),
-    ]
-    px1 = 755
-    py = int(sh * layout_heights["daily_prompt"])
-    for surf in prompts:
-        screen.blit(surf, (px1, py))
-        py += surf.get_height()
-
-    # — daily input labels & boxes —
-    dx, dy = 785, py
-    box_w, box_h = int(sw * 0.06), 30
-    for i, day in enumerate(days):
-        label = day_font.render(f"{day}:", True, (255,255,255))
-        screen.blit(label, (dx, dy + i * (box_h + 10)))
-
-        input_rect = pygame.Rect(dx + 50, dy + i * (box_h + 10), box_w, box_h)
-        value = str(daily_spoons.get(day, ""))
-        active = input_active == day
-        draw_input_box(screen, input_rect, active, value, LIGHT_GRAY, DARK_SLATE_GRAY, True, background_color, "light", 9, 0.045) #type: ignore
 
     # — rest icon buttons —
     button_w = button_h = int(sh * 0.175)

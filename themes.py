@@ -24,7 +24,7 @@ HUB_BUTTON_COLOR_KEYS = [
     "manage_tasks_color",
     "inventory_color",
     "calendar_color",
-    "shop_color",
+    "social_color",
     "stats_color"
 ]
 CALENDAR_COLOR_KEYS = [

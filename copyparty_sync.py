@@ -20,6 +20,8 @@ _DEFAULT_CFG = {
     "COPYPARTY_DAV_PREFIX": "",
     "COPYPARTY_TIMEOUT_S": 10,
     "COPYPARTY_AUTO_DOWNLOAD": False, 
+    "COPYPARTY_SOCIAL_ENABLED": False,
+    "COPYPARTY_STAY_OFFLINE": False,
 }
 
 # ---------- config IO ----------
@@ -237,41 +239,6 @@ def upload_data_json():
         print(f"[copyparty] upload error: {e}")
         return False
 
-    try:
-        # delete then put
-        try:
-            dr = requests.delete(url, headers=_auth_headers(), timeout=cfg["COPYPARTY_TIMEOUT_S"])
-            if dr.status_code not in (200, 204, 404):
-                print(f"[copyparty] pre-delete returned {dr.status_code}: {dr.text[:200]}")
-        except Exception as e:
-            print(f"[copyparty] pre-delete error (ignored): {e}")
-
-        hdr = _auth_headers(); hdr["Content-Type"] = ctype
-        r = requests.put(url, data=upload_body, headers=hdr, timeout=cfg["COPYPARTY_TIMEOUT_S"])
-        if r.status_code not in (200, 201, 204):
-            print(f"[copyparty] upload failed {r.status_code}: {r.text[:200]}")
-            return
-        print(f"[copyparty] upload ok -> {url}")
-
-        # verify bytes
-        st, body = _fresh_get(url, cfg["COPYPARTY_TIMEOUT_S"])
-        if st != 200:
-            time.sleep(0.5)
-            st, body = _fresh_get(url, cfg["COPYPARTY_TIMEOUT_S"])
-        if st == 200 and _sha256_bytes(body) == target_hash:
-            print("[copyparty] Upload integrity verified!")
-        elif st == 200:
-            time.sleep(0.6)
-            st2, body2 = _fresh_get(url, cfg["COPYPARTY_TIMEOUT_S"])
-            if st2 == 200 and _sha256_bytes(body2) == target_hash:
-                print("[copyparty] verify ok after retry")
-            else:
-                print("[copyparty] WARNING: verify mismatch; remote appears stale")
-        else:
-            print(f"[copyparty] verify GET failed with {st}")
-    except Exception as e:
-        print(f"[copyparty] upload error: {e}")
-
 def download_data_json_if_present():
     """
     Downloads /<username>/data.json.
@@ -330,6 +297,22 @@ def get_auto_download_flag() -> bool:
 def set_auto_download_flag(enabled: bool) -> bool:
     cfg = _load_cfg()
     cfg["COPYPARTY_AUTO_DOWNLOAD"] = bool(enabled)
+    return _save_cfg(cfg)
+
+def get_social_enabled_flag() -> bool:
+    return bool(_load_cfg().get("COPYPARTY_SOCIAL_ENABLED", False))
+
+def set_social_enabled_flag(enabled: bool) -> bool:
+    cfg = _load_cfg()
+    cfg["COPYPARTY_SOCIAL_ENABLED"] = bool(enabled)
+    return _save_cfg(cfg)
+
+def get_stay_offline_flag() -> bool:
+    return bool(_load_cfg().get("COPYPARTY_STAY_OFFLINE", False))
+
+def set_stay_offline_flag(enabled: bool) -> bool:
+    cfg = _load_cfg()
+    cfg["COPYPARTY_STAY_OFFLINE"] = bool(enabled)
     return _save_cfg(cfg)
 
 # ---------- new/old account & creds helpers ----------
