@@ -1,7 +1,7 @@
 #Vladislav Stolbennikov
 #8/7/2024
 #Spoons App
-#VS1.26
+#VS1.26.1
 
 '''
 Total pages:
@@ -60,6 +60,8 @@ from copyparty_sync import (
     get_stay_offline_flag
 )
 import os
+
+from state_data import _download_state
 
 IS_WINDOWS = platform.system() == "Windows"
 IS_LINUX   = platform.system() == "Linux"
@@ -330,6 +332,30 @@ while running:
     delta_time = clock.tick(60) / 1000.0
     max_days = calendar.monthrange(datetime.now().year, task_month)[1]
     mouse_pos = pygame.mouse.get_pos()
+    
+# ----- so we cant import from main? main will do it then ---------------------
+    if _download_state.get("trigger_download"):
+        _download_state["trigger_download"] = False  # reset the flag
+        _download_state["downloading"] = True
+        _download_state["done"] = False
+        _download_state["ok"] = False
+        _download_state["done_started_at"] = None
+
+        from copyparty_sync import download_data_json_if_present
+        try:
+            download_data_json_if_present()
+            sync_and_reload(False)
+            _download_state["ok"] = True
+        except Exception as e:
+            print(f"[main] sync failed: {e}")
+            _download_state["ok"] = False
+        finally:
+            _download_state["downloading"] = False
+            _download_state["done"] = True
+            _download_state["done_started_at"] = None
+
+
+
 
     # ---- live midnight rollover ----
     new_date_str = datetime.now().strftime("%Y-%m-%d")
