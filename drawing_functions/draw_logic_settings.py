@@ -2,6 +2,8 @@ import os
 import threading
 import pygame
 
+from state_data import _download_state
+
 from copyparty_sync import (
     clear_credentials,
     get_current_user,
@@ -37,12 +39,6 @@ _upload_state = {
 
 _download_rect = None
 _download_pos  = None
-_download_state = {
-    "downloading": False,
-    "done": False,
-    "ok": False,
-    "done_started_at": None,
-}
 
 _auto_rect = None  # toggle checkbox rect
 _social_rect = None
@@ -297,17 +293,7 @@ def logic_settings(event, page, *inventory_args):
                 _download_state["done_started_at"] = None
                 from copyparty_sync import download_data_json_if_present
                 download_data_json_if_present()
-                try:
-                    from main import sync_and_reload #type: ignore
-                    sync_and_reload(False)
-                    _download_state["ok"] = True
-                except Exception as e:
-                    print(f"[settings] sync failed: {e}")
-                    _download_state["ok"] = False
-                finally:
-                    _download_state["downloading"] = False
-                    _download_state["done"] = True
-                    _download_state["done_started_at"] = None
+                _download_state["trigger_download"] = True  # just a flag
                 return (page, *updated)
 
         if _active_settings_tab == "graphics":
