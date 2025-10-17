@@ -104,7 +104,6 @@ def draw_complete_tasks(
     scroll_offset_px,
     background_color,
     icon_image,
-    spoon_name,
     folder_one,
     folder_two,
     folder_three,
@@ -1356,7 +1355,7 @@ def handle_task_scroll(event, scroll_offset_px, total_content_height):
     return max(0, min(scroll_offset_px, max_scroll))
 
 
-def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confetti_particles, level, spoons_used_today):
+def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_dates, confetti_particles, level, spoons_used_today):
     """
     Handles clicks and key events for both list and edit form.
     """
@@ -1873,7 +1872,7 @@ def logic_complete_tasks(task_list, buttons, event, spoons, streak_dates, confet
                 name, cost, done_, days, date, st, et, labels = task_list[idx]
                 new_done = frame_i + 1
                 to_fill  = new_done - done_
-                if to_fill > 0 and spoons >= to_fill:
+                if to_fill > 0 and spoons >= to_fill or spoons_debt_toggle:
                     task_list[idx][2] = min(cost, new_done)
                     spoons -= to_fill
                     spoons_used_today += to_fill

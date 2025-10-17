@@ -125,7 +125,7 @@ def save_data(
     folder_five, folder_six, streak_dates,
     border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder,
     taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, label_favorites,
-    spoons_used_today):
+    spoons_used_today, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle):
 
 
     # resolve icon file name
@@ -180,8 +180,13 @@ def save_data(
             "intro": intro
         },
         "label_favorites": label_favorites,
-        "last_save_date": [date.today().isoformat(), int(spoons_used_today)]
+        "last_save_date": [date.today().isoformat(), int(spoons_used_today)],
+        # NEW FLAGS
+        "sound_toggle": sound_toggle,
+        "spoons_debt_toggle": spoons_debt_toggle,
+        "spoons_debt_consequences_toggle": spoons_debt_consequences_toggle
     }
+
 
     try:
         # atomic write
@@ -265,6 +270,8 @@ def load_data():
     global hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name
     global calendarImages_name, themeBackgroundsImages_name, intro_name
     global label_favorites, spoons_used_today
+    global sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle
+
 
     try:
         with open("data.json", "r") as f:
@@ -273,9 +280,7 @@ def load_data():
         # — your existing field loading —
         spoons = data.get("spoons", 0)
         for var_name, json_key in TASK_CATEGORY_JSON_MAP.items():
-    	    globals()[var_name] = [
-                task_from_serializable(t) for t in data.get(json_key, [])
-            ]
+            globals()[var_name] = [task_from_serializable(t) for t in data.get(json_key, [])]
 
         daily_spoons = data.get("daily_spoons", {"Mon":0,"Tue":0,"Wed":0,"Thu":0,"Fri":0,"Sat":0,"Sun":0})
         loaded_theme = data.get("theme", "")
@@ -305,6 +310,11 @@ def load_data():
         folder_four  = data.get("folder_four","Misc")
         folder_five  = data.get("folder_five","Exams")
         folder_six   = data.get("folder_six","Projects")
+
+        # NEW FLAGS (default values if missing)
+        sound_toggle = data.get("sound_toggle", True)
+        spoons_debt_toggle = data.get("spoons_debt_toggle", False)
+        spoons_debt_consequences_toggle = data.get("spoons_debt_consequences_toggle", False)
 
         # last_save_date can be legacy string or new pair ["YYYY-MM-DD", spoons_used_today]
         lsd = data.get("last_save_date")
@@ -412,5 +422,5 @@ def load_data():
         border_name, hubIcons_name, spoonIcons_name, restIcons_name,
         hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
         calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites,
-        last_save_date, spoons_used_today
+        last_save_date, spoons_used_today, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle
     )

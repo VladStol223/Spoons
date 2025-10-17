@@ -19,7 +19,7 @@ layout_heights = {
     "spoon_label":     0.32,
     "spoon_input_line":0.42,
     "rest_buttons":    0.65,
-    "daily_prompt":    0.27,
+    "daily_prompt":    0.18,
 }
 
 days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
@@ -45,6 +45,9 @@ _social_rect = None
 _spoons_rect = None
 _graphics_rect = None
 _account_rect = None
+_sound_rect = None
+_spoons_debt_rect = None
+_spoons_debt_cons_rect = None
 
 def _start_upload_thread():
     def _worker():
@@ -88,7 +91,7 @@ def _draw_result_overlay(screen, ok: bool, pos: tuple, started_at_key: str):
 # track which tab is active
 _active_settings_tab = "account"  # default tab
 
-def draw_settings(screen, font, daily_spoons, *inventory_args):
+def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, icon_image, manillaFolder_name, *inventory_args):
     """
     Draws the Settings screen, which now contains two tabs:
     'Graphics Settings' (shows Inventory UI)
@@ -100,7 +103,7 @@ def draw_settings(screen, font, daily_spoons, *inventory_args):
     global _logout_rect, _upload_rect, _upload_pos, _download_rect, _download_pos, _auto_rect, _social_rect
     global _active_settings_tab
 
-    spoon_name_input, inventory_tab, background_color, input_active, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open = inventory_args
+    spoon_name_input, inventory_tab, background_color, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open = inventory_args
 
     sw, sh = screen.get_size()
 
@@ -116,6 +119,7 @@ def draw_settings(screen, font, daily_spoons, *inventory_args):
     graphics_rect = pygame.Rect(((sw//2) - btn_w - spacing//2 - left_offset), top_y, btn_w, btn_h)
     account_rect  = pygame.Rect(((sw//2) + spacing//2 - left_offset), top_y, btn_w, btn_h)
     spoons_rect  = pygame.Rect(((sw//2) + spacing//2 + btn_w - left_offset), top_y, btn_w, btn_h)
+    sound_button_rect = pygame.Rect(sw - 100, 30, 60, 60)
 
     # Draw tabs
     for rect, text, active in [
@@ -128,11 +132,20 @@ def draw_settings(screen, font, daily_spoons, *inventory_args):
         label = tab_font.render(text, True, color)
         screen.blit(label, (rect.centerx - label.get_width() // 2, rect.centery - label.get_height() // 2))
 
+    # --- Sound toggle button ---
+    screen.blit(sound_button, sound_button_rect)
+    if not sound_toggle:
+        sx, sy = sound_button.get_size()
+        redx = pygame.transform.smoothscale(floppy_disk_redx, (sx, sy))
+        screen.blit(redx, sound_button_rect)
+
     # Store rects for click logic
-    global _graphics_rect, _account_rect, _spoons_rect
+    global _graphics_rect, _account_rect, _spoons_rect, _sound_rect
     _graphics_rect = graphics_rect
     _account_rect = account_rect
     _spoons_rect = spoons_rect
+    _sound_rect = sound_button_rect
+
 
     # --- Separator line below tabs ---
     pygame.draw.line(screen, (0, 0, 0), (int(sw*0.15), top_y + btn_h), (int(sw*0.85), top_y + btn_h), 4)
@@ -141,7 +154,7 @@ def draw_settings(screen, font, daily_spoons, *inventory_args):
     if _active_settings_tab == "graphics":
         # inventory_args are passed from main
         if inventory_args:
-            draw_inventory(screen, *inventory_args)
+            draw_inventory(screen, icon_image,manillaFolder_name,  *inventory_args)
     elif _active_settings_tab == "account":
         # draw account settings (existing content)
         # reuse your original UI section
@@ -220,31 +233,67 @@ def draw_settings(screen, font, daily_spoons, *inventory_args):
     
     elif _active_settings_tab == "spoons":
         prompts = [
-            prompt_font.render("Daily Wake-up", True, (255,255,255)),
-            prompt_font.render(f"{spoon_name}", True, (255,255,255)),
+            prompt_font.render(f"Daily Wake-up {spoon_name}", True, (255,255,255)),
         ]
-        px1 = 755
+
+        # --- Spoons-related toggles ---
+        global _spoons_debt_rect
+        global _spoons_debt_cons_rect
+        box_size = int(sh * 0.06)
+
+        toggle_start_y = int(sh * 0.8)
+        toggle_gap = int(sh * 0.1)
+
+        # Spoons Debt toggle
+        debt_label = font.render("Enable Spoons Debt", True, (255,255,255))
+        screen.blit(debt_label, (sw*0.17, toggle_start_y))
+        _spoons_debt_rect = pygame.Rect(sw*0.13, toggle_start_y, box_size, box_size)
+        pygame.draw.rect(screen, (180,180,180), _spoons_debt_rect, width=3, border_radius=6)
+        if spoons_debt_toggle:
+            chk = pygame.transform.smoothscale(floppy_disk_checkmark, (box_size, box_size))
+            screen.blit(chk, _spoons_debt_rect.topleft)
+        else:
+            rx = pygame.transform.smoothscale(floppy_disk_redx, (box_size, box_size))
+            screen.blit(rx, _spoons_debt_rect.topleft)
+
+        # Spoons Debt Consequences toggle
+        cons_label = font.render("Spoons Debt Consequences", True, (255,255,255))
+        screen.blit(cons_label, (sw*0.17, toggle_start_y + toggle_gap))
+        _spoons_debt_cons_rect = pygame.Rect(sw*0.13, toggle_start_y + toggle_gap, box_size, box_size)
+        pygame.draw.rect(screen, (180,180,180), _spoons_debt_cons_rect, width=3, border_radius=6)
+        if spoons_debt_consequences_toggle:
+            chk = pygame.transform.smoothscale(floppy_disk_checkmark, (box_size, box_size))
+            screen.blit(chk, _spoons_debt_cons_rect.topleft)
+        else:
+            rx = pygame.transform.smoothscale(floppy_disk_redx, (box_size, box_size))
+            screen.blit(rx, _spoons_debt_cons_rect.topleft)
+
+        px1 = 130
         py = int(sh * layout_heights["daily_prompt"])
         for surf in prompts:
             screen.blit(surf, (px1, py))
             py += surf.get_height()
 
         # — daily input labels & boxes —
-        dx, dy = 785, py
+        dx = px1
+        dy = int(sh * layout_heights["daily_prompt"]) + 40
         box_w, box_h = int(sw * 0.06), 30
+
         for i, day in enumerate(days):
             label = day_font.render(f"{day}:", True, (255,255,255))
-            screen.blit(label, (dx, dy + i * (box_h + 10)))
+            screen.blit(label, (dx + 10 + i * (box_w + 10), dy))
 
-            input_rect = pygame.Rect(dx + 50, dy + i * (box_h + 10), box_w, box_h)
+            input_rect = pygame.Rect(dx + i * (box_w + 10), dy + 30, box_w, box_h)
             value = str(daily_spoons.get(day, ""))
             active = input_active == day
             draw_input_box(screen, input_rect, active, value, LIGHT_GRAY, DARK_SLATE_GRAY, True, background_color, "light", 9, 0.045) #type: ignore
 
 
-def logic_settings(event, page, *inventory_args):
+def logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, *inventory_args):
     """Handles tab switching and normal settings logic."""
     global _active_settings_tab
+
+    sh, sw = pygame.display.get_surface().get_size()
 
     updated = inventory_args
 
@@ -252,29 +301,28 @@ def logic_settings(event, page, *inventory_args):
         # --- Tab clicks ---
         if _graphics_rect and _graphics_rect.collidepoint(event.pos):
             _active_settings_tab = "graphics"
-            return (page, *updated)
         if _account_rect and _account_rect.collidepoint(event.pos):
             _active_settings_tab = "account"
-            return (page, *updated)
         if _spoons_rect and _spoons_rect.collidepoint(event.pos):
             _active_settings_tab = "spoons"
-            return (page, *updated)
+        
+        # --- Global Sound toggle ---
+        if _sound_rect and _sound_rect.collidepoint(event.pos):
+            sound_toggle = not sound_toggle
 
         # --- Account tab logic (only if visible) ---
         if _active_settings_tab == "account":
             if _auto_rect and _auto_rect.collidepoint(event.pos):
                 new_val = not get_auto_download_flag()
                 set_auto_download_flag(new_val)
-                return (page, *updated)
             
             if _social_rect and _social_rect.collidepoint(event.pos):
                 new_val = not get_social_enabled_flag()
                 set_social_enabled_flag(new_val)
-                return (page, *updated)
 
             if _logout_rect and _logout_rect.collidepoint(event.pos):
                 clear_credentials()
-                return ("login", *updated)
+                return ("login", daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, *updated)
 
             if _upload_rect and _upload_rect.collidepoint(event.pos) and not _upload_state["uploading"]:
                 _upload_state["uploading"] = True
@@ -284,7 +332,6 @@ def logic_settings(event, page, *inventory_args):
                 _upload_state["next_tick_ms"] = pygame.time.get_ticks() + 500
                 _upload_state["done_started_at"] = None
                 _start_upload_thread()
-                return (page, *updated)
 
             if _download_rect and _download_rect.collidepoint(event.pos):
                 _download_state["downloading"] = True
@@ -294,17 +341,49 @@ def logic_settings(event, page, *inventory_args):
                 from copyparty_sync import download_data_json_if_present
                 download_data_json_if_present()
                 _download_state["trigger_download"] = True  # just a flag
-                return (page, *updated)
 
         if _active_settings_tab == "graphics":
             # inventory_args are passed from main
             if inventory_args:
-                updated = logic_inventory(event, *inventory_args)
-                return (page, *updated)
+               input_active, *updated = logic_inventory(event, input_active, *inventory_args)
             
-    return (page, *updated)
+        # --- Spoons tab toggles ---
+        if _active_settings_tab == "spoons":
+            if _spoons_debt_rect and _spoons_debt_rect.collidepoint(event.pos):
+                spoons_debt_toggle = not spoons_debt_toggle
 
+            if _spoons_debt_cons_rect and _spoons_debt_cons_rect.collidepoint(event.pos):
+                spoons_debt_consequences_toggle = not spoons_debt_consequences_toggle
 
+                    # --- Spoons tab daily input box logic ---
+        if _active_settings_tab == "spoons":
+            dx = 130
+            box_h = 30
+            dy = int(sh * layout_heights["daily_prompt"])
+            box_w = int(pygame.display.get_surface().get_width() * 0.06)
+
+            # Handle clicks
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                for i, day in enumerate(days):
+                    rect = pygame.Rect(dx + i * (box_w + 10), dy, box_w, box_h)
+                    if rect.collidepoint(event.pos):
+                        input_active = day
+                        return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, *updated)
+                input_active = ""
+
+    # Handle typing
+    elif event.type == pygame.KEYDOWN and input_active in days:
+        current_val = daily_spoons.get(input_active, "")
+        if isinstance(current_val, int):
+            current_val = str(current_val)
+        if event.key == pygame.K_BACKSPACE:
+            current_val = current_val[:-1]
+        elif event.unicode.isdigit() and len(current_val) < 2:
+            current_val += event.unicode
+        daily_spoons[input_active] = int(current_val) if current_val else 0
+
+            
+    return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, *updated)
 
 
 
@@ -440,10 +519,11 @@ def to_color(val):
 
 def draw_inventory(
     screen,
+    icon_image,
+    manillaFolder_name,
     spoon_name_input,
     inventory_tab,
     background_color,
-    input_active,
     folder_one,
     folder_two,
     folder_three,
@@ -536,8 +616,8 @@ def draw_inventory(
             draw_rounded_button(
                 screen,
                 outline,
-                lighter_background,
-                darker_background, #type: ignore
+                background_color if icon_image == icon else lighter_background,
+                darker_background,
                 1, 2
             )
 
@@ -572,7 +652,7 @@ def draw_inventory(
             cell_y = 190 + 100 * row
             outline = pygame.Rect(cell_x, cell_y, square_width, square_width)
             inventory_folder_buttons.append((outline, surface, name))
-            draw_rounded_button(screen, outline, lighter_background, darker_background, 1, 2)
+            draw_rounded_button(screen, outline, background_color if manillaFolder_name == name else lighter_background, darker_background, 1, 2)
             scaled  = pygame.transform.scale(surface, (icon_width, (icon_width//5)*3))
             rect    = scaled.get_rect(center=outline.center)
             screen.blit(scaled, rect)
@@ -671,9 +751,9 @@ def draw_inventory(
 
 
 def logic_inventory(event,
+                    input_active,
                     inventory_tab,
                     spoon_name_input,
-                    input_active,
                     icon_image,
                     folder_one,
                     folder_two,
@@ -804,9 +884,9 @@ def logic_inventory(event,
             else:
                 folder_six += event.unicode
 
-    return (inventory_tab,
+    return (input_active,
+            inventory_tab,
             spoon_name_input,
-            input_active,
             icon_image,
             folder_one,
             folder_two,

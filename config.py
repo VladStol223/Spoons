@@ -153,6 +153,7 @@ image_categories = {
         'floppyDiskCheckmark': ('floppyDiskUploadCheckmark.png', (60,60)),
         'floppyDiskRedX': ('floppyDiskUploadRedX.png', (60,60)),
         'floppyDiskDots': ('floppyDiskUploadDots.png', (60,60)),
+        'soundButton': ('soundButton.png', (60,60)),
     },
 }
 
@@ -364,6 +365,7 @@ recurring_button = toggleButtons['recurringButton']
 time_button = toggleButtons['timeButton']
 confirm_edit_button = toggleButtons['ConfirmButton']
 cancel_edit_button = toggleButtons['CancelButton']
+sound_button = toggleButtons['soundButton']
 
 #floppy disk upload buttons
 floppy_disk_upload = toggleButtons['floppyDiskUpload']
@@ -680,3 +682,7 @@ login_password = ""
 login_input_active = None
 
 _active_settings_tab = "account"
+
+sound_toggle = False
+spoons_debt_toggle = False
+spoons_debt_consequences_toggle = False
