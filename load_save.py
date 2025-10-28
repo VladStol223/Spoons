@@ -27,10 +27,62 @@ TASK_CATEGORY_JSON_MAP = {
 # Reverse mapping: JSON key → internal variable
 TASK_CATEGORY_JSON_REVERSE = {v: k for k, v in TASK_CATEGORY_JSON_MAP.items()}
 
+def _migrate_task_list_to_new_format(task_list):
+    """
+    Ensures all tasks follow the new canonical order:
+    [name, description, spoons, done, days_left, due_date, start_time, end_time, labels]
+
+    If a task appears to be in the old layout (description last),
+    it reorders the elements accordingly. Safe for mixed-format saves.
+    """
+    migrated = []
+    for t in task_list:
+        if isinstance(t, dict):
+            migrated.append(task_from_serializable(t))
+            continue
+
+        t = list(t)
+        L = len(t)
+
+        # Detect old format pattern:
+        # old: [name, spoons, done, days_left, due_date, start_time, end_time, labels, description]
+        if L == 9 and isinstance(t[8], str) and not str(t[2]).isalpha():
+            name = t[0]
+            description = t[8]
+            spoons = t[1]
+            done = t[2]
+            days_left = t[3]
+            due_date = t[4]
+            start_time = t[5]
+            end_time = t[6]
+            labels = t[7]
+            migrated.append([name, description, spoons, done, days_left, due_date, start_time, end_time, labels])
+        # Detect legacy 8-field (no description)
+        elif L == 8:
+            name = t[0]
+            description = ""
+            spoons = t[1]
+            done = t[2]
+            days_left = t[3]
+            due_date = t[4]
+            start_time = t[5]
+            end_time = t[6]
+            labels = t[7]
+            migrated.append([name, description, spoons, done, days_left, due_date, start_time, end_time, labels])
+        # Already correct (new) format
+        elif L == 9 and isinstance(t[1], str) and not isinstance(t[2], str):
+            migrated.append(t)
+        else:
+            # Fallback for any other strange legacy form
+            while len(t) < 9:
+                t.append([] if len(t) in (7, 8) else "")
+            migrated.append(t)
+    return migrated
+
 def task_to_serializable(task):
     """
-    Accepts either a tuple/list in legacy formats (5/6/7/8 fields) or a dict.
-    Outputs a dict with stable keys.
+    Accepts either a tuple/list in legacy formats (5–9 fields) or a dict.
+    Outputs a dict with stable keys, including optional description.
     """
     if isinstance(task, dict):
         name = task.get("task_name", "")
@@ -38,15 +90,19 @@ def task_to_serializable(task):
         done = int(task.get("done", 0))
         days_left = int(task.get("days_till_due_date", 0))
         due = task.get("due_date", "1970-01-01T00:00:00")
-        # keep ISO string if provided; else assume datetime and convert
+        description = task.get("description", "")
+
         if isinstance(due, datetime):
             due_iso = due.isoformat()
         else:
             due_iso = str(due)
+
         start_time = task.get("start_time", [0,0,0,0])
         end_time   = task.get("end_time",   [0,0,0,0])
         labels     = task.get("labels", [])
-        if not isinstance(labels, list): labels = []
+        if not isinstance(labels, list):
+            labels = []
+
         return {
             "task_name": name,
             "spoons_needed": spoons_needed,
@@ -55,34 +111,34 @@ def task_to_serializable(task):
             "due_date": due_iso,
             "start_time": start_time,
             "end_time": end_time,
-            "labels": labels
+            "labels": labels,
+            "description": description
         }
 
     # tuple/list paths
     t = list(task)
     L = len(t)
 
-    # Common pieces
     name = t[0] if L >= 1 else ""
-    spoons_needed = int(t[1]) if L >= 2 else 0
-    # default to 0 (int), not "❌"
-    done = int(t[2]) if L >= 3 and isinstance(t[2], (int, float)) else 0
-    days_left = int(t[3]) if L >= 4 else 0
-    due_dt = t[4] if L >= 5 else datetime(1970,1,1)
+    description = t[1] if L >= 2 else ""
+    spoons_needed = int(t[2]) if L >= 3 and str(t[2]).isdigit() else 0
+    done = int(t[3]) if L >= 4 and isinstance(t[3], (int, float)) else 0
+    days_left = int(t[4]) if L >= 5 else 0
+    due_dt = t[5] if L >= 6 else datetime(1970,1,1)
+    start_time = t[6] if L >= 7 else [0,0,0,0]
+    end_time   = t[7] if L >= 8 else [0,0,0,0]
+    labels     = t[8] if L >= 9 else []
 
-    # optional bits
-    start_time = t[5] if L >= 6 else [0,0,0,0]
-    end_time   = t[6] if L >= 7 else [0,0,0,0]
-    labels     = t[7] if L >= 8 else []
-    if not isinstance(labels, list): labels = []
+    if not isinstance(labels, list):
+        labels = []
+    if not isinstance(description, str):
+        description = ""
 
-    # normalize due_date
     if isinstance(due_dt, datetime):
         due_iso = due_dt.isoformat()
     else:
-        # if someone stored a date or string, coerce to string
         try:
-            due_iso = due_dt.isoformat()  # date has isoformat too
+            due_iso = due_dt.isoformat()
         except Exception:
             due_iso = "1970-01-01T00:00:00"
 
@@ -94,8 +150,10 @@ def task_to_serializable(task):
         "due_date": due_iso,
         "start_time": start_time,
         "end_time": end_time,
-        "labels": labels
+        "labels": labels,
+        "description": description
     }
+
 
 """
 Summary:
@@ -131,19 +189,12 @@ def save_data(
     # resolve icon file name
     global icon_image_name
     if   icon_image == spoon_image:        icon_image_name = "spoon.png"
-    elif icon_image == battery_image:      icon_image_name = "battery.png"
-    elif icon_image == star_image:         icon_image_name = "star.png"
-    elif icon_image == potion_image:       icon_image_name = "potion.png"
-    elif icon_image == yourdidit_image:    icon_image_name = "yourdidit.png"
+    elif icon_image == star_image:    icon_image_name = "star.png"
     elif icon_image == mike_image:         icon_image_name = "mike.png"
-    elif icon_image == lightningface_image: icon_image_name = "lightningface.png"
-    elif icon_image == diamond_image:      icon_image_name = "diamond.png"
-    elif icon_image == starfruit_image:    icon_image_name = "starfruit.png"
-    elif icon_image == strawberry_image:   icon_image_name = "strawberry.png"
-    elif icon_image == terstar_image:      icon_image_name = "terstar.png"
-    elif icon_image == hcheart_image:      icon_image_name = "hcheart.png"
-    elif icon_image == beer_image:         icon_image_name = "beer.png"
-    elif icon_image == drpepper_image:     icon_image_name = "drpepper.png"
+    elif icon_image == minecraft_image:      icon_image_name = "minecraft.png"
+    elif icon_image == stardew_image:    icon_image_name = "starfruit.png"
+    elif icon_image == celeste_image:   icon_image_name = "strawberry.png"
+    elif icon_image == minecraft1_image:      icon_image_name = "minecraft1.png"
     else:                                  icon_image_name = "spoon.png"
 
     payload = {
@@ -219,16 +270,14 @@ Returns:
 def task_from_serializable(task):
     """
     Converts saved dict -> canonical list format used in-app:
-    [name, spoons_needed, done, days_left, due_datetime, start_time, end_time, labels]
+    [name, spoons_needed, done, days_left, due_datetime, start_time, end_time, labels, description]
     """
     name = task.get("task_name", "")
     spoons_needed = int(task.get("spoons_needed", 0))
-    # store as int; you compare numerically elsewhere
     done = int(task.get("done", 0))
     days_left = int(task.get("days_till_due_date", 0))
-
     due_str = task.get("due_date", "1970-01-01T00:00:00")
-    # be tolerant of both full seconds and possible microseconds
+
     due_dt = None
     for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d", "%Y-%m-%dT%H:%M:%S.%f"):
         try:
@@ -237,15 +286,19 @@ def task_from_serializable(task):
         except Exception:
             pass
     if due_dt is None:
-        # fallback to "now" if completely unparsable
         due_dt = datetime(1970,1,1)
 
     start_time = task.get("start_time", [0,0,0,0])
     end_time   = task.get("end_time",   [0,0,0,0])
     labels     = task.get("labels", [])
-    if not isinstance(labels, list): labels = []
+    description = task.get("description", "")
 
-    return [name, spoons_needed, done, days_left, due_dt, start_time, end_time, labels]
+    if not isinstance(labels, list):
+        labels = []
+    if not isinstance(description, str):
+        description = ""
+
+    return [name, spoons_needed, done, days_left, due_dt, start_time, end_time, labels, description]
 
 """
 Summary:
@@ -280,7 +333,9 @@ def load_data():
         # — your existing field loading —
         spoons = data.get("spoons", 0)
         for var_name, json_key in TASK_CATEGORY_JSON_MAP.items():
-            globals()[var_name] = [task_from_serializable(t) for t in data.get(json_key, [])]
+            raw_tasks = [task_from_serializable(t) for t in data.get(json_key, [])]
+            globals()[var_name] = _migrate_task_list_to_new_format(raw_tasks)
+
 
         daily_spoons = data.get("daily_spoons", {"Mon":0,"Tue":0,"Wed":0,"Thu":0,"Fri":0,"Sat":0,"Sun":0})
         loaded_theme = data.get("theme", "")
@@ -288,19 +343,12 @@ def load_data():
         # icon_image mapping…
         icon_image_name = data.get("icon_image","spoon.png")
         if   icon_image_name=="spoon.png":       icon_image=spoon_image
-        elif icon_image_name=="battery.png":     icon_image=battery_image
-        elif icon_image_name=="star.png":        icon_image=star_image
-        elif icon_image_name=="potion.png":      icon_image=potion_image
-        elif icon_image_name=="yourdidit.png":   icon_image=yourdidit_image
+        elif icon_image_name=="star.png":   icon_image=star_image
         elif icon_image_name=="mike.png":        icon_image=mike_image
-        elif icon_image_name=="lightningface.png": icon_image=lightningface_image
-        elif icon_image_name=="diamond.png":     icon_image=diamond_image
-        elif icon_image_name=="starfruit.png":   icon_image=starfruit_image
-        elif icon_image_name=="strawberry.png":  icon_image=strawberry_image
-        elif icon_image_name=="terstar.png":     icon_image=terstar_image
-        elif icon_image_name=="hcheart.png":     icon_image=hcheart_image
-        elif icon_image_name=="beer.png":        icon_image=beer_image
-        elif icon_image_name=="drpepper.png":    icon_image=drpepper_image
+        elif icon_image_name=="minecraft.png":     icon_image=minecraft_image
+        elif icon_image_name=="stardew.png":   icon_image=stardew_image
+        elif icon_image_name=="celeste.png":  icon_image=celeste_image
+        elif icon_image_name=="minecraft1.png":     icon_image=minecraft1_image
         else:                                    icon_image=spoon_image
 
         spoon_name_input = data.get("spoon_name_input","Spoons")

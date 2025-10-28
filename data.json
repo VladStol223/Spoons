@@ -1,231 +1,11 @@
 {
-  "spoons": 12,
+  "spoons": 98,
   "folder_1_tasks": [
     {
-      "task_name": "test",
-      "spoons_needed": 10,
-      "done": 4,
-      "days_till_due_date": -1,
-      "due_date": "2025-10-15T00:00:00",
-      "start_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "end_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "labels": []
-    },
-    {
-      "task_name": "Lab 08",
-      "spoons_needed": 3,
-      "done": 0,
-      "days_till_due_date": 0,
-      "due_date": "2025-10-16T00:00:00",
-      "start_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "end_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "labels": []
-    },
-    {
-      "task_name": "Quiz 07",
-      "spoons_needed": 2,
-      "done": 0,
-      "days_till_due_date": 0,
-      "due_date": "2025-10-16T00:00:00",
-      "start_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "end_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "labels": []
-    },
-    {
-      "task_name": "def bods hw 5",
-      "spoons_needed": 3,
-      "done": 0,
-      "days_till_due_date": 1,
-      "due_date": "2025-10-17T00:00:00",
-      "start_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "end_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "labels": []
-    },
-    {
-      "task_name": "study for def bods",
-      "spoons_needed": 10,
-      "done": 0,
-      "days_till_due_date": 3,
-      "due_date": "2025-10-19T00:00:00",
-      "start_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "end_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "labels": []
-    },
-    {
-      "task_name": "Midterm Peer eval",
-      "spoons_needed": 2,
-      "done": 0,
-      "days_till_due_date": 4,
-      "due_date": "2025-10-20T00:00:00",
-      "start_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "end_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "labels": []
-    },
-    {
-      "task_name": "Project Midterm Report",
-      "spoons_needed": 3,
-      "done": 0,
-      "days_till_due_date": 4,
-      "due_date": "2025-10-20T00:00:00",
-      "start_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "end_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "labels": []
-    },
-    {
-      "task_name": "study for thermo",
-      "spoons_needed": 10,
-      "done": 0,
-      "days_till_due_date": 4,
-      "due_date": "2025-10-20T00:00:00",
-      "start_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "end_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "labels": []
-    },
-    {
-      "task_name": "Exam 1 Points Back",
-      "spoons_needed": 3,
-      "done": 0,
-      "days_till_due_date": 5,
-      "due_date": "2025-10-21T00:00:00",
-      "start_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "end_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "labels": []
-    },
-    {
-      "task_name": "Lab 09",
-      "spoons_needed": 3,
-      "done": 0,
-      "days_till_due_date": 7,
-      "due_date": "2025-10-23T00:00:00",
-      "start_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "end_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "labels": []
-    },
-    {
-      "task_name": "Quiz 08",
-      "spoons_needed": 2,
-      "done": 0,
-      "days_till_due_date": 7,
-      "due_date": "2025-10-23T00:00:00",
-      "start_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "end_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "labels": []
-    },
-    {
       "task_name": "Problem Set 4",
-      "spoons_needed": 6,
+      "spoons_needed": 5,
       "done": 0,
-      "days_till_due_date": 11,
+      "days_till_due_date": 0,
       "due_date": "2025-10-27T00:00:00",
       "start_time": [
         0,
@@ -239,33 +19,14 @@
         0,
         0
       ],
-      "labels": []
-    },
-    {
-      "task_name": "thermo hw 8 reading",
-      "spoons_needed": 1,
-      "done": 0,
-      "days_till_due_date": 11,
-      "due_date": "2025-10-27T00:00:00",
-      "start_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "end_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "labels": []
+      "labels": [],
+      "description": ""
     },
     {
       "task_name": "thermo hw8",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 12,
+      "days_till_due_date": 1,
       "due_date": "2025-10-28T00:00:00",
       "start_time": [
         0,
@@ -279,13 +40,14 @@
         0,
         0
       ],
-      "labels": []
+      "labels": [],
+      "description": ""
     },
     {
       "task_name": "Lab 10",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 14,
+      "days_till_due_date": 3,
       "due_date": "2025-10-30T00:00:00",
       "start_time": [
         0,
@@ -299,13 +61,14 @@
         0,
         0
       ],
-      "labels": []
+      "labels": [],
+      "description": ""
     },
     {
       "task_name": "Quiz 09",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 14,
+      "days_till_due_date": 3,
       "due_date": "2025-10-30T00:00:00",
       "start_time": [
         0,
@@ -319,13 +82,77 @@
         0,
         0
       ],
-      "labels": []
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "Study for fluids quiz 3",
+      "spoons_needed": 10,
+      "done": 0,
+      "days_till_due_date": 6,
+      "due_date": "2025-11-02T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "Study for sysD Exam 2",
+      "spoons_needed": 10,
+      "done": 0,
+      "days_till_due_date": 21,
+      "due_date": "2025-11-17T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "Study for Fluids quiz 3",
+      "spoons_needed": 10,
+      "done": 0,
+      "days_till_due_date": 34,
+      "due_date": "2025-11-30T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
     },
     {
       "task_name": "midsemester eval",
       "spoons_needed": 1,
       "done": 1,
-      "days_till_due_date": -3,
+      "days_till_due_date": -14,
       "due_date": "2025-10-13T00:00:00",
       "start_time": [
         0,
@@ -339,13 +166,14 @@
         0,
         0
       ],
-      "labels": []
+      "labels": [],
+      "description": ""
     },
     {
       "task_name": "hw 7 reading",
       "spoons_needed": 2,
       "done": 2,
-      "days_till_due_date": -3,
+      "days_till_due_date": -14,
       "due_date": "2025-10-13T00:00:00",
       "start_time": [
         0,
@@ -359,13 +187,14 @@
         0,
         0
       ],
-      "labels": []
+      "labels": [],
+      "description": ""
     },
     {
       "task_name": "send in degree map",
       "spoons_needed": 3,
       "done": 3,
-      "days_till_due_date": -3,
+      "days_till_due_date": -14,
       "due_date": "2025-10-13T00:00:00",
       "start_time": [
         0,
@@ -379,13 +208,14 @@
         0,
         0
       ],
-      "labels": []
+      "labels": [],
+      "description": ""
     },
     {
       "task_name": "thermo hw7",
       "spoons_needed": 2,
       "done": 2,
-      "days_till_due_date": -2,
+      "days_till_due_date": -13,
       "due_date": "2025-10-14T00:00:00",
       "start_time": [
         0,
@@ -399,13 +229,14 @@
         0,
         0
       ],
-      "labels": []
+      "labels": [],
+      "description": ""
     },
     {
       "task_name": "thermo participation",
       "spoons_needed": 1,
       "done": 1,
-      "days_till_due_date": -2,
+      "days_till_due_date": -13,
       "due_date": "2025-10-14T00:00:00",
       "start_time": [
         0,
@@ -419,15 +250,268 @@
         0,
         0
       ],
-      "labels": []
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "Thermo Bonus",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": -12,
+      "due_date": "2025-10-15T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "Lab 08",
+      "spoons_needed": 3,
+      "done": 3,
+      "days_till_due_date": -11,
+      "due_date": "2025-10-16T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "Quiz 07",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": -11,
+      "due_date": "2025-10-16T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "def bods hw 5",
+      "spoons_needed": 3,
+      "done": 3,
+      "days_till_due_date": -10,
+      "due_date": "2025-10-17T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "study for def bods",
+      "spoons_needed": 10,
+      "done": 10,
+      "days_till_due_date": -8,
+      "due_date": "2025-10-19T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "study for thermo",
+      "spoons_needed": 10,
+      "done": 10,
+      "days_till_due_date": -7,
+      "due_date": "2025-10-20T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "Midterm Peer eval",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": -7,
+      "due_date": "2025-10-20T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "Project Midterm Report",
+      "spoons_needed": 3,
+      "done": 3,
+      "days_till_due_date": -7,
+      "due_date": "2025-10-20T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "Exam 1 Points Back",
+      "spoons_needed": 7,
+      "done": 7,
+      "days_till_due_date": -6,
+      "due_date": "2025-10-21T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "Lab 09",
+      "spoons_needed": 3,
+      "done": 3,
+      "days_till_due_date": -4,
+      "due_date": "2025-10-23T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "Quiz 08",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": -4,
+      "due_date": "2025-10-23T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "thermo hw 8 reading",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": 0,
+      "due_date": "2025-10-27T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
     }
   ],
   "folder_2_tasks": [
     {
       "task_name": "check if tools work",
       "spoons_needed": 2,
-      "done": 0,
-      "days_till_due_date": -2,
+      "done": 2,
+      "days_till_due_date": -13,
       "due_date": "2025-10-14T00:00:00",
       "start_time": [
         0,
@@ -441,13 +525,14 @@
         0,
         0
       ],
-      "labels": []
+      "labels": [],
+      "description": ""
     },
     {
       "task_name": "connect API Keys",
       "spoons_needed": 2,
-      "done": 0,
-      "days_till_due_date": -1,
+      "done": 2,
+      "days_till_due_date": -12,
       "due_date": "2025-10-15T00:00:00",
       "start_time": [
         0,
@@ -461,13 +546,14 @@
         0,
         0
       ],
-      "labels": []
+      "labels": [],
+      "description": ""
     },
     {
       "task_name": "Work on React Frontend",
       "spoons_needed": 2,
-      "done": 0,
-      "days_till_due_date": -1,
+      "done": 2,
+      "days_till_due_date": -12,
       "due_date": "2025-10-15T00:00:00",
       "start_time": [
         0,
@@ -481,15 +567,35 @@
         0,
         0
       ],
-      "labels": []
-    }
-  ],
-  "folder_3_tasks": [
+      "labels": [],
+      "description": ""
+    },
     {
-      "task_name": "dust the vents",
+      "task_name": "take contract db video",
       "spoons_needed": 2,
-      "done": 0,
-      "days_till_due_date": 5,
+      "done": 2,
+      "days_till_due_date": -7,
+      "due_date": "2025-10-20T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "send yogi video",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": -6,
       "due_date": "2025-10-21T00:00:00",
       "start_time": [
         0,
@@ -503,13 +609,37 @@
         0,
         0
       ],
-      "labels": []
+      "labels": [],
+      "description": ""
     },
+    {
+      "task_name": "check out naomi stuff",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": -6,
+      "due_date": "2025-10-21T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    }
+  ],
+  "folder_3_tasks": [
     {
       "task_name": "Dishwasher",
       "spoons_needed": 2,
       "done": 2,
-      "days_till_due_date": -3,
+      "days_till_due_date": -14,
       "due_date": "2025-10-13T00:00:00",
       "start_time": [
         0,
@@ -523,13 +653,14 @@
         0,
         0
       ],
-      "labels": []
+      "labels": [],
+      "description": ""
     },
     {
       "task_name": "Clean Counters",
       "spoons_needed": 1,
       "done": 1,
-      "days_till_due_date": -3,
+      "days_till_due_date": -14,
       "due_date": "2025-10-13T00:00:00",
       "start_time": [
         0,
@@ -543,35 +674,14 @@
         0,
         0
       ],
-      "labels": []
-    }
-  ],
-  "folder_4_tasks": [
-    {
-      "task_name": "Def Bods Midterm 2",
-      "spoons_needed": 3,
-      "done": 0,
-      "days_till_due_date": 4,
-      "due_date": "2025-10-20T00:00:00",
-      "start_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "end_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "labels": []
+      "labels": [],
+      "description": ""
     },
     {
-      "task_name": "Thermo Midterm 2",
-      "spoons_needed": 3,
-      "done": 0,
-      "days_till_due_date": 5,
+      "task_name": "litter",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": -6,
       "due_date": "2025-10-21T00:00:00",
       "start_time": [
         0,
@@ -585,16 +695,15 @@
         0,
         0
       ],
-      "labels": []
-    }
-  ],
-  "folder_5_tasks": [
+      "labels": [],
+      "description": ""
+    },
     {
-      "task_name": "Get Livi Flowers",
+      "task_name": "counters",
       "spoons_needed": 2,
-      "done": 0,
-      "days_till_due_date": 2,
-      "due_date": "2025-10-18T00:00:00",
+      "done": 2,
+      "days_till_due_date": -6,
+      "due_date": "2025-10-21T00:00:00",
       "start_time": [
         0,
         0,
@@ -607,13 +716,226 @@
         0,
         0
       ],
-      "labels": []
+      "labels": [],
+      "description": ""
     },
     {
-      "task_name": "DO GLASSES",
+      "task_name": "dishes",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": -6,
+      "due_date": "2025-10-21T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "clean fridge",
       "spoons_needed": 5,
+      "done": 5,
+      "days_till_due_date": -5,
+      "due_date": "2025-10-22T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "dust the vents",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": -5,
+      "due_date": "2025-10-22T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "trash",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": -5,
+      "due_date": "2025-10-22T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "trash",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": -3,
+      "due_date": "2025-10-24T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "get gorciers",
+      "spoons_needed": 3,
+      "done": 3,
+      "days_till_due_date": -3,
+      "due_date": "2025-10-24T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "dishes",
+      "spoons_needed": 1,
+      "done": 1,
+      "days_till_due_date": -3,
+      "due_date": "2025-10-24T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    }
+  ],
+  "folder_4_tasks": [
+    {
+      "task_name": "fluids quiz 3",
+      "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 4,
+      "days_till_due_date": 7,
+      "due_date": "2025-11-03T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "System Dynamics Exam 2",
+      "spoons_needed": 2,
+      "done": 0,
+      "days_till_due_date": 22,
+      "due_date": "2025-11-18T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "Fluids Quiz 4",
+      "spoons_needed": 2,
+      "done": 0,
+      "days_till_due_date": 35,
+      "due_date": "2025-12-01T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "Def Bods Midterm 2",
+      "spoons_needed": 3,
+      "done": 3,
+      "days_till_due_date": -7,
       "due_date": "2025-10-20T00:00:00",
       "start_time": [
         0,
@@ -627,13 +949,37 @@
         0,
         0
       ],
-      "labels": []
+      "labels": [],
+      "description": ""
     },
     {
-      "task_name": "Pumpkin Patch Date",
+      "task_name": "Thermo Midterm 2",
       "spoons_needed": 3,
+      "done": 3,
+      "days_till_due_date": -6,
+      "due_date": "2025-10-21T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    }
+  ],
+  "folder_5_tasks": [
+    {
+      "task_name": "DO GLASSES",
+      "spoons_needed": 5,
       "done": 0,
-      "days_till_due_date": 9,
+      "days_till_due_date": -2,
       "due_date": "2025-10-25T00:00:00",
       "start_time": [
         0,
@@ -647,13 +993,41 @@
         0,
         0
       ],
-      "labels": []
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "order items (tags)",
+      "spoons_needed": 2,
+      "done": 0,
+      "days_till_due_date": -2,
+      "due_date": "2025-10-25T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [
+        "lip gloss",
+        "IG pill box",
+        "matching items",
+        "pink aerolight",
+        "wine stopper"
+      ],
+      "description": ""
     },
     {
       "task_name": "get multi-spoon holder",
       "spoons_needed": 1,
       "done": 1,
-      "days_till_due_date": -3,
+      "days_till_due_date": -14,
       "due_date": "2025-10-13T00:00:00",
       "start_time": [
         0,
@@ -667,16 +1041,15 @@
         0,
         0
       ],
-      "labels": []
-    }
-  ],
-  "folder_6_tasks": [
+      "labels": [],
+      "description": ""
+    },
     {
-      "task_name": "check email for reply",
+      "task_name": "Get Livi Flowers",
       "spoons_needed": 2,
-      "done": 0,
-      "days_till_due_date": -1,
-      "due_date": "2025-10-15T00:00:00",
+      "done": 2,
+      "days_till_due_date": -9,
+      "due_date": "2025-10-18T00:00:00",
       "start_time": [
         0,
         0,
@@ -689,13 +1062,79 @@
         0,
         0
       ],
-      "labels": []
+      "labels": [],
+      "description": ""
     },
+    {
+      "task_name": "fluff flowers",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": -5,
+      "due_date": "2025-10-22T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "get flowers for concert",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": -4,
+      "due_date": "2025-10-23T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "Pumpkin Patch Date",
+      "spoons_needed": 3,
+      "done": 3,
+      "days_till_due_date": -1,
+      "due_date": "2025-10-26T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    }
+  ],
+  "folder_6_tasks": [
     {
       "task_name": "Contact Therapist",
       "spoons_needed": 2,
       "done": 2,
-      "days_till_due_date": -4,
+      "days_till_due_date": -15,
       "due_date": "2025-10-12T00:00:00",
       "start_time": [
         0,
@@ -709,22 +1148,86 @@
         0,
         0
       ],
-      "labels": []
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "check if tools work",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": -13,
+      "due_date": "2025-10-14T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "check email for reply",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": -12,
+      "due_date": "2025-10-15T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "email her back",
+      "spoons_needed": 2,
+      "done": 2,
+      "days_till_due_date": -3,
+      "due_date": "2025-10-24T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
     }
   ],
   "daily_spoons": {
     "Mon": 10,
     "Tue": 10,
-    "Wed": 13,
-    "Thu": 15,
+    "Wed": 10,
+    "Thu": 10,
     "Fri": 10,
-    "Sat": 15,
-    "Sun": 15,
+    "Sat": 10,
+    "Sun": 10,
     "spoons": 22
   },
   "theme": "foresty",
-  "icon_image": "strawberry.png",
-  "spoon_name_input": "Strawbs",
+  "icon_image": "spoon.png",
+  "spoon_name_input": "Icons",
   "folder_one": "School",
   "folder_two": "Work",
   "folder_three": "Chores",
@@ -760,17 +1263,15 @@
     ],
     "folder_three": [],
     "folder_four": [],
-    "folder_five": [
-      "labelfdsfg"
-    ],
+    "folder_five": [],
     "folder_six": [
       "gatech",
       "MRDC"
     ]
   },
   "last_save_date": [
-    "2025-10-16",
-    0
+    "2025-10-27",
+    21
   ],
   "sound_toggle": false,
   "spoons_debt_toggle": true,

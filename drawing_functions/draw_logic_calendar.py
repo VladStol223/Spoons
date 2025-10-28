@@ -220,17 +220,43 @@ def draw_range_mode(
         all_tasks.extend(lst)
 
     buckets = {"Overdue": [], "To-Do": [], "Completed": []}
-    for name, spoons, done, _, due_date, *_ in all_tasks:
-        d = due_date.date() if isinstance(due_date, datetime) else due_date
-        if not (start_date <= d <= end_date):
-            continue
-        if done:
-            buckets["Completed"].append(name)
-        else:
-            if d < today:
+    for t in all_tasks:
+        try:
+            if isinstance(t, dict):
+                name = t.get("task_name", "")
+                spoons = int(t.get("spoons_needed", 0))
+                done = int(t.get("done", 0))
+                due_date = t.get("due_date", None)
+            else:
+                name = t[0]
+                spoons = int(t[2]) if len(t) > 2 else 0
+                done = int(t[3]) if len(t) > 3 else 0
+                due_date = t[5] if len(t) > 5 else None
+
+            # Normalize due_date
+            if isinstance(due_date, datetime):
+                d = due_date.date()
+            elif isinstance(due_date, str):
+                try:
+                    d = datetime.fromisoformat(due_date).date()
+                except ValueError:
+                    continue
+            elif isinstance(due_date, date): #type: ignore
+                d = due_date
+            else:
+                continue
+
+            if not (start_date <= d <= end_date):
+                continue
+
+            if done >= spoons and spoons > 0:
+                buckets["Completed"].append(name)
+            elif d < today:
                 buckets["Overdue"].append(name)
             else:
                 buckets["To-Do"].append(name)
+        except Exception:
+            continue
 
     # ----- RENDER TASK NAMES IN EACH COLUMN -----
     text_y = start_y + font.get_height() + 30
@@ -327,7 +353,7 @@ def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offse
                         for ch in chars:
                             cw = font.size(ch)[0]
                             if width + cw > max_w and part:
-                                # emit the piece so far
+                                # emit the piece so farokay 
                                 return part, [w[len(part):]] + list(words_iter)
                             part += ch
                             width += cw
@@ -370,7 +396,7 @@ def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offse
                     return ''
             else:
                 # tuple/list: index 5 is start_time like [hh, mm, ...] in your model
-                st = task[5] if len(task) > 5 else None
+                st = task[6] if len(task) > 5 else None
                 if isinstance(st, (list, tuple)) and len(st) >= 2:
                     hh, mm = int(st[0]), int(st[1])
                 else:
@@ -467,7 +493,7 @@ def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offse
             for t in lst:
                 try:
                     # Try dictionary access first
-                    due_date = t['due_date'] if isinstance(t, dict) else t[4]
+                    due_date = t['due_date'] if isinstance(t, dict) else (t[5] if len(t) > 5 else None)
                     if isinstance(due_date, str):
                         if due_date[:10] == current.strftime("%Y-%m-%d"):
                             day_tasks.append(t)
@@ -509,7 +535,7 @@ def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offse
                         is_complete = task['done'] >= task['spoons_needed']
                     else:
                         name = task[0]
-                        is_complete = task[2] >= task[1]
+                        is_complete = task[3] >= task[2]
                 except (TypeError, IndexError, KeyError):
                     continue
 
@@ -728,7 +754,7 @@ def draw_month_mode(screen, font, bigger_font, smaller_font, darker_background, 
             for t in lst:
                 try:
                     # Support both dict and tuple formats
-                    due_dt = (t['due_date'] if isinstance(t, dict) else t[4])
+                    due_dt = (t['due_date'] if isinstance(t, dict) else (t[5] if len(t) > 5 else None))
                     if isinstance(due_dt, datetime):
                         is_same_day = (due_dt.date() == slot_date.date())
                     else:
@@ -743,7 +769,7 @@ def draw_month_mode(screen, font, bigger_font, smaller_font, darker_background, 
                     else:
                         name = t[0]
                         # tuple/list: done >= spoons_needed
-                        is_complete = t[2] >= t[1]
+                        is_complete = t[3] >= t[2]
                     all_due.append((name, col, is_complete))
                 except Exception:
                     continue

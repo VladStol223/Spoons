@@ -1,5 +1,5 @@
 COLORS = {
-    "BACKGROUND_IMAGE": (-1, -1, -1),
+    "BACKGROUND_IMAGE": (147, 129, 102),
     # WHITE-BLACK GRAY
     "WHITE": (255, 255, 255),
     "LIGHT_IVORY": (255, 248, 231),

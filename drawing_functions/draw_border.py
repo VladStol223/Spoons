@@ -22,10 +22,10 @@ def draw_border(screen, rect, page, background_color, border, is_maximized, scal
     # choose your base scale
     scale = max(3, (6 / scale_factor)) if is_maximized else 3
 
-    hub_border_offset = 82 + (82 * is_maximized) + (scale * 6)      # px from left edge; adjust as needed
-    hotbar_border_offset = 102 + (102 * is_maximized) + (scale * 6)  # px from top edge for inventory page
-    avatar_border_offset = 214 + (214 * is_maximized) + (scale * 12)  # px from right edge for input_tasks vertical border
-    inventory_border_offset = 134 + (134 * is_maximized) + (scale * 12) # px from left edge;
+    hub_border_offset = 100     # px from left edge; adjust as needed
+    hotbar_border_offset = 80  # px from top edge for inventory page   was 120
+    avatar_border_offset = 300  # px from right edge for input_tasks vertical border
+    inventory_border_offset = 134 # px from left edge;
     
     # deterministic RNG per border
     seed = x + (y << 8) + (w << 16) + (h << 24)
@@ -155,7 +155,7 @@ def draw_border(screen, rect, page, background_color, border, is_maximized, scal
             )
             tx += ht.get_width()
 
-        if page == "": #avatar border
+        if page in "":  #avatar border    ("input_spoons", "input_tasks", "manage_tasks"):
             # 5a-2) vertical slice at 150px from the right
             y_start = tc_h//2 + edge_h//2              # same “hub” top
             y_end   = hotbar_border_offset - edge_h//2
@@ -176,6 +176,7 @@ def draw_border(screen, rect, page, background_color, border, is_maximized, scal
                         (right_x, hub_border_offset - edge_h//4 - edge_h//2 + 3))
         
     if page in ("input_tasks"):
+        right_x = sw - 250
         # Align with the same top/bottom bounds as hub border
         y_start2 = hotbar_border_offset + edge_h // 2          # starts below inventory border
         y_end2   = sh - (tc_h + edge_h // 2)                  # stop where hub border stops

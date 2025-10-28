@@ -129,7 +129,6 @@ def sync_and_reload(flag):
         print(f"[copyparty] fetching online data.json")
         download_data_json_if_present()
         print(f"[copyparty] refreshing local data with downloaded data.json")
-
     (
         spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,  
         exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image,
@@ -165,10 +164,10 @@ def compute_spoons_needed_today(*task_lists):
                                 total_needed += need
                 else:
                     # tuple/list: [name, spoons_needed, done, days_left, due_dt, ...]
-                    due_dt = t[4]
+                    due_dt = t[5]
                     due_day = due_dt.date() if hasattr(due_dt, "date") else due_dt
                     if due_day and due_day <= today:
-                        need = int(t[1]) - int(t[2])
+                        need = int(t[2]) - int(t[3])
                         if need > 0:
                             total_needed += need
             except Exception:
@@ -180,8 +179,8 @@ def _decrement_days(lst, n_days):
         return
     for task in lst:
         try:
-            if task[3] > 0:
-                task[3] = max(0, task[3] - n_days)
+            if task[4] > 0:
+                task[4] = max(0, task[4] - n_days)
         except Exception:
             pass
 
@@ -238,7 +237,6 @@ from drawing_functions.draw_logic_manage_tasks import draw_complete_tasks, logic
 from drawing_functions.draw_logic_calendar import draw_calendar, logic_calendar
 from drawing_functions.draw_logic_social import draw_social, logic_social
 from drawing_functions.logic_task_toggle import logic_task_toggle
-from drawing_functions.draw_logic_inventory import draw_inventory, logic_inventory  
 from drawing_functions.draw_logic_settings import draw_settings, logic_settings
 from drawing_functions.draw_border import draw_border
 from drawing_functions.draw_hotbar import draw_hotbar
@@ -406,8 +404,9 @@ while running:
 
     spoons_needed_today = compute_spoons_needed_today(homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list)
 
-    if background_color == (-1,-1,-1):
-            screen.blit(light_academia_background, (0,0))
+    if background_color == (147, 129, 102):
+        screen.fill(background_color)
+        #screen.blit(light_academia_background, (0,0))
     else:
         screen.fill(background_color)
         hub_background_color = background_color
@@ -426,8 +425,8 @@ while running:
             draw_input_spoons(screen, spoons, spoon_name_input, delta_time, icon_image, input_active, background_color, x_offset=140)
         
     elif page == "input_tasks":
-        draw_input_tasks(screen, spoons, current_task, current_spoons, input_active, 
-                         folder, task_month, task_day, time_toggle_on, recurring_toggle_on,  start_time, end_time,
+        draw_input_tasks(screen, spoons, current_task, current_description, current_spoons, input_active, 
+                         folder, task_month, task_day, description_toggle_on, time_toggle_on, recurring_toggle_on,  start_time, end_time,
                          done_button_color, background_color, add_tasks_choose_folder_color, add_tasks_chosen_folder_color, icon_image, spoon_name_input,
                          task_how_often, task_how_long, task_repetitions_amount,
                          folder_one, folder_two, folder_three, folder_four, folder_five, folder_six
@@ -493,7 +492,7 @@ while running:
         draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, icon_image,manillaFolder_name,spoon_name_input, inventory_tab, background_color, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open)
 
     if page not in ("calendar", "social", "settings"):
-        draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page, spoons_needed_today, spoons_used_today)
+        draw_hotbar(screen, spoons, icon_image, spoon_name_input, daily_spoons, spoons_needed_today, spoons_used_today)
 
     draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
         
@@ -608,7 +607,7 @@ while running:
             spoons, daily_spoons, page, input_active = logic_input_spoons(event, daily_spoons, spoons, input_active)
             
         elif page == "input_tasks":
-            input_active,page,folder,time_toggle_on, recurring_toggle_on,current_task,current_spoons,task_month,task_day,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list,task_how_often,task_how_long,task_repetitions_amount, start_time = logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month,task_day,task_how_often,task_how_long,task_repetitions_amount,time_toggle_on,recurring_toggle_on,max_days,input_active,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list, start_time)
+            input_active,page,folder, description_toggle_on, time_toggle_on, recurring_toggle_on,current_task, current_description, current_spoons,task_month,task_day,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list,task_how_often,task_how_long,task_repetitions_amount, start_time = logic_input_tasks(event,screen,current_task, current_description, current_spoons,folder,task_month,task_day,task_how_often,task_how_long,task_repetitions_amount, description_toggle_on, time_toggle_on,recurring_toggle_on,max_days,input_active,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list, start_time)
         elif page == "manage_tasks":
             page = logic_manage_tasks_hub(event, page, folder_rects)
         elif page == "complete_homework_tasks":

@@ -16,7 +16,27 @@ current_spoons = ""
 # [name, spoons, completed, days_left, due_date, start_time, end_time, labels]
 IDX_NAME = 0; IDX_SPOONS = 1; IDX_COMPLETED = 2; IDX_DAYS_LEFT = 3; IDX_DUE_DATE = 4; IDX_START_TIME = 5; IDX_END_TIME = 6; IDX_LABELS = 7
 
+normal_layout_heights = {
+    "task_label":                  0.28,    # “Enter task name:”
+    "task_input_line":             0.35,   # y=195/600
+    "due_date_label":              0.51,   # “Enter due date:” & “Enter Start date:”
+    "due_date_input_line":         0.58,   # y=305/600
+    "spoons_label":                0.74,   # “Enter spoons needed:”
+    "spoons_input_line":           0.81,   # y=420/600
+    "description_label":           0.37,   # “Enter description:”
+    "description_input_line":      0.47,   # y=255/600
+}
 
+description_layout_heights = {
+    "task_label":                  0.20,    # “Enter task name:”
+    "task_input_line":             0.27,   # y=195/600
+    "description_label":           0.37,   # “Enter description:”
+    "description_input_line":      0.44,   # y=255/600
+    "due_date_label":              0.60,   # “Enter due date:” & “Enter Start date:”
+    "due_date_input_line":         0.67,   # y=305/600
+    "spoons_label":                0.77,   # “Enter spoons needed:”
+    "spoons_input_line":           0.84,   # y=420/600
+}
 """
 Summary:
     Draws the task input interface on the given screen, including task name, spoons needed, due date, and time options.
@@ -45,24 +65,8 @@ Returns:
 TASK_NAME_REF = "thisisthecharacterlimit?ye"
 MAX_TASK_PIXEL_WIDTH = font.size(TASK_NAME_REF)[0]  # uses your existing `font`
 
-layout_heights = {
-    "task_label":                  0.28,    # “Enter task name:”
-    "task_input_line":             0.35,   # y=195/600
-    "due_date_label":              0.51,   # “Enter due date:” & “Enter Start date:”
-    "due_date_input_line":         0.58,   # y=305/600
-    "spoons_label":                0.74,   # “Enter spoons needed:”
-    "spoons_input_line":           0.81,   # y=420/600
-
-    "time_toggle_label":           0.100,   # y=60/600
-
-    "repetitions_amount_label":    0.65,   # “Repetitions:”
-    "repetitions_input_line":      0.70,   # y=420/600
-    "how_long_label":              0.55,   # “How Long:”
-    "how_long_input_line":         0.553,   # y=290/600
-}
-
-def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active, 
-                     folder, task_month, task_day, time_toggle_on, recurring_toggle_on,
+def draw_input_tasks(screen, spoons, current_task, current_description, current_spoons, input_active, 
+                     folder, task_month, task_day, description_toggle_on, time_toggle_on, recurring_toggle_on,
                      start_time, end_time, done_button_color, background_color,
                      add_tasks_choose_folder_color, add_tasks_chosen_folder_color,
                      icon_image, spoon_name_input, task_how_often, task_how_long,
@@ -72,7 +76,12 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
     global month_typed, day_typed, caret_task, caret_month, caret_day, caret_spoons
     global start_time_typed, how_often_typed, how_long_typed, repetitions_typed
     global caret_start_time, caret_how_often, caret_how_long, caret_repetitions
+    global caret_description
 
+    if description_toggle_on:
+        layout_heights = description_layout_heights
+    else:
+        layout_heights = normal_layout_heights
 
     if isinstance(current_spoons, int):
         display_spoons = "" if current_spoons == 0 else str(current_spoons)
@@ -84,7 +93,7 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
 
     r, g, b = background_color
     folder_list = ["homework", "chores", "work", "misc", "exams", "projects"]
-    done_button_y_pos = 144 + 60 * folder_list.index(folder)
+    done_button_y_pos = 114 + 70 * folder_list.index(folder)
 
     done_button_color     = tuple(max(0,  c - 20) for c in (r, g, b))
     due_date_infill_color = tuple(min(255, c + 20) for c in (r, g, b))
@@ -92,6 +101,8 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
     task_input_box = pygame.Rect(250, y_pos["task_input_line"], 300, 50)
     done_button       = pygame.Rect(630, done_button_y_pos,50, 32)
     arrow_points = [(done_button.right, done_button.top - 10),(done_button.right + 30, done_button.centery),(done_button.right, done_button.bottom + 10)]
+
+    description_input_box = pygame.Rect(225, y_pos.get("description_input_line", y_pos["task_input_line"]), 350, 80)
 
     # Mirror layout math from draw_input_tasks so click/hover regions match visuals
     _recurring_vshift = y_pos["spoons_input_line"] - y_pos["due_date_input_line"]
@@ -132,12 +143,15 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
 
     draw_complete_tasks_folders(screen,folder,folder_one,folder_two,folder_three,folder_four,folder_five,folder_six, homework_tasks_list,chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, manillaFolder)
 
-    time_btn_rect = time_button.get_rect(topleft=(120,140))
-    recurring_btn_rect = recurring_button.get_rect(topleft=(120,190))
+    description_btn_rect = description_button.get_rect(topleft=(120,100))
+    time_btn_rect = time_button.get_rect(topleft=(120,150))
+    recurring_btn_rect = recurring_button.get_rect(topleft=(120,200))
     def _draw_toggle_aura(rect): 
         aura = pygame.Surface((rect.width + 8, rect.height + 8), pygame.SRCALPHA); pygame.draw.rect(aura, (0,255,0,70), aura.get_rect(), border_radius=8); screen.blit(aura, (rect.x - 4, rect.y - 4))
+    if description_toggle_on: _draw_toggle_aura(description_btn_rect)
     if time_toggle_on: _draw_toggle_aura(time_btn_rect)
     if recurring_toggle_on: _draw_toggle_aura(recurring_btn_rect)
+    screen.blit(description_button, description_btn_rect.topleft)
     screen.blit(time_button, time_btn_rect.topleft)
     screen.blit(recurring_button, recurring_btn_rect.topleft)
 
@@ -233,6 +247,30 @@ def draw_input_tasks(screen, spoons, current_task, current_spoons, input_active,
         else:
             txt = font.render(str(day_value), True, BLACK) #type: ignore
             screen.blit(txt, (x0, y0))
+
+    if description_toggle_on:
+        screen.blit(font.render("Description:", True, WHITE), (335, y_pos["description_label"]))  # type: ignore
+        # draw the box background & border only
+        draw_input_box(screen, description_input_box, input_active == "description", "", DARK_SLATE_GRAY, DARK_SLATE_GRAY, False, background_color, "light")  # type: ignore
+
+        # wrap and draw up to two lines
+        x0 = description_input_box.x + 10
+        y0 = description_input_box.y + 8
+        max_w = description_input_box.width - 12
+        line_h = font.get_height()
+
+        segs = _wrap_segments_by_char(current_description, font, max_w, max_lines=2)
+        draw_y = y0
+        for _, _, seg_txt in segs:
+            screen.blit(font.render(seg_txt, True, BLACK), (x0, draw_y))  # type: ignore
+            draw_y += line_h
+
+        # caret on the proper wrapped line
+        if input_active == "description" and _caret_visible():
+            cx, cy = _caret_pos_for_wrapped(current_description, max(0, min(caret_description, len(current_description))), font, x0, y0, max_w, line_h)
+            cx = min(cx, description_input_box.right - 6)
+            pygame.draw.line(screen, LIGHT_GRAY, (cx, cy), (cx, cy + line_h), 2)  # type: ignore
+
 
     if recurring_toggle_on:
         screen.blit(font.render("Spoons:", True, WHITE),(spoon_input_box.x - 15, y_pos["spoons_label"])) #type: ignore
@@ -407,6 +445,7 @@ caret_start_time = 0
 caret_how_often = 0
 caret_how_long = 0
 caret_repetitions = 0
+caret_description = 0
 
 def _caret_visible(): return (pygame.time.get_ticks() // 500) % 2 == 0
 def _caret_x(font_obj, text, start_x): return start_x + font_obj.size(text)[0]
@@ -418,6 +457,56 @@ def _index_from_click(font_obj, text, click_x, start_x):
         x += w
     return len(text)
 
+def _wrap_segments_by_char(text, font_obj, max_w, max_lines=2):
+    """Return a list of (start_idx, end_idx, seg_text) wrapped by characters to fit max_w, capped at max_lines."""
+    segs = []
+    if not text:
+        return [(0, 0, "")]
+    line_start = 0
+    line = ""
+    for j, ch in enumerate(text):
+        test_line = line + ch
+        if font_obj.size(test_line)[0] <= max_w:
+            line = test_line
+        else:
+            segs.append((line_start, j, line))
+            if len(segs) >= max_lines - 1:
+                # last allowed line consumes the rest
+                segs.append((j, len(text), text[j:]))
+                return segs[:max_lines]
+            line = ch
+            line_start = j
+    segs.append((line_start, len(text), line))
+    return segs[:max_lines]
+
+def _caret_pos_for_wrapped(text, caret_idx, font_obj, x0, y0, max_w, line_height):
+    """Map a linear caret_idx into (cx, cy) for wrapped two-line text."""
+    segs = _wrap_segments_by_char(text, font_obj, max_w, max_lines=2)
+    if not segs:
+        return x0, y0
+    # find which segment owns caret
+    for line_i, (s, e, seg_txt) in enumerate(segs):
+        if caret_idx < s:  # before current line -> place at start of this line
+            return x0, y0 + line_i * line_height
+        if s <= caret_idx <= e:
+            left = seg_txt[:max(0, caret_idx - s)]
+            return _caret_x(font_obj, left, x0), y0 + line_i * line_height
+    # after last char -> end of last line
+    last_s, last_e, last_txt = segs[-1]
+    return _caret_x(font_obj, last_txt, x0), y0 + (len(segs) - 1) * line_height
+
+def _index_from_click_wrapped(text, click_x, click_y, font_obj, x0, y0, max_w, line_height):
+    """Inverse of caret map for mouse clicks into wrapped text region."""
+    segs = _wrap_segments_by_char(text, font_obj, max_w, max_lines=2)
+    if not segs:
+        return 0
+    # pick line by y
+    rel_y = max(0, click_y - y0)
+    line_i = min(rel_y // line_height, len(segs) - 1)
+    s, e, seg_txt = segs[int(line_i)]
+    # index within line using single-line picker
+    idx_in_line = _index_from_click(font_obj, seg_txt, click_x, x0)
+    return min(e, s + idx_in_line)
 
 # --- Helpers ---
 def _month_from_typed(typed, months_list):
@@ -495,7 +584,7 @@ def _commit_positive_int(global_state, key_name, current_val, default_val=1, min
     global_state[key_name] = ""
     return current_val
 
-def _add_task_entry(current_task, current_spoons, folder, task_date, current_time, lists_tuple,
+def _add_task_entry(current_task, current_description, current_spoons, folder, task_date, current_time, lists_tuple,
                     recurring_toggle_on, task_how_often, task_how_long, task_repetitions_amount,
                     start_time):
     (homework_tasks_list, chores_tasks_list, work_tasks_list,
@@ -518,20 +607,38 @@ def _add_task_entry(current_task, current_spoons, folder, task_date, current_tim
         elif folder == "exams": exams_tasks_list.append(entry)
         elif folder == "projects": projects_tasks_list.append(entry)
 
+    new_entry = [
+        current_task,                # 0 name
+        current_description.strip(), # 1 description (new)
+        int(current_spoons),         # 2 spoons
+        0,                           # 3 completed flag
+        days_till_due,               # 4 days_left
+        task_date,                   # 5 due_date
+        start_time_4,                # 6 start_time
+        [0,0,0,0],                   # 7 end_time (placeholder)
+        []                           # 8 labels
+    ]
+
     if recurring_toggle_on:
         for i in range(task_repetitions_amount):
             actual_date = task_date + timedelta(days=i * task_how_often)
             days_left = (actual_date - current_time).days + 1
-            _push([current_task, int(current_spoons), 0, days_left, actual_date,
-                   start_time_4, [0,0,0,0], []])
+            new_entry[4] = days_left
+            new_entry[5] = actual_date
+            _push(new_entry.copy())
     else:
-        _push([current_task, int(current_spoons), 0, days_till_due, task_date,
-               start_time_4, [0,0,0,0], []])
+        _push(new_entry)
 
-def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month,task_day,task_how_often,task_how_long,task_repetitions_amount,time_toggle_on,recurring_toggle_on,max_days,input_active,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list, start_time):
+def logic_input_tasks(event,screen,current_task, current_description, current_spoons,folder,task_month,task_day,task_how_often,task_how_long,task_repetitions_amount, description_toggle_on, time_toggle_on,recurring_toggle_on,max_days,input_active,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list, start_time):
     global month_typed, day_typed, caret_task, caret_month, caret_day, caret_spoons
     global start_time_typed, how_often_typed, how_long_typed, repetitions_typed
     global caret_start_time, caret_how_often, caret_how_long, caret_repetitions
+    global caret_description
+
+    if description_toggle_on:
+        layout_heights = description_layout_heights
+    else:
+        layout_heights = normal_layout_heights
 
     # default start_time -> current time if not provided
     try:
@@ -545,14 +652,17 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
     y_pos = {k: int(v * screen_h) for k, v in layout_heights.items()}
 
     folder_list = ["homework", "chores", "work", "misc", "exams", "projects"]
-    done_button_y_pos = 144 + 60 * folder_list.index(folder)
+    done_button_y_pos = 114 + 70 * folder_list.index(folder)
 
     task_input_box = pygame.Rect(250, y_pos["task_input_line"], 300, 50)
 
     # Needed in this scope too
     done_button = pygame.Rect(630, done_button_y_pos, 50, 32)
-    time_btn_rect = time_button.get_rect(topleft=(120, 140))
-    recurring_btn_rect = recurring_button.get_rect(topleft=(120, 190))
+    description_btn_rect = description_button.get_rect(topleft=(120, 100))
+    time_btn_rect = time_button.get_rect(topleft=(120, 150))
+    recurring_btn_rect = recurring_button.get_rect(topleft=(120, 200))
+
+    description_input_box = pygame.Rect(225, y_pos.get("description_input_line", y_pos["task_input_line"]), 350, 80)
 
     _recurring_vshift = y_pos["spoons_input_line"] - y_pos["due_date_input_line"]
     _SPOONS_X_BASE = 375
@@ -612,7 +722,9 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
 
 
     if event.type == pygame.MOUSEBUTTONDOWN:
-        if time_btn_rect.collidepoint(event.pos):
+        if description_btn_rect.collidepoint(event.pos):
+            description_toggle_on = not description_toggle_on
+        elif time_btn_rect.collidepoint(event.pos):
             time_toggle_on = not time_toggle_on
         elif recurring_btn_rect.collidepoint(event.pos):
             if input_active == "month": task_month = _commit_month({"month_typed": month_typed}, task_month, months); month_typed = ""
@@ -670,6 +782,13 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
             if task_input_box.collidepoint(event.pos):
                 input_active = "task"
                 caret_task = _index_from_click(font, current_task, event.pos[0], task_input_box.x + 10)
+            elif description_input_box.collidepoint(event.pos):
+                input_active = "description"
+                x0 = description_input_box.x + 10
+                y0 = description_input_box.y + 8
+                max_w = description_input_box.width - 12
+                line_h = font.get_height()
+                caret_description = _index_from_click_wrapped(current_description, event.pos[0], event.pos[1], font, x0, y0, max_w, line_h)
             elif month_rect_edit.collidepoint(event.pos):
                 input_active = "month"
                 caret_month = _index_from_click(font, month_typed, event.pos[0], month_rect_full.x + 10)
@@ -772,12 +891,12 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
             if current_task and current_spoons:
                 task_date = datetime(current_time.year, task_month, int(task_day))
                 _add_task_entry(
-                    current_task, current_spoons, folder, task_date, current_time,
+                    current_task, current_description, current_spoons, folder, task_date, current_time,
                     (homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list),
                     recurring_toggle_on, task_how_often, task_how_long, task_repetitions_amount,
                     start_time
                 )
-                current_task = ""; current_spoons = ""; input_active = False; month_typed = ""; day_typed = ""
+                current_task = ""; current_description = ""; current_spoons = ""; input_active = False; month_typed = ""; day_typed = ""
 
         # Folder selection (unchanged)
         for f_key, rect in reversed(ctf_mod.folder_rects):
@@ -873,6 +992,34 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
                     if font.size(candidate)[0] <= MAX_TASK_PIXEL_WIDTH:
                         current_task = candidate
                         caret_task += 1
+
+        elif input_active == "description":
+            if event.key == pygame.K_RETURN:
+                input_active = "month"  # or next logical field
+            elif event.key == pygame.K_BACKSPACE:
+                if caret_description > 0:
+                    current_description = current_description[:caret_description-1] + current_description[caret_description:]
+                    caret_description -= 1
+            elif event.key == pygame.K_DELETE:
+                if caret_description < len(current_description):
+                    current_description = current_description[:caret_description] + current_description[caret_description+1:]
+            elif event.key == pygame.K_LEFT:
+                if caret_description > 0: caret_description -= 1
+            elif event.key == pygame.K_RIGHT:
+                if caret_description < len(current_description): caret_description += 1
+            elif event.key == pygame.K_HOME:
+                caret_description = 0
+            elif event.key == pygame.K_END:
+                caret_description = len(current_description)
+            else:
+                ch = event.unicode
+                if ch:
+                    candidate = current_description[:caret_description] + ch + current_description[caret_description:]
+                    max_w = description_input_box.width - 12
+                    segs = _wrap_segments_by_char(candidate, font, max_w, max_lines=3)  # ask for 3 to detect overflow
+                    if len(segs) <= 2:  # accept only if it still fits in two lines
+                        current_description = candidate
+                        caret_description += 1
 
         elif input_active == "month":
             if event.key == pygame.K_RETURN:
@@ -996,12 +1143,12 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
                 if current_task and current_spoons:
                     task_date = datetime(current_time.year, task_month, int(task_day))
                     _add_task_entry(
-                        current_task, current_spoons, folder, task_date, current_time,
+                        current_task, current_description, current_spoons, folder, task_date, current_time,
                         (homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list),
                         recurring_toggle_on, task_how_often, task_how_long, task_repetitions_amount,
                         start_time
                     )
-                    current_task = ""; current_spoons = ""; input_active = "task"; month_typed = ""; day_typed = ""; caret_task = 0; caret_spoons = 0
+                    current_task = ""; current_description = ""; current_spoons = ""; input_active = "task"; month_typed = ""; day_typed = ""; caret_task = 0; caret_spoons = 0
             elif event.key == pygame.K_BACKSPACE:
                 if caret_spoons > 0:
                     current_spoons = current_spoons[:caret_spoons-1] + current_spoons[caret_spoons:]
@@ -1026,4 +1173,4 @@ def logic_input_tasks(event,screen,current_task,current_spoons,folder,task_month
                 current_spoons = "10"; caret_spoons = min(caret_spoons, len(current_spoons))
 
 
-    return (input_active,page,folder,time_toggle_on,recurring_toggle_on,current_task,current_spoons,task_month,task_day,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list,task_how_often,task_how_long,task_repetitions_amount, start_time)
+    return (input_active,page,folder,description_toggle_on,time_toggle_on,recurring_toggle_on,current_task,current_description, current_spoons,task_month,task_day,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list,task_how_often,task_how_long,task_repetitions_amount, start_time)

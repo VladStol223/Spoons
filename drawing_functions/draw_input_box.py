@@ -47,23 +47,43 @@ def draw_input_box(
     sw, sh = screen.get_size()
     font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(sh * fontsize))
 
-    # 1) Determine border color and render text
+    # 1) Determine border color and font
     if active == "small_font":
-        text_surface = small_font.render(str(text), True, BLACK)  # type: ignore
+        render_font = small_font
         color = inactive_color
     else:
+        render_font = font
         color = active_color if active else inactive_color
-        text_surface = font.render(str(text), True, BLACK)  # type: ignore
 
-    # 2) Compute text position
-    if centered:
-        text_x = rect.x + (rect.width - text_surface.get_width()) // 2
-        text_y = rect.y + 12 - pullUp
+    # 2) Wrap text automatically for multiline support
+    words = str(text).split(" ")
+    lines = []
+    current_line = ""
+    max_width = rect.width - 10  # padding
+
+    for word in words:
+        test_line = current_line + (" " if current_line else "") + word
+        if render_font.size(test_line)[0] <= max_width:
+            current_line = test_line
+        else:
+            lines.append(current_line)
+            current_line = word
+    if current_line:
+        lines.append(current_line)
+
+    # 3) Limit to two lines max (for your two-line box)
+    lines = lines[:2]
+
+    # 4) Compute y positions to center vertically if single line; top align if two lines
+    line_height = render_font.get_height()
+    if len(lines) == 1:
+        total_text_height = line_height
+        start_y = rect.y + (rect.height - total_text_height) // 2
     else:
-        text_x = rect.x + 5
-        text_y = rect.y + 12 - pullUp
+        total_text_height = line_height * len(lines)
+        start_y = rect.y + 5  # top padding for multiline
 
-    # 3) If infill is requested, compute fill color and draw filled rect
+    # 5) If infill is requested, compute fill color and draw background
     if infill and background_color is not None:
         if infill == "light":
             fill_color = adjust_color(background_color, 20)
@@ -75,12 +95,18 @@ def draw_input_box(
             fill_color = adjust_color(background_color, -40)
         else:
             fill_color = None
-
         if fill_color:
             pygame.draw.rect(screen, fill_color, rect)
 
-    # 4) Blit the text on top of any fill
-    screen.blit(text_surface, (text_x, text_y))
+    # 6) Draw each line
+    y = start_y
+    for line in lines:
+        if centered:
+            text_x = rect.x + (rect.width - render_font.size(line)[0]) // 2
+        else:
+            text_x = rect.x + 5
+        screen.blit(render_font.render(line, True, BLACK), (text_x, y)) #type: ignore
+        y += line_height + 2
 
-    # 5) Draw border around the input box
+    # 7) Draw border
     pygame.draw.rect(screen, color, rect, 4)

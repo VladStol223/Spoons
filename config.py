@@ -70,29 +70,38 @@ image_categories = {
         'settings_icon':    ('settingsIcon.png',(28,28)),
     },
     'spoonIcons': {
+        'exclamation_mark':   ('exclamation_mark.png',(33,33)),
         'spoon_image':        ('spoon.png',(33,33)),
-        'battery_image':      ('greenBattery.png',(33,33)),
+        'spoon_image_5':      ('spoon_5.png',(33,33)),
+        'spoon_image_25':     ('spoon_25.png',(33,33)),
+        'stardew_image':      ('stardew.png', (33,33)),
+        'stardew_image_5':    ('stardew_5.png', (33,33)),
+        'stardew_image_25':   ('stardew_25.png', (33,33)),
+        'celeste_image':      ('celeste.png', (33,33)),
+        'celeste_image_5':    ('celeste_5.png', (33,33)),
+        'celeste_image_25':   ('celeste_25.png', (33,33)),
+        'minecraft_image':    ('minecraft.png',(33,33)),
+        'minecraft_image_5':  ('minecraft_5.png',(33,33)),
+        'minecraft_image_25': ('minecraft_25.png',(33,33)),
+        'minecraft1_image':   ('minecraft1.png',(33,33)),
+        'minecraft1_image_5': ('minecraft1_5.png',(33,33)),
+        'minecraft1_image_25':('minecraft1_25.png',(33,33)),
         'star_image':         ('star.png',(33,33)),
-        'potion_image':       ('potion.png',(33,33)),
-        'yourdidit_image':    ('yourdidit.png',(33,33)),
+        'star_image_5':       ('star_5.png',(33,33)),
+        'star_image_25':      ('star_25.png',(33,33)),
         'mike_image':         ('mike.png', (33,33)),
-        'lightningface_image':('lightningface.png', (33,33)),
-        'diamond_image' :     ('diamond.png', (33,33)),
-        'starfruit_image':    ('starfruit.png', (33,33)),
-        'strawberry_image':   ('strawberry.png', (33,33)),
-        'terstar_image':      ('terstar.png', (33,33)),
-        'hcheart_image':            ('hcheart.png', (33, 33)),
-        'beer_image':               ('beer.png', (33,33)),
-        'drpepper_image':           ('drpepper.png', (33,33)), 
+        'mike_image_5':       ('mike_5.png', (33,33)),
+        'mike_image_25':      ('mike_25.png', (33,33)),
     },
     'restIcons': {
-        'short_rest_icon': ('shortRestIcon.png',(790,790)),
-        'half_rest_icon':  ('halfRestIcon.png',(864,864)),
-        'full_rest_icon':  ('fullRestIcon.png',(820,820)),
+        'short_rest_icon': ('shortRestIcon.png',(90,90)),
+        'half_rest_icon':  ('halfRestIcon.png',(90,90)),
+        'full_rest_icon':  ('fullRestIcon.png',(900,900)),
     },
     'hotbar': {
         'coin_image': ('coin.png',(15,17)),
         'xp_bar':     ('xpBar.png',(155,30)),
+        'fatigue_bar': ('fatigueBar.png',(348,34)),
     },
     'manillaFolder': {
         'manilla_folder':('manillaFolder.png',(150,62)),
@@ -146,6 +155,7 @@ image_categories = {
     'toggleButtons': {
         'recurringButton': ('recurringToggleButton.png', (40,40)),
         'timeButton': ('timeToggleButton.png', (40,40)),
+        'descriptionButton': ('descriptionToggleButton.png', (40,40)),
         'ConfirmButton': ('confirmButton.png', (120,40)),
         'CancelButton': ('cancelButton.png', (120,40)),
         'floppyDiskUpload': ('floppyDiskUpload.png', (60,60)),
@@ -154,6 +164,7 @@ image_categories = {
         'floppyDiskRedX': ('floppyDiskUploadRedX.png', (60,60)),
         'floppyDiskDots': ('floppyDiskUploadDots.png', (60,60)),
         'soundButton': ('soundButton.png', (60,60)),
+        'infoButton': ('infoToggle.png', (30,30)),
     },
 }
 
@@ -204,8 +215,8 @@ hubIcons = "default"
 hubIcons_name = "default"
 spoonIcons = ""
 spoonIcons_name = ""
-restIcons = ""
-restIcons_name = ""
+restIcons = "blackCats"
+restIcons_name = "blackCats"
 hotbar = ""
 hotbar_name = ""
 manillaFolder = "dark"
@@ -281,21 +292,21 @@ calendar_icon     = hubIcons['calendar_icon']
 social_icon         = hubIcons['social_icon']
 settings_icon     = hubIcons['settings_icon']
 
+exclamation_mark   = spoonIcons['exclamation_mark']
 # — spoon icons —
 spoon_image           = spoonIcons['spoon_image']
-battery_image         = spoonIcons['battery_image']
-star_image            = spoonIcons['star_image']
-potion_image          = spoonIcons['potion_image']
-yourdidit_image       = spoonIcons['yourdidit_image']
+
+minecraft_image         = spoonIcons['minecraft_image']
+
+minecraft1_image        = spoonIcons['minecraft1_image']
+
+stardew_image       = spoonIcons['stardew_image']
+
+celeste_image      = spoonIcons['celeste_image']
+
+star_image       = spoonIcons['star_image']
+
 mike_image            = spoonIcons['mike_image']
-lightningface_image   = spoonIcons['lightningface_image']
-diamond_image         = spoonIcons['diamond_image']
-starfruit_image       = spoonIcons['starfruit_image']
-strawberry_image      = spoonIcons['strawberry_image']
-terstar_image            = spoonIcons['terstar_image']
-hcheart_image            = spoonIcons['hcheart_image']
-beer_image            = spoonIcons['beer_image']
-drpepper_image            = spoonIcons['drpepper_image']
 
 # — rest icons —
 short_rest = restIcons['short_rest_icon']
@@ -305,6 +316,7 @@ full_rest  = restIcons['full_rest_icon']
 # — hotbar icons —
 coin_image = hotbar['coin_image']
 xp_bar_image     = hotbar['xp_bar']
+fatigue_bar_image = hotbar['fatigue_bar']
 
 # — manilla folder icons —
 manilla_folder = manillaFolder['manilla_folder']
@@ -363,9 +375,11 @@ inventory_icons_extras = inventoryIcons['extras']
 #toggle buttons
 recurring_button = toggleButtons['recurringButton']
 time_button = toggleButtons['timeButton']
+description_button = toggleButtons['descriptionButton']
 confirm_edit_button = toggleButtons['ConfirmButton']
 cancel_edit_button = toggleButtons['CancelButton']
 sound_button = toggleButtons['soundButton']
+info_button = toggleButtons['infoButton']
 
 #floppy disk upload buttons
 floppy_disk_upload = toggleButtons['floppyDiskUpload']
@@ -536,6 +550,7 @@ work_fol_color = RED# type: ignore
 misc_fol_color = GOLD# type: ignore
 
 current_task = ""
+current_description = ""
 current_spoons = 0
 task_buttons_homework = []
 task_buttons_chores = []
@@ -572,6 +587,7 @@ spoon_name = "Spoons"
 page = "login"
 folder = "homework"
 running = True
+description_toggle_on = False
 time_toggle_on = False
 recurring_toggle_on = False
 start_time = [0, 0, 0, 0]  # Representing "00:00"

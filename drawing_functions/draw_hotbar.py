@@ -1,291 +1,236 @@
 import pygame
 from datetime import datetime
 from config import *
-import math
-from math import hypot
 
 # pre-create font so you’re not reloading every frame
 font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.06))
-coin_scale = 1.8
-xp_scale = 1.4
 
 
-# Initial avatar position
-avatar_x = 860
-avatar_y = 60
-avatar_speed = 1
+def draw_hotbar(screen, spoons, icon_image, spoon_name_input, daily_spoons, today_needed, spoons_used_today):
+    # ----------------------------
+    # Hover Animation Settings
+    # ----------------------------
+    hover_speed = 4.0       # Higher = faster slide
+    hover_offset_bar = 45   # How far the hotbar (spoons + fatigue bar) moves upward
+    hover_offset_text = 30  # How far the stats text moves upward
+    text_color = (255, 255, 255)
+    shadow_color = (0, 0, 0)
+    shadow_offset = 2
 
-def get_alpha(time):
-    """
-    Returns an alpha 0–255 that is 0 at midnight (0:00), 255 at noon (12:00),
-    and falls off linearly before/after.
-    """
-    now = datetime.now()
-    # turn hour+minute into a float 0.0–24.0
-    h = now.hour + now.minute / 60.0
-    # compute “distance” from noon
-    dist = abs(h - 12.0)
-    # normalized brightness: 1.0 at noon, 0.0 at midnight
-    if time == 'day':
-        brightness = max(0.0, 1.0 - dist / 12.0)
-        return int(brightness * 255)
-    if time == 'night':
-        brightness = max(0.0, 1.0 - dist / 12.0)
-        return int((0.25 - brightness) * 255)
-    if time == 'dark_night':
-        brightness = max(0.0, 1.0 - dist / 12.0)
-        return int((1.0 - brightness) * 255)
+    # Static state variables (persist between frames)
+    if not hasattr(draw_hotbar, "offset_bar"):
+        draw_hotbar.offset_bar = 0.0
+        draw_hotbar.offset_text = 0.0
+        draw_hotbar.is_hovered = False
 
-def _lerp(c0, c1, t):
-    """linear-interpolate two colour tuples."""
-    return tuple(int(a + (b - a) * t) for a, b in zip(c0, c1))
+    screen.blit(info_button, (screen.get_width() - info_button.get_width() - 30, 30))
 
-def get_day_color():
-    """
-    Return sky-colour that:
-      • is darkest at midnight,
-      • warms at sunrise / sunset,
-      • brightens to pale blue at the solar midpoint,
-      • and shifts sunrise±sunset ±2 h across the seasons.
-    """
-    # ---------- 1  current fractional hour & day-of-year -------------------
-    now   = datetime.now()
-    hourf = now.hour + now.minute/60.0               # 0–24 float
-    doy   = now.timetuple().tm_yday                  # 1-366
+    # ----------------------------
+    # Detect Hover State
+    # ----------------------------
+    mx, my = pygame.mouse.get_pos()
+    hover_area = (screen_width - 80 < mx < screen_width - 18) and (18 < my < 80)
+    draw_hotbar.is_hovered = hover_area
 
-    # ---------- 2  compute seasonal shift (±2 h) ---------------------------
-    # Use a cosine so shift = +max on 21 Jun (doy≈172), −max on 21 Dec.
-    # amplitude  = 2 hours
-    hours_amp   = 2.0
-    # phase so cos(0)=1 on 21 Jun
-    shift = hours_amp * math.cos( 2*math.pi * (doy - 172) / 365.0 )
+    # Animate offsets toward targets
+    target_bar = -hover_offset_bar if draw_hotbar.is_hovered else 0
+    target_text = -hover_offset_text if draw_hotbar.is_hovered else 0
+    draw_hotbar.offset_bar += (target_bar - draw_hotbar.offset_bar) * 0.1 * hover_speed
+    draw_hotbar.offset_text += (target_text - draw_hotbar.offset_text) * 0.1 * hover_speed
 
-    sunrise = 6.0 - shift          # earlier in summer, later in winter
-    sunset  = 18.0 + shift         # later  in summer, earlier in winter
-    # keep within bounds
-    sunrise = max(0.0, min(24.0, sunrise))
-    sunset  = max(0.0, min(24.0, sunset))
-    solar_mid = (sunrise + sunset) / 2.0   # stays 12.0 when shift is symmetric
+    # Convert to integers for drawing
+    y_offset_bar = int(draw_hotbar.offset_bar)
+    y_offset_text = int(draw_hotbar.offset_text)
 
-    # ---------- 3  define key-frame colours --------------------------------
-    night_blue      = (  0,   0,  80)      # midnight
-    dawn_orange     = (255,120, 50)        # sunrise glow
-    noon_blue       = (173,216,230)        # pale daytime sky
-    dusk_orange     = (255,140, 60)        # sunset glow
+    # ----------------------------
+    # Draw spoons + fatigue bar (move by bar offset)
+    # ----------------------------
+    draw_spoons(screen, spoons, icon_image, spoon_name_input, today_needed=today_needed, y_offset=y_offset_bar)
 
-    keyframes = [
-        (0.0,   night_blue),
-        (sunrise,  dawn_orange),
-        (solar_mid, noon_blue),
-        (sunset,   dusk_orange),
-        (24.0,  night_blue)   # wrap
-    ]
+    fatigue_bar = hotbar['fatigue_bar']
+    fatigue_bar_x = screen_width - fatigue_bar.width - 80
+    fatigue_bar_y = 28 + y_offset_bar
+    bar_width, bar_height = fatigue_bar.get_size()
 
-    # ---------- 4  find bracket segment & interpolate ----------------------
-    for (h0, c0), (h1, c1) in zip(keyframes, keyframes[1:]):
-        if h0 <= hourf <= h1:
-            t = (hourf - h0) / (h1 - h0)   # 0-1 within segment
-            return _lerp(c0, c1, t)
+    color_x = fatigue_bar_x + 8
+    color_y = fatigue_bar_y + 8
+    color_width = bar_width - 16
+    color_height = bar_height - 16
 
-    # Fallback (shouldn’t occur)
-    return night_blue
+    today_str = datetime.now().strftime("%a")
+    daily_target = daily_spoons.get(today_str, 10)
+    used = spoons_used_today
 
+    slot_count = max(1, daily_target)
+    slot_width = color_width / slot_count
+    fill_width = used * slot_width
 
-def draw_shadow(screen,
-                image1, x1, y1,
-                image2, x2, y2,
-                kind="variable"):
-    """
-    Draws a realistic translucent shadow overhang with three rays:
-      - one from each bottom-corner (near & far)
-      - one from the bottom-center (max opacity line)
+    green_limit = daily_target * slot_width
+    yellow_limit = daily_target * 2 * slot_width
 
-    Opacity:
-      · Full at the center ray.
-      · 0% at the two corner rays and at the tip.
-      · Steeper quartic fade toward the edges.
-    """
-    import math
-    # ------------------------------------------------ centres & corners
-    w1, h1 = image1.get_width(), image1.get_height()
-    w2, h2 = image2.get_width(), image2.get_height()
-    cx, cy = x1 + w1/2.0, y1 + h1/2.0         # light center
+    if used > 0:
+        green_w = min(fill_width, green_limit)
+        pygame.draw.rect(screen, (0, 255, 0), (color_x, color_y, green_w, color_height))
+        if used > daily_target:
+            yellow_w = min(fill_width - green_limit, yellow_limit - green_limit)
+            pygame.draw.rect(screen, (255, 255, 0), (color_x, color_y, yellow_w, color_height))
+        if used > daily_target * 2:
+            red_w = fill_width - yellow_limit
+            pygame.draw.rect(screen, (255, 0, 0), (color_x, color_y, red_w, color_height))
 
-    bl = (x2,       y2 + h2)                  # bottom-left of furniture
-    br = (x2 + w2,  y2 + h2)                  # bottom-right
-    center_corner = ((bl[0] + br[0]) / 2, bl[1])
+    line_color = (63, 44, 27)
+    for i in range(1, slot_count):
+        line_x = int(color_x + i * slot_width)
+        pygame.draw.line(screen, line_color, (line_x, color_y), (line_x, color_y + color_height), 2)
 
-    # choose near/far corners relative to light
-    near = bl if abs(cx - bl[0]) < abs(cx - br[0]) else br
-    far  = br if near is bl else bl
+    screen.blit(fatigue_bar, (fatigue_bar_x, fatigue_bar_y))
 
-    # ------------------------------------------------ allocated length
-    if kind == "constant":
-        line_len = 175
-    else:
-        brightness = get_alpha("day") / 255.0  # 0 @ midnight → 1 @ noon
-        line_len   = 75 + 100 * brightness
+    # ----------------------------
+    # Draw Hover Stats Text (move by smaller offset)
+    # ----------------------------
+    if draw_hotbar.is_hovered or abs(draw_hotbar.offset_text) > 1:
+        stats_y = 45 + y_offset_text + hover_offset_text
+        text_str = f"Spoons owned: {spoons}       Spoons needed: {today_needed}       Spoons used: {spoons_used_today}"
 
-    # ------------------------------------------------ compute all three rays
-    def make_ray(corner_pt):
-        dx, dy = corner_pt[0] - cx, corner_pt[1] - cy
-        dist   = math.hypot(dx, dy)
-        if dist == 0 or line_len <= dist:
-            return None
-        ux, uy   = dx/dist, dy/dist
-        overhang = line_len - dist
-        end_pt   = (corner_pt[0] + ux*overhang,
-                    corner_pt[1] + uy*overhang)
-        return corner_pt, end_pt
+        shadow = font.render(text_str, True, shadow_color)
+        text_surface = font.render(text_str, True, text_color)
 
-    rays = []
-    for corner in (near, center_corner, far):
-        ray = make_ray(corner)
-        if ray is None:
-            return      # if any ray won’t project, skip the shadow
-        rays.append(ray)
+        text_rect = text_surface.get_rect(center=(screen_width // 2 + 25, stats_y))
+        shadow_rect = text_rect.copy()
+        shadow_rect.x += shadow_offset
+        shadow_rect.y += shadow_offset
 
-    # unpack
-    (nc, ne), (cc, ce), (fc, fe) = rays
+        screen.blit(shadow, shadow_rect)
+        screen.blit(text_surface, text_rect)
 
-    # ------------------------------------------------ build the shadow polygon
-    poly = [nc, cc, fc, fe, ce, ne]
+def draw_spoons(screen, spoons, icon_image, spoon_name, today_needed, y_offset=0):
+    import pygame
 
-    # bounding box
-    xs, ys = zip(*poly)
-    left, top  = int(min(xs)), int(min(ys))
-    right, bot = int(max(xs))+1, int(max(ys))+1
-    width, height = right-left, bot-top
-    if width == 0 or height == 0:
-        return
-
-    # create mask for the wedge
-    poly_offset = [(x-left, y-top) for x, y in poly]
-    mask_surf   = pygame.Surface((width, height), pygame.SRCALPHA)
-    pygame.draw.polygon(mask_surf, (255,255,255), poly_offset)
-    mask = pygame.mask.from_surface(mask_surf)
-
-    # prepare gradient surface
-    grad = pygame.Surface((width, height), pygame.SRCALPHA)
-    α_max = 45
-
-    # precompute dirs & lengths
-    near_vec   = (ne[0]-nc[0], ne[1]-nc[1])
-    near_len   = math.hypot(*near_vec)
-    near_dir   = (near_vec[0]/near_len, near_vec[1]/near_len)
-
-    center_vec = (ce[0]-cc[0], ce[1]-cc[1])
-    center_len = math.hypot(*center_vec)
-
-    # helper: distance from point to a ray
-    def dist_to_ray(px, py, x0, y0, x1, y1, ray_len):
-        return abs((y1 - y0)*px - (x1 - x0)*py + x1*y0 - y1*x0) / ray_len
-
-    # ---------- fill in per-pixel alpha
-    for yy in range(height):
-        for xx in range(width):
-            if not mask.get_at((xx, yy)):
-                continue
-            wx, wy = xx + left, yy + top
-
-            # length-wise fade (along near-ray)
-            vx, vy = wx-nc[0], wy-nc[1]
-            t = (vx*near_dir[0] + vy*near_dir[1]) / near_len
-            t = max(0.0, min(1.0, t))
-
-            # compute half-width at this t (distance between near & far rays)
-            near_pt = (nc[0] + near_dir[0]*near_len*t,
-                       nc[1] + near_dir[1]*near_len*t)
-            far_vec  = (fe[0]-fc[0], fe[1]-fc[1])
-            far_pt = (fc[0] + far_vec[0]*t, fc[1] + far_vec[1]*t)
-            half_width = math.hypot(far_pt[0]-near_pt[0],
-                                     far_pt[1]-near_pt[1]) / 2.0
-
-            # distance to the center-ray
-            d_center = dist_to_ray(wx, wy, cc[0], cc[1], ce[0], ce[1], center_len)
-            fade_side = min(1.0, d_center / half_width)
-            # quartic for a steeper drop-off
-            fade_side = fade_side**4
-
-            α = int(α_max * (1.0 - t) * (1.0 - fade_side))
-            if α > 0:
-                grad.set_at((xx, yy), (0,0,0, α))
-
-    # blit once
-    screen.blit(grad, (left, top))
-
-
-
-def draw_hotbar(screen, spoons, icon_image, spoon_name_input, streak_dates, coins, level, page, today_needed, spoons_used_today):
-
-    # 1) draw your existing spoons UI
-    draw_spoons(screen, spoons, icon_image, spoon_name_input)
-
-    # 2) “Spoons used today” (replaces XP bar)
-    text_x = 115
-    text_y = 30
-
-    used_msg = f"'s used today: {int(spoons_used_today)}"
-    used_surf = font.render(used_msg, True, WHITE)  # type: ignore
-    icon_x = text_x 
-    screen.blit(icon_image, (icon_x, text_y - 3))
-    msg_x = icon_x + 30
-    msg_y = text_y
-    screen.blit(used_surf, (msg_x, msg_y))
-
-    # 3) “{icon}s needed for today: {num}” to the right of the used-today text
-    msg = f"'s needed for today: {today_needed}"
-    msg_surf = font.render(msg, True, WHITE)  # type: ignore
-
-    icon_x = text_x + used_surf.get_width() + 290
-    screen.blit(icon_image, (icon_x, text_y - 3))
-    msg_x = icon_x + 30
-    msg_y = text_y
-    screen.blit(msg_surf, (msg_x, msg_y))
-
-
-def draw_spoons(screen, spoons, icon_image, spoon_name):
-    # 1) label
-    spoon_text = font.render(f"{spoon_name}: {spoons}", True, WHITE)  # type: ignore
-    text_x, text_y = 115, 70
+    spoon_text = font.render(f"{spoons}", True, WHITE)  # type: ignore
+    text_x, text_y = 125, 30 + y_offset
     screen.blit(spoon_text, (text_x, text_y))
 
-    # 2) prep icons
-    icon_image = icon_image.convert_alpha()
-    icon_w, icon_h = icon_image.get_size()
-    ghost_scale = 0.85  # slightly smaller
-    ghost_w, ghost_h = int(icon_w * ghost_scale), int(icon_h * ghost_scale)
-    ghost_icon = pygame.transform.smoothscale(icon_image, (ghost_w, ghost_h))
-    ghost_icon.set_alpha(int(255 * 0.35))  # a bit lighter
+    total_slots = 11
+    slot_spacing = 33
+    base_x, base_y = 160, 28 + y_offset
 
-    total_capacity = 20
 
-    # 3) total region you want to occupy
-    total_icon_image_width = 800
-    start_x = text_x + spoon_text.get_width() + 5
-    region_width = total_icon_image_width - spoon_text.get_width()
-    region_width = max(region_width, icon_w)
+    # --- Derive icon variants ---
+    stem = None
+    for key, val in spoonIcons.items():
+        if val is icon_image:
+            stem = key.replace("_image", "")
+            break
+    if not stem:
+        return
 
-    # 4) spacing factors
-    ghost_spacing_factor = 0.8
+    icon_1 = spoonIcons[f"{stem}_image"].convert_alpha()
+    icon_5 = spoonIcons.get(f"{stem}_image_5", icon_1).convert_alpha()
+    icon_25 = spoonIcons.get(f"{stem}_image_25", icon_1).convert_alpha()
+    exclamation = spoonIcons["exclamation_mark"].convert_alpha()
 
-    # 5) gaps math
-    full_gaps = max(spoons - 1, 0)
-    ghost_count = total_capacity - spoons
-    denom = full_gaps + ghost_count * ghost_spacing_factor
-    full_step = (region_width - icon_w) / denom if denom > 0 else 0.0
-    ghost_step = full_step * ghost_spacing_factor
+    # --- Sizes and scaling ---
+    icon_w, icon_h = icon_1.get_size()
+    ghost_scale = 0.65
+    ghost_alpha = int(255 * 0.35)
 
-    # 6) draw all 20 (ghosts are vertically centered to the full icon height)
-    x = start_x
-    for i in range(total_capacity):
-        use_ghost = i >= spoons
-        surf = ghost_icon if use_ghost else icon_image
-        sw, sh = (ghost_w, ghost_h) if use_ghost else (icon_w, icon_h)
-        if use_ghost:
-            # ghost icons are centered vertically
-            y = text_y + (icon_h - sh*0.85) // 2
-        else:
-            y = text_y + (icon_h - sh) // 2
-        screen.blit(surf, (int(x), int(y)))
-        x += full_step if i < spoons - 1 else ghost_step
+    ghost_1 = pygame.transform.smoothscale(icon_1, (int(icon_w * ghost_scale), int(icon_h * ghost_scale))); ghost_1.set_alpha(ghost_alpha)
+    ghost_5 = pygame.transform.smoothscale(icon_5, (int(icon_w * ghost_scale), int(icon_h * ghost_scale))); ghost_5.set_alpha(ghost_alpha)
+    ghost_25 = pygame.transform.smoothscale(icon_25, (int(icon_w * ghost_scale), int(icon_h * ghost_scale))); ghost_25.set_alpha(ghost_alpha)
+
+    ex_w, ex_h = exclamation.get_size()
+    ghost_ex = pygame.transform.smoothscale(exclamation, (int(ex_w * ghost_scale), int(ex_h * ghost_scale))); ghost_ex.set_alpha(200)
+
+    # --- Helper: break into denominations ---
+    def breakdown(value):
+        parts = []
+        while value > 0 and len(parts) < total_slots:
+            if value >= 25:
+                parts.append(25)
+                value -= 25
+            elif value >= 5:
+                parts.append(5)
+                value -= 5
+            else:
+                parts.append(1)
+                value -= 1
+        return parts
+
+    # --- Helper: denomination difference ---
+    def denomination_diff(needed_parts, owned_parts):
+        def count_parts(parts):
+            counts = {25: 0, 5: 0, 1: 0}
+            for p in parts:
+                counts[p] += 1
+            return counts
+
+        need = count_parts(needed_parts)
+        own = count_parts(owned_parts)
+
+        diff = {25: need[25]-own[25], 5: need[5]-own[5], 1: need[1]-own[1]}
+        result = []
+        for denom in (25, 5, 1):
+            n = diff[denom]
+            if n > 0:
+                result.extend([denom]*n)      # ghosts
+            elif n < 0:
+                result.extend([-denom]*(-n))  # missing ex marks
+        return result
+
+    # --- Determine slot contents ---
+    owned_parts = breakdown(spoons)
+    needed_parts = breakdown(today_needed)
+    diffs = denomination_diff(needed_parts, owned_parts)
+
+    # Separate ghosts vs removals
+    ghost_parts = [abs(d) for d in diffs if d > 0]
+    remove_ex_parts = [abs(d) for d in diffs if d < 0]
+
+    # Start assuming all owned have exclamation marks
+    owned_ex_flags = [True] * len(owned_parts)
+
+    # Remove marks that correspond to "extra" denominations
+    for extra_val in remove_ex_parts:
+        # Find the rightmost owned part matching this denomination that still has a mark
+        for i in range(len(owned_parts) - 1, -1, -1):
+            if owned_parts[i] == extra_val and owned_ex_flags[i]:
+                owned_ex_flags[i] = False
+                break
+
+    # Build slots (full icons first, then ghosts, then empties)
+    slots = []
+    for i, val in enumerate(owned_parts):
+        slots.append(("full", val, owned_ex_flags[i]))
+    for val in ghost_parts:
+        slots.append(("ghost", val, True))
+    while len(slots) < total_slots:
+        slots.append(("empty", 0, False))
+
+    # --- Drawing helper ---
+    def pick_img(mode, val):
+        if val == 25:
+            return icon_25 if mode == "full" else ghost_25
+        if val == 5:
+            return icon_5 if mode == "full" else ghost_5
+        if val == 1:
+            return icon_1 if mode == "full" else ghost_1
+        return None
+
+    # --- Draw ---
+    for i, (mode, val, has_ex) in enumerate(slots[:total_slots]):
+        x = base_x + i * slot_spacing + 7 if mode == "ghost" else base_x + i * slot_spacing
+        y = base_y + 5 if mode == "ghost" else base_y
+        img = pick_img(mode, val)
+        if img is None or mode == "empty":
+            center = (x + icon_w // 2, y + icon_h // 2)
+            pygame.draw.circle(screen, (0, 0, 0), center, int(icon_w * 0.15), 2)
+            continue
+
+        iw, ih = img.get_size()
+        screen.blit(img, (x, y))
+
+        if has_ex:
+            ex = ghost_ex if mode == "ghost" else exclamation
+            ex_x = x + 5 + (iw - ex.get_width()) // 2
+            ex_y = y + (ih - ex.get_height()) // 2
+            screen.blit(ex, (ex_x, ex_y))

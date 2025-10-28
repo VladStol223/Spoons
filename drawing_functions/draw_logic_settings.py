@@ -152,9 +152,9 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
 
     # --- Active tab content ---
     if _active_settings_tab == "graphics":
-        # inventory_args are passed from main
         if inventory_args:
-            draw_inventory(screen, icon_image,manillaFolder_name,  *inventory_args)
+            # inventory_args begins with: spoon_name_input, inventory_tab, background_color, folder_one.., folders_dropdown_open
+            draw_inventory(screen, icon_image, manillaFolder_name, input_active, *inventory_args)
     elif _active_settings_tab == "account":
         # draw account settings (existing content)
         # reuse your original UI section
@@ -342,10 +342,10 @@ def logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons
                 download_data_json_if_present()
                 _download_state["trigger_download"] = True  # just a flag
 
-        if _active_settings_tab == "graphics":
-            # inventory_args are passed from main
-            if inventory_args:
-               input_active, *updated = logic_inventory(event, input_active, *inventory_args)
+        # Always pass events to the inventory logic when the Graphics tab is active,
+        if _active_settings_tab == "graphics" and inventory_args:
+            input_active, *updated = logic_inventory(event, input_active, *inventory_args)
+
             
         # --- Spoons tab toggles ---
         if _active_settings_tab == "spoons":
@@ -371,16 +371,51 @@ def logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons
                         return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, *updated)
                 input_active = ""
 
-    # Handle typing
-    elif event.type == pygame.KEYDOWN and input_active in days:
-        current_val = daily_spoons.get(input_active, "")
-        if isinstance(current_val, int):
-            current_val = str(current_val)
-        if event.key == pygame.K_BACKSPACE:
-            current_val = current_val[:-1]
-        elif event.unicode.isdigit() and len(current_val) < 2:
-            current_val += event.unicode
-        daily_spoons[input_active] = int(current_val) if current_val else 0
+    # --- Handle all typing centrally ---
+    elif event.type == pygame.KEYDOWN:
+        # 1) If editing a day input
+        if input_active in days:
+            current_val = str(daily_spoons.get(input_active, ""))
+            if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+                input_active = ""
+            elif event.key == pygame.K_BACKSPACE:
+                current_val = current_val[:-1]
+            elif event.unicode.isdigit() and len(current_val) < 2:
+                current_val += event.unicode
+            daily_spoons[input_active] = int(current_val) if current_val else 0
+
+        # 2) If editing spoon/folder names in graphics tab
+        elif _active_settings_tab == "graphics" and input_active in ("spoon_name","folder_one","folder_two","folder_three","folder_four","folder_five","folder_six"):
+            if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+                input_active = ""  # defocus immediately
+            elif event.key == pygame.K_BACKSPACE:
+                if input_active == "spoon_name":
+                    inventory_args = list(inventory_args)
+                    inventory_args[1] = inventory_args[1][:-1]
+                else:
+                    idx_map = {
+                        "folder_one": 3, "folder_two": 4, "folder_three": 5,
+                        "folder_four": 6, "folder_five": 7, "folder_six": 8
+                    }
+                    idx = idx_map[input_active]
+                    inventory_args = list(inventory_args)
+                    inventory_args[idx] = inventory_args[idx][:-1]
+            elif len(event.unicode) == 1 and event.unicode.isprintable():
+                _measure_font = pygame.font.Font("fonts/Stardew_Valley.ttf", 24)
+                if input_active == "spoon_name":
+                    new_text = inventory_args[1] + event.unicode
+                    text_width, _ = _measure_font.size(new_text)
+                    if text_width <= spoon_name_input_box.width - 10:
+                        inventory_args = list(inventory_args)
+                        inventory_args[1] = new_text
+                else:
+                    idx_map = {
+                        "folder_one": 3, "folder_two": 4, "folder_three": 5,
+                        "folder_four": 6, "folder_five": 7, "folder_six": 8
+                    }
+                    idx = idx_map[input_active]
+                    inventory_args = list(inventory_args)
+                    inventory_args[idx] += event.unicode
 
             
     return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, *updated)
@@ -441,20 +476,14 @@ spoon_name_input_box = pygame.Rect(750, 140, 150, 40)
 
 icon_surfaces = [
     spoon_image,
-    battery_image,
     star_image,
-    potion_image,
-    yourdidit_image,
     mike_image,
-    lightningface_image,
-    diamond_image,
-    starfruit_image,
-    strawberry_image,
-    terstar_image,
-    hcheart_image,
-    beer_image,
-    drpepper_image,
-]
+    minecraft_image,
+    stardew_image,
+    celeste_image,
+    minecraft1_image,
+    ]
+
 
 theme_colors = [
     "aquatic",
@@ -521,6 +550,7 @@ def draw_inventory(
     screen,
     icon_image,
     manillaFolder_name,
+    input_active,
     spoon_name_input,
     inventory_tab,
     background_color,
@@ -529,8 +559,10 @@ def draw_inventory(
     folder_three,
     folder_four,
     folder_five,
-    folder_six, folders_dropdown_open
+    folder_six,
+    folders_dropdown_open
 ):
+
     r, g, b = background_color
     darker_background   = (max(r - 40, 0), max(g - 40, 0), max(b - 40, 0))
     light_background    = (min(r + 20, 255), min(g + 20, 255), min(b + 20, 255))
@@ -767,122 +799,81 @@ def logic_inventory(event,
                     current_theme):
 
     if event.type == pygame.MOUSEBUTTONDOWN:
-
-        # — spoon name field (Icons tab)
-        if spoon_name_input_box.collidepoint(event.pos):
-            input_active = "spoon_name"
-        else:
-            # if you click anywhere else, deactivate text entry
-            input_active = ""
-
-        # — switch tabs
         mx, my = event.pos
+        clicked_any = False
+
+        # 1) Tab switching first
         if icon_tab_box.collidepoint(mx, my):
-            inventory_tab = "Icons"
+            inventory_tab = "Icons"; clicked_any = True
         elif folder_tab_box.collidepoint(mx, my):
-            inventory_tab = "Folders"
+            inventory_tab = "Folders"; clicked_any = True
         elif theme_tab_box.collidepoint(mx, my):
-            inventory_tab = "Themes"
+            inventory_tab = "Themes"; clicked_any = True
         elif border_tab_box.collidepoint(mx, my):
-            inventory_tab = "Borders"
+            inventory_tab = "Borders"; clicked_any = True
         elif extra_tab_box.collidepoint(mx, my):
-            inventory_tab = "Extras"
+            inventory_tab = "Extras"; clicked_any = True
 
-        # — Icons tab selection
+        # 2) Per-tab interactions & focus (AFTER tab state updates)
+        # Icons tab
         if inventory_tab == "Icons":
+            if spoon_name_input_box.collidepoint(mx, my):
+                input_active = "spoon_name"; clicked_any = True
             for outline, icon in inventory_icon_buttons:
-                if outline.collidepoint(event.pos):
-                    icon_image = icon
+                if outline.collidepoint(mx, my):
+                    icon_image = icon; clicked_any = True
                     break
 
-        if inventory_tab == "Folders" and not folders_dropdown_open:
-            for outline, surface, name in inventory_folder_buttons:
-                if outline.collidepoint(event.pos):
-                    manillaFolder, manillaFolder_name = set_image('manillaFolder', name)
-                    break
+        # Folders tab
+        if inventory_tab == "Folders":
+            # toggle dropdown
+            if folder_dropdown_rect.collidepoint(mx, my):
+                folders_dropdown_open = not folders_dropdown_open
+                clicked_any = True
 
+            # choose folder art only when dropdown is closed
+            if not folders_dropdown_open:
+                for outline, surface, name in inventory_folder_buttons:
+                    if outline.collidepoint(mx, my):
+                        manillaFolder, manillaFolder_name = set_image('manillaFolder', name)
+                        clicked_any = True
+                        break
+
+            # when open, focus the appropriate input box
+            if folders_dropdown_open:
+                if folder_one_name_input_box.collidepoint(mx, my):
+                    input_active = "folder_one"; clicked_any = True
+                elif folder_two_name_input_box.collidepoint(mx, my):
+                    input_active = "folder_two"; clicked_any = True
+                elif folder_three_name_input_box.collidepoint(mx, my):
+                    input_active = "folder_three"; clicked_any = True
+                elif folder_four_name_input_box.collidepoint(mx, my):
+                    input_active = "folder_four"; clicked_any = True
+                elif folder_five_name_input_box.collidepoint(mx, my):
+                    input_active = "folder_five"; clicked_any = True
+                elif folder_six_name_input_box.collidepoint(mx, my):
+                    input_active = "folder_six"; clicked_any = True
+
+        # Themes tab
         if inventory_tab == "Themes":
             for cell_rect, theme_key in inventory_themes_buttons:
-                if cell_rect.collidepoint(event.pos):
+                if cell_rect.collidepoint(mx, my):
                     current_theme = switch_theme(theme_key, globals())
+                    clicked_any = True
                     break
 
+        # Borders tab
         if inventory_tab == "Borders":
             for outline, surface, name in inventory_border_buttons:
-                if outline.collidepoint(event.pos):
+                if outline.collidepoint(mx, my):
                     border, border_name = set_image('border', name)
+                    clicked_any = True
                     break
 
-        # — Folders tab interactions
-        if inventory_tab == "Folders":
-            # 1) Click on header toggles dropdown
-            if folder_dropdown_rect.collidepoint(event.pos):
-                folders_dropdown_open = not folders_dropdown_open
+        # 3) If this click didn't hit any actionable control, clear focus
+        if not clicked_any:
+            input_active = ""
 
-            # 2) If the dropdown is open, clicking on any input-box should activate it
-            if folders_dropdown_open:
-                if folder_one_name_input_box.collidepoint(event.pos):
-                    input_active = "folder_one"
-                elif folder_two_name_input_box.collidepoint(event.pos):
-                    input_active = "folder_two"
-                elif folder_three_name_input_box.collidepoint(event.pos):
-                    input_active = "folder_three"
-                elif folder_four_name_input_box.collidepoint(event.pos):
-                    input_active = "folder_four"
-                elif folder_five_name_input_box.collidepoint(event.pos):
-                    input_active = "folder_five"
-                elif folder_six_name_input_box.collidepoint(event.pos):
-                    input_active = "folder_six"
-
-    elif event.type == pygame.KEYDOWN:
-        # — spoon name typing
-        if input_active == "spoon_name":
-            if event.key == pygame.K_RETURN:
-                input_active = False
-            elif event.key == pygame.K_BACKSPACE:
-                spoon_name_input = spoon_name_input[:-1]
-            else:
-                new_text = spoon_name_input + event.unicode
-                text_width, _ = font.size(new_text)
-                if text_width <= spoon_name_input_box.width - 10:
-                    spoon_name_input = new_text
-
-        # — folder name typing
-        elif input_active == "folder_one":
-            if event.key == pygame.K_BACKSPACE:
-                folder_one = folder_one[:-1]
-            else:
-                folder_one += event.unicode
-
-        elif input_active == "folder_two":
-            if event.key == pygame.K_BACKSPACE:
-                folder_two = folder_two[:-1]
-            else:
-                folder_two += event.unicode
-
-        elif input_active == "folder_three":
-            if event.key == pygame.K_BACKSPACE:
-                folder_three = folder_three[:-1]
-            else:
-                folder_three += event.unicode
-
-        elif input_active == "folder_four":
-            if event.key == pygame.K_BACKSPACE:
-                folder_four = folder_four[:-1]
-            else:
-                folder_four += event.unicode
-
-        elif input_active == "folder_five":
-            if event.key == pygame.K_BACKSPACE:
-                folder_five = folder_five[:-1]
-            else:
-                folder_five += event.unicode
-
-        elif input_active == "folder_six":
-            if event.key == pygame.K_BACKSPACE:
-                folder_six = folder_six[:-1]
-            else:
-                folder_six += event.unicode
 
     return (input_active,
             inventory_tab,

@@ -33,7 +33,7 @@ def draw_manage_tasks_hub(
             except:
                 pass
         # Sort: incomplete (done_count < cost) first, then by days_left
-        lst.sort(key=lambda t: (t[2] >= t[1], t[3]))
+        lst.sort(key=lambda t: (t[3] >= t[2], t[4]))
 
     # --- 2) Summaries (only overdue, today, and next 7 days) ---
     def summarize(lst):
@@ -41,7 +41,7 @@ def draw_manage_tasks_hub(
         total_tasks  = 0
         for t in lst:
             try:
-                name, cost, done, days_left = t[0], int(t[1]), int(t[2]), int(t[3])
+                name, cost, done, days_left = t[0], int(t[2]), int(t[3]), int(t[4])
             except Exception:
                 # fallback if tuple shape is off
                 try:

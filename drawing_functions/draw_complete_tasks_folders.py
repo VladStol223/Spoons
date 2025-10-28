@@ -7,7 +7,7 @@ folder_rects = []
 def draw_complete_tasks_folders(screen,selected_folder,folder_one,folder_two,folder_three,folder_four,folder_five,folder_six,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list, manillaFolder):
     global folder_rects; folder_rects=[]
     # config
-    right_offset=0; top_offset=125; vertical_spacing=-32
+    right_offset=0; top_offset=85; vertical_spacing=-24
     scale_factor=1.5
     manilla_folder = manillaFolder['manilla_folder']
     manilla_folder_open = manillaFolder['manilla_folder_open']

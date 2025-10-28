@@ -57,7 +57,7 @@ new_label_rect = None          # pygame.Rect of the active "new label" chip for 
 new_label_buttons = []         # (pygame.Rect, task_index) for non-active "new label" chips
 
 # Scrolling layout constants
-CONTENT_TOP     = 148   # Where content starts
+CONTENT_TOP     = 108   # Where content starts
 VIEWPORT_HEIGHT = 350   # Visible content height
 SCROLL_X        = 910   # Scrollbar X
 SCROLL_Y        = 140   # Scrollbar Y
@@ -159,13 +159,13 @@ def draw_complete_tasks(
         )
 
     overdue, upcoming, completed = [], {}, []
-    for idx, (name, cost, done, days, date, st, et, labels) in enumerate(task_list):
+    for idx, (name, desc, cost, done, days, date, st, et, labels) in enumerate(task_list):
         if done >= cost:
-            completed.append((idx, name, cost, done, days, date, st, et, labels))
+            completed.append((idx, name, desc, cost, done, days, date, st, et, labels,))
         elif days < 0:
-            overdue.append((idx, name, cost, done, days, date, st, et, labels))
+            overdue.append((idx, name, desc, cost, done, days, date, st, et, labels,))
         else:
-            upcoming.setdefault(days, []).append((idx, name, cost, done, days, date, st, et, labels))
+            upcoming.setdefault(days, []).append((idx, name, desc, cost, done, days, date, st, et, labels,))
     overdue.sort(key=lambda x: x[4])
     days_sorted = sorted(upcoming.keys())
 
@@ -199,7 +199,7 @@ def draw_complete_tasks(
             screen.blit(surf, (150, py))
         y_cur += h
 
-        for idx, name, cost, done, days, date, st, et, labels in items:
+        for idx, name, desc, cost, done, days, date, st, et, labels, in items:
             by = y_cur - scroll_offset_px
             if not (by+50 < CONTENT_TOP or by > CONTENT_TOP+VIEWPORT_HEIGHT):
                 # If this task’s label dropdown is open, draw it and push below rows down
@@ -947,7 +947,7 @@ def _draw_edit_form(screen, background_color, icon_image, spoons, task_list):
     _blit_task_name_fit(screen, name, name_x, name_y, x_limit, base_px)
 
     # Current task labels are edited directly on the live task_list
-    labels_ref = task_list[currently_editing][7] if (isinstance(currently_editing, int) and 0 <= currently_editing < len(task_list)) else []
+    labels_ref = task_list[currently_editing][8] if (isinstance(currently_editing, int) and 0 <= currently_editing < len(task_list)) else []
 
     mx2, my2 = pygame.mouse.get_pos()
     if len(labels_ref) > 0:
@@ -1372,8 +1372,8 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
             txt = (new_label_text or "").strip()
             if txt:
                 # append to the end (it is drawn after all labels)
-                if txt not in task_list[t][7]:  # avoid duplicate labels; remove this line if dupes allowed
-                    task_list[t][7].append(txt)
+                if txt not in task_list[t][8]:  # avoid duplicate labels; remove this line if dupes allowed
+                    task_list[t][8].append(txt)
             # reset state
             new_label_active_task = None
             new_label_text = ""
@@ -1447,7 +1447,7 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
         for rect, t_idx, l_idx in label_chip_buttons:
             if rect.collidepoint(event.pos):
                 # Start drag: store the chip info; it will be hidden from its slot while dragging
-                lab_text = task_list[t_idx][7][l_idx]  # labels list at index 7
+                lab_text = task_list[t_idx][8][l_idx]  # labels list at index 7
                 dragging_label = {"source": "task", "task_idx": t_idx, "label_idx": l_idx, "text": lab_text}
                 return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
         # 1b) Start dragging from Favorites panel
@@ -1481,7 +1481,7 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
             if dragging_label.get("source") == "fav" and in_task_area and open_task_idx is not None:
                 label_text = dragging_label["text"]
                 insert_i = hover_insert_index_per_task.get(open_task_idx)
-                labels_ref = task_list[open_task_idx][7]
+                labels_ref = task_list[open_task_idx][8]
                 if insert_i == "END" or insert_i is None:
                     insert_pos = len(labels_ref)  # append
                 else:
@@ -1500,7 +1500,7 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
                 label_text = dragging_label["text"]
                 from_i = dragging_label["label_idx"]
                 insert_i = hover_insert_index_per_task.get(open_task_idx)
-                labels_ref = task_list[open_task_idx][7]
+                labels_ref = task_list[open_task_idx][8]
 
                 # remove first
                 if 0 <= from_i < len(labels_ref) and labels_ref[from_i] == label_text:
@@ -1525,7 +1525,7 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
                 t_idx = dragging_label.get("task_idx")
                 l_idx = dragging_label.get("label_idx")
                 if t_idx is not None and l_idx is not None:
-                    labels_ref = task_list[t_idx][7]
+                    labels_ref = task_list[t_idx][8]
                     if 0 <= l_idx < len(labels_ref) and labels_ref[l_idx] == dragging_label.get("text"):
                         del labels_ref[l_idx]
                 dragging_label = None
@@ -1613,24 +1613,23 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
 
                 # Update task + SAVE START TIME
                 orig = task_list[currently_editing]
-                new_date = orig[4].replace(month=mon, day=day)
+                new_date = orig[5].replace(month=mon, day=day)
                 new_days = (new_date - datetime.now()).days + 1
 
                 # parse HHMM digits to hh/mm
                 s = (edit_state.get("start_time", "") or "").strip()
                 s = s.zfill(4)[:4] if s.isdigit() else ""
                 try:
-                    hh = int(s[:2]) if s else int(orig[5][0])  # fallback to existing
-                    mm = int(s[2:]) if s else int(orig[5][1])
+                    hh = int(s[:2]) if s else int(orig[6][0])  # fallback to existing
+                    mm = int(s[2:]) if s else int(orig[6][1])
                     hh = max(0, min(23, hh))
                     mm = max(0, min(59, mm))
                 except Exception:
-                    # last-resort fallback to 00:00
                     hh, mm = 0, 0
 
                 # keep original container shape if possible
-                if isinstance(orig[5], (list, tuple)) and len(orig[5]) >= 2:
-                    new_st = list(orig[5])
+                if isinstance(orig[6], (list, tuple)) and len(orig[6]) >= 2:
+                    new_st = list(orig[6])
                     new_st[0] = hh
                     new_st[1] = mm
                 else:
@@ -1647,7 +1646,7 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
                 new_label_text = ""
                 new_label_rect = None
 
-                task_list[currently_editing] = [name, cost, done_, new_days, new_date, new_st, orig[6], orig[7]]
+                task_list[currently_editing] = [name, orig[1], cost, done_, new_days, new_date, new_st, orig[7], orig[8]]
 
 
                 currently_editing = None
@@ -1843,7 +1842,7 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
                     task_list.pop(idx)
                 else:
                     # Enter edit
-                    name, cost, done_, days, date, st, et, labels = task_list[idx]
+                    name, desc, cost, done_, days, date, st, et, labels = task_list[idx]
                     expanded_label_tasks.clear()
                     # make a HHMM digits string from task start_time [hh,mm,*,*] if present
                     def _st_to_digits(st):
@@ -1869,11 +1868,11 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
         # Spoon-frame clicks
         for rect, idx, frame_i in frame_buttons:
             if rect.collidepoint(event.pos):
-                name, cost, done_, days, date, st, et, labels = task_list[idx]
+                name, desc, cost, done_, days, date, st, et, labels= task_list[idx]
                 new_done = frame_i + 1
                 to_fill  = new_done - done_
                 if to_fill > 0 and spoons >= to_fill or spoons_debt_toggle:
-                    task_list[idx][2] = min(cost, new_done)
+                    task_list[idx][3] = min(cost, new_done)
                     spoons -= to_fill
                     spoons_used_today += to_fill
 
