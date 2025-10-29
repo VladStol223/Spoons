@@ -94,8 +94,8 @@ image_categories = {
         'mike_image_25':      ('mike_25.png', (33,33)),
     },
     'restIcons': {
-        'short_rest_icon': ('shortRestIcon.png',(90,90)),
-        'half_rest_icon':  ('halfRestIcon.png',(90,90)),
+        'short_rest_icon': ('shortRestIcon.png',(900,900)),
+        'half_rest_icon':  ('halfRestIcon.png',(900,900)),
         'full_rest_icon':  ('fullRestIcon.png',(900,900)),
     },
     'hotbar': {

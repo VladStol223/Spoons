@@ -1,33 +1,12 @@
 {
-  "spoons": 98,
+  "spoons": 7,
   "folder_1_tasks": [
     {
       "task_name": "Problem Set 4",
       "spoons_needed": 5,
       "done": 0,
-      "days_till_due_date": 0,
-      "due_date": "2025-10-27T00:00:00",
-      "start_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "end_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "labels": [],
-      "description": ""
-    },
-    {
-      "task_name": "thermo hw8",
-      "spoons_needed": 3,
-      "done": 0,
       "days_till_due_date": 1,
-      "due_date": "2025-10-28T00:00:00",
+      "due_date": "2025-10-29T00:00:00",
       "start_time": [
         0,
         0,
@@ -47,7 +26,7 @@
       "task_name": "Lab 10",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 3,
+      "days_till_due_date": 2,
       "due_date": "2025-10-30T00:00:00",
       "start_time": [
         0,
@@ -68,7 +47,7 @@
       "task_name": "Quiz 09",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 3,
+      "days_till_due_date": 2,
       "due_date": "2025-10-30T00:00:00",
       "start_time": [
         0,
@@ -89,7 +68,7 @@
       "task_name": "Study for fluids quiz 3",
       "spoons_needed": 10,
       "done": 0,
-      "days_till_due_date": 6,
+      "days_till_due_date": 5,
       "due_date": "2025-11-02T00:00:00",
       "start_time": [
         0,
@@ -110,7 +89,7 @@
       "task_name": "Study for sysD Exam 2",
       "spoons_needed": 10,
       "done": 0,
-      "days_till_due_date": 21,
+      "days_till_due_date": 20,
       "due_date": "2025-11-17T00:00:00",
       "start_time": [
         0,
@@ -131,7 +110,7 @@
       "task_name": "Study for Fluids quiz 3",
       "spoons_needed": 10,
       "done": 0,
-      "days_till_due_date": 34,
+      "days_till_due_date": 33,
       "due_date": "2025-11-30T00:00:00",
       "start_time": [
         0,
@@ -469,6 +448,27 @@
       "done": 2,
       "days_till_due_date": -4,
       "due_date": "2025-10-23T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
+      "task_name": "thermo hw8",
+      "spoons_needed": 3,
+      "done": 3,
+      "days_till_due_date": 0,
+      "due_date": "2025-10-28T00:00:00",
       "start_time": [
         0,
         0,
@@ -872,7 +872,7 @@
       "task_name": "fluids quiz 3",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 7,
+      "days_till_due_date": 6,
       "due_date": "2025-11-03T00:00:00",
       "start_time": [
         0,
@@ -893,7 +893,7 @@
       "task_name": "System Dynamics Exam 2",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 22,
+      "days_till_due_date": 21,
       "due_date": "2025-11-18T00:00:00",
       "start_time": [
         0,
@@ -914,7 +914,7 @@
       "task_name": "Fluids Quiz 4",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 35,
+      "days_till_due_date": 34,
       "due_date": "2025-12-01T00:00:00",
       "start_time": [
         0,
@@ -976,32 +976,11 @@
   ],
   "folder_5_tasks": [
     {
-      "task_name": "DO GLASSES",
-      "spoons_needed": 5,
-      "done": 0,
-      "days_till_due_date": -2,
-      "due_date": "2025-10-25T00:00:00",
-      "start_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "end_time": [
-        0,
-        0,
-        0,
-        0
-      ],
-      "labels": [],
-      "description": ""
-    },
-    {
       "task_name": "order items (tags)",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": -2,
-      "due_date": "2025-10-25T00:00:00",
+      "days_till_due_date": 3,
+      "due_date": "2025-10-31T00:00:00",
       "start_time": [
         0,
         0,
@@ -1021,6 +1000,27 @@
         "pink aerolight",
         "wine stopper"
       ],
+      "description": ""
+    },
+    {
+      "task_name": "DO GLASSES",
+      "spoons_needed": 5,
+      "done": 0,
+      "days_till_due_date": 7,
+      "due_date": "2025-11-04T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
       "description": ""
     },
     {
@@ -1270,8 +1270,8 @@
     ]
   },
   "last_save_date": [
-    "2025-10-27",
-    21
+    "2025-10-28",
+    3
   ],
   "sound_toggle": false,
   "spoons_debt_toggle": true,

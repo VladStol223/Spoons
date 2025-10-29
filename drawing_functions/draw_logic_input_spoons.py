@@ -59,13 +59,51 @@ def draw_input_spoons(screen, spoons, spoon_name, delta_time, icon_image, input_
         "full":  pygame.Rect(start_x + 2*(button_w + spacing), y_rest, button_w, button_h)
     }
 
+    # --- Animation handling ---
     icons = {"short": short_rest, "half": half_rest, "full": full_rest}
     hovered_rest = None
+
+    frame_w, frame_h = 90, 90
+    columns, rows = 5, 4
+    gap = 1
+    frame_count = columns * rows
+
+    # compute max pixel bounds for safety
+    max_x = (columns - 1) * (frame_w + gap) + frame_w
+    max_y = (rows - 1) * (frame_h + gap) + frame_h
+
+    # time-based frame index (10 fps)
+    t = pygame.time.get_ticks() / 1000.0
+    fps = 10
+    current_frame = int(t * fps) % frame_count
+    row = current_frame // columns
+    col = current_frame % columns
+
+    sx = col * (frame_w + gap)
+    sy = row * (frame_h + gap)
+
+    # ensure we don't exceed sheet boundaries
+    sx = min(sx, max_x - frame_w)
+    sy = min(sy, max_y - frame_h)
+    frame_rect = pygame.Rect(sx, sy, frame_w, frame_h)
+
     for name, rect in rest_icon_rects.items():
-        img = pygame.transform.scale(icons[name], rect.size)
-        screen.blit(img, rect.topleft)
+        sheet = icons[name]
+        # guard against incorrect sheet sizes
+        if sheet.get_width() < max_x or sheet.get_height() < max_y:
+            sheet = pygame.transform.scale(sheet, (max_x, max_y))
+
+        try:
+            frame = sheet.subsurface(frame_rect).copy()
+        except ValueError:
+            # fallback: top-left frame if out of range
+            frame = sheet.subsurface(pygame.Rect(0, 0, frame_w, frame_h)).copy()
+
+        frame_scaled = pygame.transform.smoothscale(frame, rect.size)
+        screen.blit(frame_scaled, rect.topleft)
         if rect.collidepoint(mouse_x, mouse_y):
             hovered_rest = name
+
 
     # — rest labels —
     rest_labels.clear()
