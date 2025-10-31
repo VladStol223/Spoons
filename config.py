@@ -165,6 +165,7 @@ image_categories = {
         'floppyDiskDots': ('floppyDiskUploadDots.png', (60,60)),
         'soundButton': ('soundButton.png', (60,60)),
         'infoButton': ('infoToggle.png', (30,30)),
+        'taskDescriptionToggle': ('taskDescriptionToggle.png', (30,30)),
     },
 }
 
@@ -295,17 +296,11 @@ settings_icon     = hubIcons['settings_icon']
 exclamation_mark   = spoonIcons['exclamation_mark']
 # — spoon icons —
 spoon_image           = spoonIcons['spoon_image']
-
 minecraft_image         = spoonIcons['minecraft_image']
-
 minecraft1_image        = spoonIcons['minecraft1_image']
-
 stardew_image       = spoonIcons['stardew_image']
-
 celeste_image      = spoonIcons['celeste_image']
-
 star_image       = spoonIcons['star_image']
-
 mike_image            = spoonIcons['mike_image']
 
 # — rest icons —
@@ -380,6 +375,7 @@ confirm_edit_button = toggleButtons['ConfirmButton']
 cancel_edit_button = toggleButtons['CancelButton']
 sound_button = toggleButtons['soundButton']
 info_button = toggleButtons['infoButton']
+task_description_toggle = toggleButtons['taskDescriptionToggle']
 
 #floppy disk upload buttons
 floppy_disk_upload = toggleButtons['floppyDiskUpload']

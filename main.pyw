@@ -600,6 +600,8 @@ while running:
 
         page = logic_task_toggle(event, page) #handle clicks with task toggles
 
+        scroll_offset = handle_task_scroll(event, scroll_offset, total_content_height, scroll_multiplier=17)
+
         if page == "login":
             login_mode, login_username, login_password, login_input_active, page = logic_login(event, login_mode, login_username, login_password, login_input_active)
 
@@ -611,27 +613,16 @@ while running:
         elif page == "manage_tasks":
             page = logic_manage_tasks_hub(event, page, folder_rects)
         elif page == "complete_homework_tasks":
-            scroll_offset = handle_task_scroll(event, scroll_offset, total_content_height, scroll_multiplier=17)
             task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(homework_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
         elif page == "complete_chores_tasks":
-            scroll_limit = max(0, len(chores_tasks_list) - 8)
-            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(chores_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
         elif page == "complete_work_tasks":
-            scroll_limit = max(0, len(work_tasks_list) - 8)
-            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(work_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
         elif page == "complete_misc_tasks":
-            scroll_limit = max(0, len(misc_tasks_list) - 8)
-            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(misc_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
         elif page == "complete_exams_tasks":
-            scroll_limit = max(0, len(exams_tasks_list) - 8)
-            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(exams_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
         elif page == "complete_projects_tasks":
-            scroll_limit = max(0, len(projects_tasks_list) - 8)
-            scroll_offset = handle_task_scroll(event, scroll_offset, scroll_limit, scroll_multiplier=1)
             task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(projects_tasks_list, task_buttons_projects, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
         elif page == "calendar": 
             day_range_index, displayed_week_offset, displayed_month, displayed_year = logic_calendar(event, day_range_index, displayed_week_offset, displayed_month, displayed_year)

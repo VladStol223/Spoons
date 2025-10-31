@@ -34,6 +34,8 @@ dragging_label = None     # {"task_idx": int, "label_idx": int, "text": str}
 # Temporary favorites (will be saved to data.json later)
 favorites_labels = []  # this will be rebound per page
 
+description_toggle = toggleButtons['taskDescriptionToggle']
+
 def set_favorites_binding(fav_list_ref):
     """
     Bind the Favorites panel in this module to a *live* list that belongs to the current folder slot.
@@ -57,8 +59,8 @@ new_label_rect = None          # pygame.Rect of the active "new label" chip for 
 new_label_buttons = []         # (pygame.Rect, task_index) for non-active "new label" chips
 
 # Scrolling layout constants
-CONTENT_TOP     = 108   # Where content starts
-VIEWPORT_HEIGHT = 350   # Visible content height
+CONTENT_TOP     = 100   # Where content starts
+VIEWPORT_HEIGHT = 420   # Visible content height
 SCROLL_X        = 910   # Scrollbar X
 SCROLL_Y        = 140   # Scrollbar Y
 TRACK_HEIGHT    = 330   # Scrollbar track height
@@ -424,6 +426,8 @@ def draw_complete_tasks(
                 screen.blit(border_img, (138, by))
                 # --- Time badge replaces label button in LIST view ---
                 time_x, time_y = 395, by + 7
+                if desc and desc.strip():
+                    time_x = 358
                 show_time = False
                 hh = mm = 0
                 try:
@@ -437,13 +441,12 @@ def draw_complete_tasks(
                     tw, th = task_time_border.get_size()
                     screen.blit(task_time_border, (time_x - 26, time_y))
                     # time text centered on image
-                    time_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen.get_height() * 0.055))
+                    time_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen.get_height() * 0.050))
                     t_str = f"{hh:02d}:{mm:02d}"
                     ts = time_font.render(t_str, True, BLACK)  # type: ignore
                     tx = time_x + (tw - ts.get_width()) // 2 - 26
                     ty = time_y + (th - ts.get_height()) // 2 - 1
                     screen.blit(ts, (tx, ty + 2))
-                # NOTE: no label button (and no label_buttons.append) in list view anymore
 
                 name_x = 148
                 name_y = by + 12
@@ -456,7 +459,6 @@ def draw_complete_tasks(
                 else:
                     ts = task_font.render(name, True, BLACK)  # type: ignore
                     screen.blit(ts, (name_x, name_y))
-
 
                 # frames...
                 region_x, region_w = 138+297, 450
@@ -518,6 +520,55 @@ def draw_complete_tasks(
                         cy = fy+2 + 17 - ih2//2
                         screen.blit(tmp, (cx, cy))
 
+                # --- Description toggle and hover text ---
+                if desc and desc.strip():
+                    # align toggle icon to right edge of task box
+                    toggle_w, toggle_h = description_toggle.get_size()
+                    toggle_x = 430 - toggle_w  # adjust to your layout width if needed
+                    toggle_y = by + (50 - toggle_h) // 2
+                    toggle_rect = pygame.Rect(toggle_x, toggle_y, toggle_w, toggle_h)
+                    screen.blit(description_toggle, (toggle_x, toggle_y))
+
+                    # If hovering, show description text box
+                    if toggle_rect.collidepoint(mx, my):
+                        desc_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen.get_height() * 0.04))
+                        wrap_width = 1250  # you can change this or tie to screen width
+
+                        # --- Wrap description text ---
+                        words = desc.split(" ")
+                        wrapped_lines = []
+                        current_line = ""
+
+                        for word in words:
+                            test_line = current_line + word + " "
+                            if desc_font.size(test_line)[0] > wrap_width:
+                                wrapped_lines.append(current_line.strip())
+                                current_line = word + " "
+                            else:
+                                current_line = test_line
+                        if current_line:
+                            wrapped_lines.append(current_line.strip())
+
+                        # --- Compute box size ---
+                        max_line_width = max(desc_font.size(line)[0] for line in wrapped_lines)
+                        line_height = desc_font.get_height()
+                        padding_x, padding_y = 10, 6
+                        box_w = max_line_width + padding_x * 2
+                        box_h = len(wrapped_lines) * line_height + padding_y * 2
+
+                        box_x = toggle_rect.right + 10
+                        box_y = toggle_rect.centery - box_h // 2
+
+                        # --- Draw background box ---
+                        pygame.draw.rect(screen, (245, 235, 220), (box_x, box_y, box_w, box_h))
+                        pygame.draw.rect(screen, (60, 40, 30), (box_x, box_y, box_w, box_h), 2)
+
+                        # --- Render text lines ---
+                        for i, line in enumerate(wrapped_lines):
+                            ts2 = desc_font.render(line, True, (0, 0, 0))  # type: ignore
+                            screen.blit(ts2, (box_x + padding_x, box_y + padding_y + i * line_height))
+
+
                 # click target
                 btn = pygame.Rect(138, by, 750, 50)
                 buttons.append((btn, idx))
@@ -529,7 +580,7 @@ def draw_complete_tasks(
                     screen.blit(remove_edit, remove_rect.topleft)
                     remove_buttons.append((remove_rect, idx))
 
-            y_cur += 60
+            y_cur += 52
         y_cur += 4
         return y_cur
 

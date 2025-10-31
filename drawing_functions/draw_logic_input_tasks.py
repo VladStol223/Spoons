@@ -889,7 +889,22 @@ def logic_input_tasks(event,screen,current_task, current_description, current_sp
         # Add task on click
         if done_button.collidepoint(event.pos):
             if current_task and current_spoons:
-                task_date = datetime(current_time.year, task_month, int(task_day))
+                # --- Determine correct year for the task date ---
+                today = datetime.now()
+                one_month_ago = today - timedelta(days=30)
+                proposed_date = datetime(today.year, task_month, int(task_day))
+
+                # If the date is within the last month through today, assume this year.
+                # Otherwise, assume the next calendar occurrence (next year).
+                if one_month_ago <= proposed_date <= today:
+                    task_date = proposed_date
+                elif proposed_date < one_month_ago:
+                    # date too far in the past → use next year
+                    task_date = datetime(today.year + 1, task_month, int(task_day))
+                else:
+                    # date is in the future this year but more than a month ahead
+                    task_date = proposed_date if proposed_date >= today else datetime(today.year + 1, task_month, int(task_day))
+
                 _add_task_entry(
                     current_task, current_description, current_spoons, folder, task_date, current_time,
                     (homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list),
@@ -1141,7 +1156,22 @@ def logic_input_tasks(event,screen,current_task, current_description, current_sp
             if isinstance(current_spoons, int): current_spoons = ""
             if event.key == pygame.K_RETURN:
                 if current_task and current_spoons:
-                    task_date = datetime(current_time.year, task_month, int(task_day))
+                    # --- Determine correct year for the task date ---
+                    today = datetime.now()
+                    one_month_ago = today - timedelta(days=30)
+                    proposed_date = datetime(today.year, task_month, int(task_day))
+
+                    # If the date is within the last month through today, assume this year.
+                    # Otherwise, assume the next calendar occurrence (next year).
+                    if one_month_ago <= proposed_date <= today:
+                        task_date = proposed_date
+                    elif proposed_date < one_month_ago:
+                        # date too far in the past → use next year
+                        task_date = datetime(today.year + 1, task_month, int(task_day))
+                    else:
+                        # date is in the future this year but more than a month ahead
+                        task_date = proposed_date if proposed_date >= today else datetime(today.year + 1, task_month, int(task_day))
+
                     _add_task_entry(
                         current_task, current_description, current_spoons, folder, task_date, current_time,
                         (homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list),

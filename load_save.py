@@ -192,8 +192,8 @@ def save_data(
     elif icon_image == star_image:    icon_image_name = "star.png"
     elif icon_image == mike_image:         icon_image_name = "mike.png"
     elif icon_image == minecraft_image:      icon_image_name = "minecraft.png"
-    elif icon_image == stardew_image:    icon_image_name = "starfruit.png"
-    elif icon_image == celeste_image:   icon_image_name = "strawberry.png"
+    elif icon_image == stardew_image:    icon_image_name = "stardew.png"
+    elif icon_image == celeste_image:   icon_image_name = "celeste.png"
     elif icon_image == minecraft1_image:      icon_image_name = "minecraft1.png"
     else:                                  icon_image_name = "spoon.png"
 
