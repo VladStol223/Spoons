@@ -43,15 +43,9 @@ images_dir = "images"
 # 1) Declare your categories exactly as you did before:
 image_categories = {
     'avatarBackgrounds': {
-        'background_image':        ('background.png', (210, 105)),
-        'dark_background_image':   ('dark_background.png', (210, 105)),
-        'window_one_image':        ('window1.png', (26, 31)),
-        'window_flower_one_image': ('windowFlower1.png', (26, 31)),
-        'light_image':             ('light.png', (80,80)),
-        'bookshelf_image':         ('bookshelf.png', (45, 47)),
-        'lamp_image':              ('lamp.png', (22,27)),
-        'round_table_one_image':   ('roundTable1.png', (38,36)),
-        'vlad_avatar_image':       ('vladavatar.png', (18, 43)),
+        'timer_background': ('timerBackground.png', (292, 292)),
+        'timer_hand':       ('timerHand.png', (292, 292)),
+        'timer_top':        ('timerTop.png', (292, 292)),
     },
     'border': {
         'corner':          ('borderCorner.png',(12,12)),
@@ -156,6 +150,7 @@ image_categories = {
         'recurringButton': ('recurringToggleButton.png', (40,40)),
         'timeButton': ('timeToggleButton.png', (40,40)),
         'descriptionButton': ('descriptionToggleButton.png', (40,40)),
+        'timerButton': ('timerToggleButton.png', (40,40)),
         'ConfirmButton': ('confirmButton.png', (120,40)),
         'CancelButton': ('cancelButton.png', (120,40)),
         'floppyDiskUpload': ('floppyDiskUpload.png', (60,60)),
@@ -266,17 +261,6 @@ pinkManillaFolder = loaded_images['manillaFolder']['pink']['manilla_folder_full'
 greenManillaFolder = loaded_images['manillaFolder']['green']['manilla_folder_full']
 blueManillaFolder = loaded_images['manillaFolder']['blue']['manilla_folder_full']
 
-# avatar background
-avatar_background = avatarBackgrounds['background_image']
-dark_avatar_background = avatarBackgrounds['dark_background_image']
-avatar_window = avatarBackgrounds['window_one_image']
-avatar_window_flower = avatarBackgrounds['window_flower_one_image']
-avatar_light = avatarBackgrounds['light_image']
-avatar_bookshelf = avatarBackgrounds['bookshelf_image']
-avatar_lamp = avatarBackgrounds['lamp_image']
-round_table_one = avatarBackgrounds['round_table_one_image']
-vlavatar = avatarBackgrounds['vlad_avatar_image']
-
 # — border pieces —
 corner          = border['corner']
 edge1           = border['edge1']
@@ -371,6 +355,7 @@ inventory_icons_extras = inventoryIcons['extras']
 recurring_button = toggleButtons['recurringButton']
 time_button = toggleButtons['timeButton']
 description_button = toggleButtons['descriptionButton']
+timer_button = toggleButtons['timerButton']
 confirm_edit_button = toggleButtons['ConfirmButton']
 cancel_edit_button = toggleButtons['CancelButton']
 sound_button = toggleButtons['soundButton']
@@ -583,9 +568,12 @@ spoon_name = "Spoons"
 page = "login"
 folder = "homework"
 running = True
+
+timer_toggle_on = False
 description_toggle_on = False
 time_toggle_on = False
 recurring_toggle_on = False
+
 start_time = [0, 0, 0, 0]  # Representing "00:00"
 end_time = [0, 0, 0, 0]    # Representing "00:00"
 scroll_offset = 0

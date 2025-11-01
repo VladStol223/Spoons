@@ -456,6 +456,12 @@ def draw_complete_tasks(
                     x_limit = time_x - 26
                     base_px = int(screen.get_height() * 0.06)  # same as task_font size
                     _blit_task_name_fit(screen, name, name_x, name_y, x_limit, base_px)
+                elif desc and desc.strip():
+                    # left edge of the description toggle
+                    toggle_w, toggle_h = description_toggle.get_size()
+                    x_limit = 430 - toggle_w
+                    base_px = int(screen.get_height() * 0.06)  # same as task_font size
+                    _blit_task_name_fit(screen, name, name_x, name_y, x_limit, base_px)
                 else:
                     ts = task_font.render(name, True, BLACK)  # type: ignore
                     screen.blit(ts, (name_x, name_y))

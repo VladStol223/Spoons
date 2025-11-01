@@ -1,11 +1,32 @@
 {
-  "spoons": 5,
+  "spoons": 23,
   "folder_1_tasks": [
+    {
+      "task_name": "start studying for fluids",
+      "spoons_needed": 3,
+      "done": 0,
+      "days_till_due_date": 0,
+      "due_date": "2025-10-31T00:00:00",
+      "start_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": "put all study materials into chat and consolidate"
+    },
     {
       "task_name": "Study for fluids quiz 3",
       "spoons_needed": 10,
       "done": 0,
-      "days_till_due_date": 3,
+      "days_till_due_date": 2,
       "due_date": "2025-11-02T00:00:00",
       "start_time": [
         0,
@@ -26,7 +47,7 @@
       "task_name": "coe hw 6",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 4,
+      "days_till_due_date": 3,
       "due_date": "2025-11-03T00:00:00",
       "start_time": [
         0,
@@ -47,7 +68,7 @@
       "task_name": "thermo 9 reading",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 11,
+      "days_till_due_date": 10,
       "due_date": "2025-11-10T00:00:00",
       "start_time": [
         0,
@@ -68,7 +89,7 @@
       "task_name": "COE hw 7",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 11,
+      "days_till_due_date": 10,
       "due_date": "2025-11-10T00:00:00",
       "start_time": [
         0,
@@ -89,7 +110,7 @@
       "task_name": "thermo HW 9",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 11,
+      "days_till_due_date": 10,
       "due_date": "2025-11-10T00:00:00",
       "start_time": [
         0,
@@ -110,7 +131,7 @@
       "task_name": "Study for sysD Exam 2",
       "spoons_needed": 10,
       "done": 0,
-      "days_till_due_date": 18,
+      "days_till_due_date": 17,
       "due_date": "2025-11-17T00:00:00",
       "start_time": [
         0,
@@ -131,7 +152,7 @@
       "task_name": "Problem Set 5",
       "spoons_needed": 5,
       "done": 0,
-      "days_till_due_date": 18,
+      "days_till_due_date": 17,
       "due_date": "2025-11-17T00:00:00",
       "start_time": [
         0,
@@ -152,7 +173,7 @@
       "task_name": "COE hw 8",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 20,
+      "days_till_due_date": 19,
       "due_date": "2025-11-19T00:00:00",
       "start_time": [
         0,
@@ -173,7 +194,7 @@
       "task_name": "Study for Fluids quiz 3",
       "spoons_needed": 10,
       "done": 0,
-      "days_till_due_date": 31,
+      "days_till_due_date": 30,
       "due_date": "2025-11-30T00:00:00",
       "start_time": [
         0,
@@ -194,7 +215,7 @@
       "task_name": "final peer evaluation",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 32,
+      "days_till_due_date": 31,
       "due_date": "2025-12-01T00:00:00",
       "start_time": [
         0,
@@ -215,7 +236,7 @@
       "task_name": "project final report",
       "spoons_needed": 8,
       "done": 0,
-      "days_till_due_date": 32,
+      "days_till_due_date": 31,
       "due_date": "2025-12-01T00:00:00",
       "start_time": [
         0,
@@ -236,7 +257,7 @@
       "task_name": "exam 2 points back",
       "spoons_needed": 3,
       "done": 0,
-      "days_till_due_date": 32,
+      "days_till_due_date": 31,
       "due_date": "2025-12-01T00:00:00",
       "start_time": [
         0,
@@ -257,7 +278,7 @@
       "task_name": "last day of class",
       "spoons_needed": 1,
       "done": 0,
-      "days_till_due_date": 33,
+      "days_till_due_date": 32,
       "due_date": "2025-12-02T00:00:00",
       "start_time": [
         0,
@@ -870,7 +891,7 @@
       "task_name": "counters",
       "spoons_needed": 1,
       "done": 0,
-      "days_till_due_date": 1,
+      "days_till_due_date": 0,
       "due_date": "2025-10-31T00:00:00",
       "start_time": [
         0,
@@ -1229,7 +1250,7 @@
       "task_name": "fluids quiz 3",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 6,
+      "days_till_due_date": 5,
       "due_date": "2025-11-05T00:00:00",
       "start_time": [
         0,
@@ -1250,7 +1271,7 @@
       "task_name": "lab 11 (prac exam)",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 7,
+      "days_till_due_date": 6,
       "due_date": "2025-11-06T00:00:00",
       "start_time": [
         0,
@@ -1271,7 +1292,7 @@
       "task_name": "quiz 10",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 7,
+      "days_till_due_date": 6,
       "due_date": "2025-11-06T00:00:00",
       "start_time": [
         0,
@@ -1292,7 +1313,7 @@
       "task_name": "Lab Exam ",
       "spoons_needed": 5,
       "done": 0,
-      "days_till_due_date": 14,
+      "days_till_due_date": 13,
       "due_date": "2025-11-13T00:00:00",
       "start_time": [
         0,
@@ -1313,7 +1334,7 @@
       "task_name": "System Dynamics Exam 2",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 19,
+      "days_till_due_date": 18,
       "due_date": "2025-11-18T00:00:00",
       "start_time": [
         0,
@@ -1334,7 +1355,7 @@
       "task_name": "Fluids Quiz 4",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 32,
+      "days_till_due_date": 31,
       "due_date": "2025-12-01T00:00:00",
       "start_time": [
         0,
@@ -1355,7 +1376,7 @@
       "task_name": "COE 3001 Final",
       "spoons_needed": 5,
       "done": 0,
-      "days_till_due_date": 36,
+      "days_till_due_date": 35,
       "due_date": "2025-12-05T00:00:00",
       "start_time": [
         8,
@@ -1376,7 +1397,7 @@
       "task_name": "thermo final",
       "spoons_needed": 5,
       "done": 0,
-      "days_till_due_date": 39,
+      "days_till_due_date": 38,
       "due_date": "2025-12-08T00:00:00",
       "start_time": [
         11,
@@ -1441,7 +1462,7 @@
       "task_name": "order items (tags)",
       "spoons_needed": 2,
       "done": 0,
-      "days_till_due_date": 1,
+      "days_till_due_date": 0,
       "due_date": "2025-10-31T00:00:00",
       "start_time": [
         0,
@@ -1468,7 +1489,7 @@
       "task_name": "DO GLASSES",
       "spoons_needed": 5,
       "done": 0,
-      "days_till_due_date": 5,
+      "days_till_due_date": 4,
       "due_date": "2025-11-04T00:00:00",
       "start_time": [
         0,
@@ -1614,6 +1635,27 @@
   ],
   "folder_6_tasks": [
     {
+      "task_name": "therapy check-in",
+      "spoons_needed": 1,
+      "done": 0,
+      "days_till_due_date": 7,
+      "due_date": "2025-11-07T00:00:00",
+      "start_time": [
+        8,
+        30,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
+    },
+    {
       "task_name": "Contact Therapist",
       "spoons_needed": 2,
       "done": 2,
@@ -1696,6 +1738,27 @@
       ],
       "labels": [],
       "description": ""
+    },
+    {
+      "task_name": "First therapy session!!!",
+      "spoons_needed": 3,
+      "done": 3,
+      "days_till_due_date": 0,
+      "due_date": "2025-10-31T00:00:00",
+      "start_time": [
+        14,
+        0,
+        0,
+        0
+      ],
+      "end_time": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "labels": [],
+      "description": ""
     }
   ],
   "daily_spoons": {
@@ -1705,8 +1768,7 @@
     "Thu": 10,
     "Fri": 10,
     "Sat": 10,
-    "Sun": 10,
-    "spoons": 22
+    "Sun": 10
   },
   "theme": "foresty",
   "icon_image": "stardew.png",
@@ -1753,8 +1815,8 @@
     ]
   },
   "last_save_date": [
-    "2025-10-30",
-    10
+    "2025-10-31",
+    6
   ],
   "sound_toggle": false,
   "spoons_debt_toggle": true,

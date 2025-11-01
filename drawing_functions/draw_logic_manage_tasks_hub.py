@@ -99,6 +99,25 @@ def draw_manage_tasks_hub(
 
         screen.blit(full_img, (x, y))
 
+        # --- Exclamation mark logic ---
+        # Check if any task in the folder is due today or overdue
+        has_alert = False
+        for t in raw_list:
+            try:
+                task_date = t[5]
+                cost = int(t[2])
+                done = int(t[3])
+                if done < cost and task_date.date() <= datetime.now().date():
+                    has_alert = True
+                    break
+            except Exception:
+                continue
+
+        if has_alert:
+            icon_size = int(folder_w * 0.25)
+            screen.blit(exclamation_mark, (x + folder_w - icon_size + 10, y + 20))
+
+
         # Folder title
         title_s = big_font.render(name, True, BLACK) #type: ignore
         screen.blit(title_s, (x + (folder_w - title_s.get_width())//2, y + 30))

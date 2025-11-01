@@ -48,6 +48,8 @@ def draw_hotbar(screen, spoons, icon_image, spoon_name_input, daily_spoons, toda
     draw_spoons(screen, spoons, icon_image, spoon_name_input, today_needed=today_needed, y_offset=y_offset_bar)
 
     fatigue_bar = hotbar['fatigue_bar']
+    print(f"[fatigue] fatigue_bar size = {fatigue_bar.get_size()}")
+
     fatigue_bar_x = screen_width - fatigue_bar.width - 80
     fatigue_bar_y = 28 + y_offset_bar
     bar_width, bar_height = fatigue_bar.get_size()
@@ -63,7 +65,14 @@ def draw_hotbar(screen, spoons, icon_image, spoon_name_input, daily_spoons, toda
 
     slot_count = max(1, daily_target)
     slot_width = color_width / slot_count
-    fill_width = used * slot_width
+    fill_width = min(used * slot_width, color_width * 3)
+
+    # --- DEBUG ---
+    print(f"[fatigue] daily_target={daily_target}, used={used}")
+    print(f"[fatigue] bar inner size={color_width}x{color_height}")
+    print(f"[fatigue] slot_count={slot_count}, slot_width={slot_width:.2f}")
+    print(f"[fatigue] fill_width={fill_width:.2f}")
+
 
     green_limit = daily_target * slot_width
     yellow_limit = daily_target * 2 * slot_width

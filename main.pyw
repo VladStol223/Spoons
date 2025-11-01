@@ -419,10 +419,10 @@ while running:
 
     elif page == "input_spoons":
         if not UI_elements_initialized:
-            draw_input_spoons(screen, spoons, spoon_name_input, delta_time, icon_image, input_active, background_color, x_offset=140)
+            spoons = draw_input_spoons(screen, spoons, spoon_name_input, delta_time, icon_image, input_active, background_color, timer_toggle_on, x_offset=140)
             UI_elements_initialized = True
         else:
-            draw_input_spoons(screen, spoons, spoon_name_input, delta_time, icon_image, input_active, background_color, x_offset=140)
+            spoons = draw_input_spoons(screen, spoons, spoon_name_input, delta_time, icon_image, input_active, background_color, timer_toggle_on, x_offset=140)
         
     elif page == "input_tasks":
         draw_input_tasks(screen, spoons, current_task, current_description, current_spoons, input_active, 
@@ -606,7 +606,7 @@ while running:
             login_mode, login_username, login_password, login_input_active, page = logic_login(event, login_mode, login_username, login_password, login_input_active)
 
         elif page == "input_spoons" and UI_elements_initialized:
-            spoons, daily_spoons, page, input_active = logic_input_spoons(event, daily_spoons, spoons, input_active)
+            spoons, daily_spoons, page, input_active, timer_toggle_on = logic_input_spoons(event, daily_spoons, spoons, input_active, timer_toggle_on)
             
         elif page == "input_tasks":
             input_active,page,folder, description_toggle_on, time_toggle_on, recurring_toggle_on,current_task, current_description, current_spoons,task_month,task_day,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list,task_how_often,task_how_long,task_repetitions_amount, start_time = logic_input_tasks(event,screen,current_task, current_description, current_spoons,folder,task_month,task_day,task_how_often,task_how_long,task_repetitions_amount, description_toggle_on, time_toggle_on,recurring_toggle_on,max_days,input_active,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list, start_time)
