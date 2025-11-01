@@ -419,10 +419,10 @@ while running:
 
     elif page == "input_spoons":
         if not UI_elements_initialized:
-            spoons = draw_input_spoons(screen, spoons, spoon_name_input, delta_time, icon_image, input_active, background_color, timer_toggle_on, x_offset=140)
+            draw_input_spoons(screen, spoons, spoon_name_input, delta_time, icon_image, input_active, background_color, timer_toggle_on, x_offset=140)
             UI_elements_initialized = True
         else:
-            spoons = draw_input_spoons(screen, spoons, spoon_name_input, delta_time, icon_image, input_active, background_color, timer_toggle_on, x_offset=140)
+            draw_input_spoons(screen, spoons, spoon_name_input, delta_time, icon_image, input_active, background_color, timer_toggle_on, x_offset=140)
         
     elif page == "input_tasks":
         draw_input_tasks(screen, spoons, current_task, current_description, current_spoons, input_active, 

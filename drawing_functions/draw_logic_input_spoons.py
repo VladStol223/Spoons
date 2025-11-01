@@ -224,8 +224,6 @@ def draw_input_spoons(screen, spoons, spoon_name, delta_time, icon_image, input_
         label_rect = label.get_rect(center=(rect.centerx, rect.bottom + label.get_height()//2 - 20))
         screen.blit(label, label_rect)
 
-    return spoons
-
 
 def logic_input_spoons(event, daily_spoons, spoons, input_active, timer_toggle_on):
     global spoon_rects, rest_icon_rects
