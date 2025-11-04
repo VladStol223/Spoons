@@ -686,3 +686,6 @@ _active_settings_tab = "account"
 sound_toggle = False
 spoons_debt_toggle = False
 spoons_debt_consequences_toggle = False
+
+time_per_spoon = 15  # minutes per spoon (can change anytime)
+rest_spoons = {"short": 2, "half": 5, "full": 10}

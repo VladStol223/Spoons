@@ -25,8 +25,7 @@ timer_hand = avatarBackgrounds['timer_hand']
 timer_top = avatarBackgrounds['timer_top']
 
 # === Timer configuration ===
-time_per_spoon_min = 15  # minutes per spoon (can change anytime)
-deg_per_spoon = time_per_spoon_min * 6       # hand rotation per spoon (for display)
+deg_per_spoon = time_per_spoon * 6       # hand rotation per spoon (for display)
 
 # === Timer animation state ===
 timer_angle = 45         # starts rotated 45° CW (the "0" position)
@@ -64,7 +63,7 @@ def get_pulse_alpha(t, min_alpha=128, max_alpha=255, speed=4.0):
     return int(min_alpha + (max_alpha - min_alpha) * 0.3 * (1 + math.sin(t * speed)))
 
 
-def draw_input_spoons(screen, spoons, spoon_name, delta_time, icon_image, input_active, background_color, timer_toggle_on,  x_offset=40):
+def draw_input_spoons(screen, spoons, spoon_name, delta_time, icon_image, input_active, background_color, timer_toggle_on, time_per_spoon, x_offset=40):
     global spoon_rects, rest_icon_rects, rest_labels, timer_angle, rotating, timer_active, timer_start_time, timer_end_time, spoons_to_recover, total_spoons_to_recover, next_spoon_time, intro_anim_active, intro_start_time, intro_duration
 
     # --- Timer Toggle Button ---
@@ -103,7 +102,7 @@ def draw_input_spoons(screen, spoons, spoon_name, delta_time, icon_image, input_
 
         # --- Update logic if active ---
         total_rotation = total_spoons_to_recover * deg_per_spoon
-        total_secs = total_spoons_to_recover * time_per_spoon_min * 60
+        total_secs = total_spoons_to_recover * time_per_spoon * 60
 
         if intro_anim_active and intro_start_time:
             # Phase A: spin from 45° to start-angle, label counts up 00:00 -> total time
@@ -127,7 +126,7 @@ def draw_input_spoons(screen, spoons, spoon_name, delta_time, icon_image, input_
                 timer_active = True
                 timer_start_time = datetime.now()
                 timer_end_time   = timer_start_time + timedelta(seconds=total_secs)
-                next_spoon_time  = timer_start_time + timedelta(minutes=time_per_spoon_min)
+                next_spoon_time  = timer_start_time + timedelta(minutes=time_per_spoon)
 
         elif timer_active and timer_start_time and timer_end_time:
             # Phase B: countdown; hand moves back to 45°, label shows time remaining
@@ -138,11 +137,11 @@ def draw_input_spoons(screen, spoons, spoon_name, delta_time, icon_image, input_
             prog = max(0.0, min(1.0, prog))
             timer_angle = 45 + (1.0 - prog) * total_rotation
 
-            # Award spoons at intervals — ensures 1 spoon per time_per_spoon_min minutes
+            # Award spoons at intervals — ensures 1 spoon per time_per_spoon minutes
             while spoons_to_recover > 0 and now >= next_spoon_time:
                 spoons += 1
                 spoons_to_recover -= 1
-                next_spoon_time += timedelta(minutes=time_per_spoon_min)
+                next_spoon_time += timedelta(minutes=time_per_spoon)
                 if spoons_to_recover <= 0:
                     timer_active = False
                     break
@@ -225,19 +224,19 @@ def draw_input_spoons(screen, spoons, spoon_name, delta_time, icon_image, input_
         screen.blit(label, label_rect)
 
 
-def logic_input_spoons(event, daily_spoons, spoons, input_active, timer_toggle_on):
+def logic_input_spoons(event, daily_spoons, spoons, input_active, timer_toggle_on, rest_spoons):
     global spoon_rects, rest_icon_rects
     global timer_active, timer_start_time, timer_end_time, spoons_to_recover, total_spoons_to_recover, next_spoon_time, intro_anim_active, intro_start_time, intro_duration, timer_angle
     page = "input_spoons"
 
-    rest_values = {"short": 2, "half": 5, "full": 10}
+    rest_values = rest_spoons
 
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
         # --- Timer toggle click ---
         toggle_rect = pygame.Rect(120, 100, timer_toggle_button.get_width(), timer_toggle_button.get_height())
         if toggle_rect.collidepoint(event.pos):
             timer_toggle_on = not timer_toggle_on
-            return spoons, daily_spoons, page, input_active, timer_toggle_on
+            return spoons, daily_spoons, page, input_active, timer_toggle_on, rest_spoons
 
         # --- Rest icon clicks ---
         for name, rect in rest_icon_rects.items():
@@ -260,6 +259,6 @@ def logic_input_spoons(event, daily_spoons, spoons, input_active, timer_toggle_o
                     if spoons > 99:
                         spoons = 99
 
-                return spoons, daily_spoons, "input_spoons", False, timer_toggle_on
+                return spoons, daily_spoons, "input_spoons", False, timer_toggle_on, rest_spoons
 
-    return spoons, daily_spoons, page, input_active, timer_toggle_on
+    return spoons, daily_spoons, page, input_active, timer_toggle_on, rest_spoons

@@ -140,12 +140,12 @@ def logic_login(event, login_mode, username_text, password_text, input_active):
                     # NEW: precise probe to distinguish wrong username vs wrong password
                     status = probe_login_status(u, p)
 
+                    from state_data import _download_state
+
                     if status == "ok":
                         set_user_folder(u)
-
                         _status_msg = ""
-                        # Pull remote if present (ok if missing—fresh account with no upload yet)
-                        download_data_json_if_present()
+                        _download_state["trigger_download"] = True
                         return login_mode, username_text, password_text, None, "input_spoons"
 
                     if status == "wrong_password":

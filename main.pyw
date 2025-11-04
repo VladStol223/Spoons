@@ -139,8 +139,8 @@ def sync_and_reload(flag):
         border_name, hubIcons_name, spoonIcons_name, restIcons_name,
         hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
         calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites,
-        last_save_date ,spoons_used_today, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle
-    ) = load_data()
+        last_save_date ,spoons_used_today, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
+        rest_spoons, time_per_spoon) = load_data()
     print(f"[local] loaded data.json")
 
 def compute_spoons_needed_today(*task_lists):
@@ -219,7 +219,8 @@ def hub_buttons(event):
             folder_five, folder_six, streak_dates,
             border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
             scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today, 
-            sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle)
+            sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
+            rest_spoons, time_per_spoon)
 
             if page == "manage_tasks":
                 scroll_offset = 0
@@ -257,7 +258,8 @@ taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro,
 border_name, hubIcons_name, spoonIcons_name, restIcons_name,
 hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
 calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites,
-last_save_date ,spoons_used_today, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle) = load_data()
+last_save_date ,spoons_used_today, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
+rest_spoons, time_per_spoon) = load_data()
 current_theme = switch_theme(loaded_theme, globals())
 
 # --- Startup daily spoons grant + per-day counter reset ---
@@ -312,7 +314,8 @@ if (last_date is None) or (today > last_date):
             folder_five, folder_six, streak_dates,
             border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
             scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today, 
-            sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle)
+            sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
+            rest_spoons, time_per_spoon)
 else:
     streak_task_completed = False
 
@@ -363,9 +366,6 @@ while running:
             _download_state["done"] = True
             _download_state["done_started_at"] = None
 
-
-
-
     # ---- live midnight rollover ----
     new_date_str = datetime.now().strftime("%Y-%m-%d")
     if new_date_str != current_date_str:
@@ -400,7 +400,8 @@ while running:
             folder_five, folder_six, streak_dates,
             border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
             scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today, 
-            sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle)
+            sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
+            rest_spoons, time_per_spoon)
 
     spoons_needed_today = compute_spoons_needed_today(homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list)
 
@@ -419,10 +420,10 @@ while running:
 
     elif page == "input_spoons":
         if not UI_elements_initialized:
-            draw_input_spoons(screen, spoons, spoon_name_input, delta_time, icon_image, input_active, background_color, timer_toggle_on, x_offset=140)
+            draw_input_spoons(screen, spoons, spoon_name_input, delta_time, icon_image, input_active, background_color, timer_toggle_on, time_per_spoon, x_offset=140)
             UI_elements_initialized = True
         else:
-            draw_input_spoons(screen, spoons, spoon_name_input, delta_time, icon_image, input_active, background_color, timer_toggle_on, x_offset=140)
+            draw_input_spoons(screen, spoons, spoon_name_input, delta_time, icon_image, input_active, background_color, timer_toggle_on, time_per_spoon, x_offset=140)
         
     elif page == "input_tasks":
         draw_input_tasks(screen, spoons, current_task, current_description, current_spoons, input_active, 
@@ -489,7 +490,9 @@ while running:
                   folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         
     elif page == "settings":
-        draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, icon_image,manillaFolder_name,spoon_name_input, inventory_tab, background_color, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open)
+        draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, icon_image,
+                      manillaFolder_name, rest_spoons, time_per_spoon ,spoon_name_input, inventory_tab, background_color, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, 
+                      folders_dropdown_open)
 
     if page not in ("calendar", "social", "settings"):
         draw_hotbar(screen, spoons, icon_image, spoon_name_input, daily_spoons, spoons_needed_today, spoons_used_today)
@@ -505,7 +508,8 @@ while running:
             folder_five, folder_six, streak_dates,
             border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
             scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today, 
-            sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle)
+            sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
+            rest_spoons, time_per_spoon)
 
             # make the window vanish instantly
             try:
@@ -532,7 +536,8 @@ while running:
                         folder_five, folder_six, streak_dates,
                         border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
                         scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today, 
-                        sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle)
+                        sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
+                        rest_spoons, time_per_spoon)
                         prev_page = page
                         if page_key == "manage_tasks":
                             scroll_offset = 0
@@ -585,7 +590,8 @@ while running:
                         save_data(spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, 
                                   daily_spoons, theme, icon_image, spoon_name_input, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
                                   streak_dates, border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
-                                  scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle)
+                                  scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
+                                  rest_spoons, time_per_spoon)
                         prev_page = page
                         if new_page_key == "manage_tasks":
                             scroll_offset = 0
@@ -606,7 +612,7 @@ while running:
             login_mode, login_username, login_password, login_input_active, page = logic_login(event, login_mode, login_username, login_password, login_input_active)
 
         elif page == "input_spoons" and UI_elements_initialized:
-            spoons, daily_spoons, page, input_active, timer_toggle_on = logic_input_spoons(event, daily_spoons, spoons, input_active, timer_toggle_on)
+            spoons, daily_spoons, page, input_active, timer_toggle_on, rest_spoons = logic_input_spoons(event, daily_spoons, spoons, input_active, timer_toggle_on, rest_spoons)
             
         elif page == "input_tasks":
             input_active,page,folder, description_toggle_on, time_toggle_on, recurring_toggle_on,current_task, current_description, current_spoons,task_month,task_day,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list,task_how_often,task_how_long,task_repetitions_amount, start_time = logic_input_tasks(event,screen,current_task, current_description, current_spoons,folder,task_month,task_day,task_how_often,task_how_long,task_repetitions_amount, description_toggle_on, time_toggle_on,recurring_toggle_on,max_days,input_active,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list, start_time)
@@ -629,9 +635,9 @@ while running:
         elif page == "social":
             tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_social(event, tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         elif page == "settings":
-            (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, inventory_tab, spoon_name_input, icon_image, 
+            (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, inventory_tab, spoon_name_input, icon_image, 
              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open,
-            border, border_name, manillaFolder, manillaFolder_name, current_theme) = logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, inventory_tab, spoon_name_input, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open, border, border_name, manillaFolder, manillaFolder_name, current_theme)
+            border, border_name, manillaFolder, manillaFolder_name, current_theme) = logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, inventory_tab, spoon_name_input, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open, border, border_name, manillaFolder, manillaFolder_name, current_theme)
             switch_theme(current_theme, globals())
             if not spoons_debt_toggle and spoons < 0:
                 spoons = 0

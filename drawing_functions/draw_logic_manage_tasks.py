@@ -933,30 +933,19 @@ def _draw_edit_form(screen, background_color, icon_image, spoons, task_list):
         return fallback_month
 
     now = datetime.now()
-
-    # if the month field is currently being typed, use the original (committed) month for calculations
     raw_month_for_draw = edit_state.get("month", str(now.month)) or str(now.month)
-    if input_active == "month" and edit_state.get("_month_orig_pretty"):
-        raw_month_for_draw = edit_state["_month_orig_pretty"]
-
+    if input_active == "month" and edit_state.get("_month_orig_pretty"): raw_month_for_draw = edit_state["_month_orig_pretty"]
     mon = _safe_month_to_int(raw_month_for_draw, now.month)
+    try: year = int(edit_state.get("year", now.year))
+    except Exception: year = now.year
+    max_day_ctx = calendar.monthrange(year, mon)[1]
+    raw_day_for_draw = edit_state.get("day", str(min(now.day, max_day_ctx))) or str(min(now.day, max_day_ctx))
+    if input_active == "day" and (edit_state.get("day", "") == ""): raw_day_for_draw = edit_state.get("_day_orig", str(min(now.day, max_day_ctx)))
+    try: day = max(1, min(int(str(raw_day_for_draw).strip()), max_day_ctx))
+    except Exception: day = min(now.day, max_day_ctx)
+    due = datetime(year, mon, day)
 
-    # similar idea for day: if actively typing and empty, fall back to original
-    raw_day_for_draw = edit_state.get("day", str(now.day)) or str(now.day)
-    if input_active == "day" and (edit_state.get("day", "") == ""):
-        raw_day_for_draw = edit_state.get("_day_orig", str(now.day))
 
-    try:
-        day = max(1, min(31, int(str(raw_day_for_draw).strip())))
-    except Exception:
-        day = now.day
-
-    # compute date/status
-    now = datetime.now()
-    try:
-        due = datetime(now.year, mon, day)
-    except:
-        due = now
     days_left = (due - now).days + 1
 
     if cost > 0 and done >= cost:
@@ -1245,19 +1234,78 @@ def _draw_edit_form(screen, background_color, icon_image, spoons, task_list):
         draw_input_box(screen,done_rect,input_active == "done",str(done),LIGHT_GRAY,DARK_SLATE_GRAY,True,background_color,"light") #type: ignore
         edit_buttons.append((cost_rect,"cost")); edit_buttons.append((done_rect,"done"))
 
-        # Month/Day + Start Time
-        due_horizontal_shift = 65
+        # Year / Month / Day + Start Time
+        due_horizontal_shift = 25
         y1 = y0 + h + sp + 30
 
-        x1_shifted = x1 - due_horizontal_shift
-        mon_rect = pygame.Rect(x1_shifted, y1, 200, h)
-        day_rect = pygame.Rect(x1_shifted + 200 + sp, y1, 100, h)
-        st_rect  = pygame.Rect(day_rect.right + sp, y1, 140, h)  # start time to the right
+        x1_shifted = x1 + due_horizontal_shift
+        year_rect = pygame.Rect(x1_shifted - 120 - sp, y1, 120, h)
+        mon_rect  = pygame.Rect(x1_shifted, y1, 160, h)
+        day_rect  = pygame.Rect(mon_rect.right + sp, y1, 100, h)
+        st_rect   = pygame.Rect(day_rect.right + sp, y1, 140, h)  # start time to the right
 
         # Labels (aligned with shifted rects)
-        screen.blit(header_font.render("Due Month:", True, WHITE), (x1_shifted + 40, y1 - 30))       # type: ignore
-        screen.blit(header_font.render("Due Day:",   True, WHITE), (day_rect.x + 10,   y1 - 30))     # type: ignore
-        screen.blit(header_font.render("Start Time:",True, WHITE), (st_rect.x  + 4,    y1 - 30))     # type: ignore
+        screen.blit(header_font.render("Due Year:",  True, WHITE), (year_rect.x + 15, y1 - 30))      # type: ignore
+        screen.blit(header_font.render("Due Month:", True, WHITE), (mon_rect.x  + 30, y1 - 30))      # type: ignore
+        screen.blit(header_font.render("Due Day:",   True, WHITE), (day_rect.x + 10,  y1 - 30))      # type: ignore
+        screen.blit(header_font.render("Start Time:",True, WHITE), (st_rect.x  + 4,   y1 - 30))      # type: ignore
+
+        # Get display values
+        raw_year = str(edit_state.get("year", str(datetime.now().year)))
+        raw_mon  = str(edit_state.get("month", calendar.month_name[mon]))
+        raw_day  = str(edit_state.get("day", day))
+        year_display = raw_year
+        mon_display  = raw_mon if input_active == "month" else calendar.month_name[mon]
+        day_display  = raw_day if input_active == "day"   else str(day)
+
+        # Draw input boxes
+        draw_input_box(screen, year_rect, input_active == "year", year_display,
+                       LIGHT_GRAY, DARK_SLATE_GRAY, True, background_color, "light") # type: ignore
+        draw_input_box(screen, mon_rect, input_active == "month", mon_display,
+                       LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light") # type: ignore
+        draw_input_box(screen, day_rect, input_active == "day", day_display,
+                       LIGHT_GRAY, DARK_SLATE_GRAY, True,  background_color, "light") # type: ignore
+
+        # Start time
+        raw_st = edit_state.get("start_time", "")
+        def _fmt_st_display(s):
+            if input_active == "start_time": return s
+            if s and s.isdigit():
+                s = s.zfill(4)[:4]
+                return f"{s[:2]}:{s[2:]}"
+            return "HH:MM"
+        draw_input_box(screen, st_rect, input_active == "start_time", _fmt_st_display(raw_st),
+                       LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light") # type: ignore
+
+        # --- Arrows ---
+        arrow = font.render(">", True, arrow_color)
+        up    = pygame.transform.rotate(arrow, 90)
+        dn    = pygame.transform.rotate(arrow, 270)
+
+        y_up = pygame.Rect(year_rect.right - 23, year_rect.y + 5, 15, 15)
+        y_dn = pygame.Rect(year_rect.right - 23, year_rect.y + year_rect.height - 20, 15, 15)
+        m_up = pygame.Rect(mon_rect.right - 23, mon_rect.y + 5, 15, 15)
+        m_dn = pygame.Rect(mon_rect.right - 23, mon_rect.y + mon_rect.height - 20, 15, 15)
+        d_up = pygame.Rect(day_rect.right - 23, day_rect.y + 5, 15, 15)
+        d_dn = pygame.Rect(day_rect.right - 23, day_rect.y + day_rect.height - 20, 15, 15)
+        st_up = pygame.Rect(st_rect.right - 23, st_rect.y + 5, 15, 15)
+        st_dn = pygame.Rect(st_rect.right - 23, st_rect.y + st_rect.height - 20, 15, 15)
+
+        for b in (y_up, y_dn, m_up, m_dn, d_up, d_dn, st_up, st_dn):
+            pygame.draw.rect(screen, input_box_color, b)
+        for u, d in ((y_up, y_dn), (m_up, m_dn), (d_up, d_dn), (st_up, st_dn)):
+            screen.blit(up, (u.left - 6, u.top + 3))
+            screen.blit(dn, (d.left - 9, d.top - 3))
+
+        # add a reduced hitbox for text typing
+        year_text_rect = pygame.Rect(year_rect.x, year_rect.y, year_rect.w - 24, year_rect.h)
+        edit_buttons += [
+            (year_text_rect, "year"),
+            (y_up, "year_up"), (y_dn, "year_down"),
+            (m_up, "month_up"), (m_dn, "month_down"),
+            (d_up, "day_up"), (d_dn, "day_down"),
+            (st_up, "start_time_up"), (st_dn, "start_time_down")
+        ]
 
 
         # Month/Day display values (pretty when inactive, raw when active)
@@ -1449,15 +1497,17 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
         edit_state["month"] = ""  # clear visible text
 
     def _commit_month_on_exit():
-        """Commit suggestion if present, else revert to original pretty month."""
-        sugg = edit_state.get("_month_suggestion_full")
-        orig = edit_state.get("_month_orig_pretty")
-        if sugg:
-            edit_state["month"] = sugg
-        elif orig:
-            edit_state["month"] = orig
-        edit_state.pop("_month_suggestion_full", None)
-        edit_state.pop("_month_orig_pretty", None)
+        """Commit suggestion if present, else revert to original pretty month, then clamp day to month/year max."""
+        sugg = edit_state.get("_month_suggestion_full"); orig = edit_state.get("_month_orig_pretty")
+        if sugg: edit_state["month"] = sugg
+        elif orig: edit_state["month"] = orig
+        edit_state.pop("_month_suggestion_full", None); edit_state.pop("_month_orig_pretty", None)
+        try: y = int(edit_state.get("year", str(datetime.now().year)))
+        except Exception: y = datetime.now().year
+        rawm = edit_state.get("month", str(datetime.now().month)); m = int(rawm) if str(rawm).isdigit() else (list(calendar.month_name).index(rawm) or datetime.now().month); maxd = calendar.monthrange(y, m)[1]
+        try: d = int(edit_state.get("day", "1") or 1)
+        except Exception: d = 1
+        edit_state["day"] = str(min(max(d,1), maxd))
 
     def _begin_day_typing():
         """Start day typing: clear field, remember original."""
@@ -1465,12 +1515,15 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
         edit_state["day"] = ""
 
     def _commit_day_on_exit():
-        """If empty or invalid, revert to original; else keep typed."""
+        """Clamp typed day to month/year max; if empty or non-digit, revert to original."""
         val = str(edit_state.get("day", "")).strip()
-        if not val.isdigit():
-            # revert if empty or invalid
+        try: y = int(edit_state.get("year", str(datetime.now().year)))
+        except Exception: y = datetime.now().year
+        rawm = edit_state.get("month", str(datetime.now().month)); m = int(rawm) if str(rawm).isdigit() else (list(calendar.month_name).index(rawm) or datetime.now().month); maxd = calendar.monthrange(y, m)[1]
+        if val.isdigit():
+            d = max(1, min(int(val), maxd)); edit_state["day"] = str(d)
+        else:
             edit_state["day"] = edit_state.get("_day_orig", "")
-        # cleanup
         edit_state.pop("_day_orig", None)
 
     def _begin_start_time_typing():
@@ -1650,27 +1703,42 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
                 elif input_active == "start_time":
                     _commit_start_time_on_exit()
 
+                # Parse year/month/day safely
+                raw_year  = str(edit_state.get("year", datetime.now().year))
+                try:
+                    year = max(1900, min(2100, int(raw_year)))
+                except Exception:
+                    year = datetime.now().year
+
                 raw_month = str(edit_state.get("month", datetime.now().month))
                 if raw_month.isdigit():
                     mon = max(1, min(12, int(raw_month)))
                 else:
                     try:
-                        # accept only full month names; otherwise default to current month
                         mon = list(calendar.month_name).index(raw_month)
                         if mon == 0:
                             mon = datetime.now().month
                     except ValueError:
                         mon = datetime.now().month
 
+                # clamp day to valid days in that month/year
                 try:
                     day = int(str(edit_state.get("day", "1")).strip() or "1")
-                    day = max(1, min(31, day))
+                    max_day = calendar.monthrange(year, mon)[1]
+                    day = max(1, min(day, max_day))
                 except Exception:
                     day = 1
 
-                # Update task + SAVE START TIME
+                # Update task date safely
                 orig = task_list[currently_editing]
-                new_date = orig[5].replace(month=mon, day=day)
+                try:
+                    new_date = datetime(year, mon, day)
+                except ValueError:
+                    # fallback: clamp day again just in case
+                    max_day = calendar.monthrange(year, mon)[1]
+                    new_date = datetime(year, mon, max_day)
+
+
                 new_days = (new_date - datetime.now()).days + 1
 
                 # parse HHMM digits to hh/mm
@@ -1736,21 +1804,56 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
                             _begin_start_time_typing()
                     # Spinners (do not change focus)
                     elif key == "month_up":
-                        raw = edit_state.get("month", str(datetime.now().month))
-                        cur = int(raw) if raw.isdigit() else (list(calendar.month_name).index(raw) or 1)
-                        nxt = cur + 1 if cur < 12 else 1
-                        edit_state["month"] = calendar.month_name[nxt]
+                        raw = edit_state.get("month", str(datetime.now().month)); cur = int(raw) if raw.isdigit() else (list(calendar.month_name).index(raw) or 1); nxt = cur + 1 if cur < 12 else 1; edit_state["month"] = calendar.month_name[nxt]; 
+                        try: y = int(edit_state.get("year", str(datetime.now().year))); 
+                        except Exception: y = datetime.now().year
+                        maxd = calendar.monthrange(y, nxt)[1]; d = int(edit_state.get("day", "1") or 1); edit_state["day"] = str(min(max(d,1), maxd))
                     elif key == "month_down":
-                        raw = edit_state.get("month", str(datetime.now().month))
-                        cur = int(raw) if raw.isdigit() else (list(calendar.month_name).index(raw) or 1)
-                        prev = cur - 1 if cur > 1 else 12
-                        edit_state["month"] = calendar.month_name[prev]
+                        raw = edit_state.get("month", str(datetime.now().month)); cur = int(raw) if raw.isdigit() else (list(calendar.month_name).index(raw) or 1); prev = cur - 1 if cur > 1 else 12; edit_state["month"] = calendar.month_name[prev]; 
+                        try: y = int(edit_state.get("year", str(datetime.now().year))); 
+                        except Exception: y = datetime.now().year
+                        maxd = calendar.monthrange(y, prev)[1]; d = int(edit_state.get("day", "1") or 1); edit_state["day"] = str(min(max(d,1), maxd))
                     elif key == "day_up":
-                        d = int(edit_state.get("day", "1") or 1)
-                        edit_state["day"] = str(min(d + 1, 31))
+                        try:
+                            y = int(edit_state.get("year", str(datetime.now().year)))
+                        except Exception:
+                            y = datetime.now().year
+                        rawm = edit_state.get("month", str(datetime.now().month))
+                        m = int(rawm) if str(rawm).isdigit() else (list(calendar.month_name).index(rawm) or datetime.now().month)
+                        maxd = calendar.monthrange(y, m)[1]
+                        try:
+                            d = int(edit_state.get("day", "1") or 1)
+                        except Exception:
+                            d = 1
+                        d = d + 1 if d < maxd else 1  # wrap around to 1 if exceeding max
+                        edit_state["day"] = str(d)
+
                     elif key == "day_down":
-                        d = int(edit_state.get("day", "1") or 1)
-                        edit_state["day"] = str(max(d - 1, 1))
+                        try:
+                            y = int(edit_state.get("year", str(datetime.now().year)))
+                        except Exception:
+                            y = datetime.now().year
+                        rawm = edit_state.get("month", str(datetime.now().month))
+                        m = int(rawm) if str(rawm).isdigit() else (list(calendar.month_name).index(rawm) or datetime.now().month)
+                        maxd = calendar.monthrange(y, m)[1]
+                        try:
+                            d = int(edit_state.get("day", "1") or 1)
+                        except Exception:
+                            d = 1
+                        d = d - 1 if d > 1 else maxd  # wrap around to max if going below 1
+                        edit_state["day"] = str(d)
+                    elif key == "year_up":
+                        try: y = int(edit_state.get("year", str(datetime.now().year)))
+                        except Exception: y = datetime.now().year
+                        ny = min(2100, y + 1); edit_state["year"] = str(ny)
+                        rawm = edit_state.get("month", str(datetime.now().month)); m = int(rawm) if str(rawm).isdigit() else (list(calendar.month_name).index(rawm) or datetime.now().month); maxd = calendar.monthrange(ny, m)[1]; d = int(edit_state.get("day", "1") or 1); edit_state["day"] = str(min(max(d,1), maxd))
+                    elif key == "year_down":
+                        try: y = int(edit_state.get("year", str(datetime.now().year)))
+                        except Exception: y = datetime.now().year
+                        ny = max(2000, y - 1); edit_state["year"] = str(ny)
+                        rawm = edit_state.get("month", str(datetime.now().month)); m = int(rawm) if str(rawm).isdigit() else (list(calendar.month_name).index(rawm) or datetime.now().month); maxd = calendar.monthrange(ny, m)[1]; d = int(edit_state.get("day", "1") or 1); edit_state["day"] = str(min(max(d,1), maxd))
+
+
                     elif key in ("start_time_up", "start_time_down"):
                         s = (edit_state.get("start_time", "") or "").zfill(4)[:4]
                         try:
@@ -1794,6 +1897,20 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
                     _begin_day_typing()
                 elif key == "start_time":
                     _begin_start_time_typing()
+
+            #  --- If user clicks anywhere NOT on an edit button, clear focus ---
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                # only runs after checking all edit_buttons
+                if not any(rect.collidepoint(event.pos) for rect, _ in edit_buttons):
+                    if input_active:
+                        # commit whatever field we’re leaving
+                        if input_active == "month":
+                            _commit_month_on_exit()
+                        elif input_active == "day":
+                            _commit_day_on_exit()
+                        elif input_active == "start_time":
+                            _commit_start_time_on_exit()
+                        input_active = None
 
         # Keyboard events for active field
         if event.type == pygame.KEYDOWN and input_active:
@@ -1852,7 +1969,15 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
 
             elif input_active == "day":
                 if ch.isdigit() and len(cur) < 2:
-                    edit_state["day"] = cur + ch
+                    try: y = int(edit_state.get("year", str(datetime.now().year)))
+                    except Exception: y = datetime.now().year
+                    rawm = edit_state.get("month", str(datetime.now().month)); m = int(rawm) if str(rawm).isdigit() else (list(calendar.month_name).index(rawm) or datetime.now().month); maxd = calendar.monthrange(y, m)[1]
+                    candidate = (cur + ch).lstrip("0"); candidate = candidate if candidate != "" else "0"
+                    d = int(candidate)
+                    if d == 0: edit_state["day"] = "1"
+                    elif d > maxd: edit_state["day"] = str(maxd)
+                    else: edit_state["day"] = str(d)
+
 
             elif input_active == "start_time":
                 if ch.isdigit() and len(cur) < 4:
@@ -1914,6 +2039,7 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
                         "name":   name,
                         "cost":   str(cost),
                         "done":   str(done_),
+                        "year":   str(date.year),
                         "month":  str(date.month),
                         "day":    str(date.day),
                         "labels": labels[:],

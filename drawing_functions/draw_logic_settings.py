@@ -91,7 +91,7 @@ def _draw_result_overlay(screen, ok: bool, pos: tuple, started_at_key: str):
 # track which tab is active
 _active_settings_tab = "account"  # default tab
 
-def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, icon_image, manillaFolder_name, *inventory_args):
+def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, icon_image, manillaFolder_name, rest_spoons, time_per_spoon, *inventory_args):
     """
     Draws the Settings screen, which now contains two tabs:
     'Graphics Settings' (shows Inventory UI)
@@ -150,6 +150,13 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
     # --- Separator line below tabs ---
     pygame.draw.line(screen, (0, 0, 0), (int(sw*0.15), top_y + btn_h), (int(sw*0.85), top_y + btn_h), 4)
 
+    left_x = 575
+    text_x = 150
+    start_y = int(sh * 0.21)
+    gap_y = 70
+    scale = 0.80
+    box_size = int(sh * 0.083)
+
     # --- Active tab content ---
     if _active_settings_tab == "graphics":
         if inventory_args:
@@ -159,15 +166,27 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
         # draw account settings (existing content)
         # reuse your original UI section
         username = get_current_user() or "(not signed in)"
-        user_surf = font.render(f"Signed in as: {username}", True, (200, 200, 200))
-        screen.blit(user_surf, (((sw+82)  - user_surf.get_width()) // 2, int(sh * 0.4)))
+        user_surf = font.render(f"Signed in as: {username}", True, WHITE) # type: ignore
+        screen.blit(user_surf, (text_x, start_y + gap_y*4))
+
+        # Log out / Log in button
+        btn_w, btn_h = int(sw * 0.25), int(sh * 0.10)
+        _logout_rect = pygame.Rect(text_x,start_y + gap_y*4 + 45, btn_w, btn_h)
+        if username == "(not signed in)":
+            pygame.draw.rect(screen, (70, 200, 70), _logout_rect, border_radius=16)
+            label = font.render("Log In", True, (255, 255, 255))
+        else:
+            pygame.draw.rect(screen, (200, 70, 70), _logout_rect, border_radius=16)
+            label = font.render("Log out", True, (255, 255, 255))
+        screen.blit(label, (_logout_rect.centerx - label.get_width() // 2, _logout_rect.centery - label.get_height() // 2))
 
         # Toggle: Auto-download at startup
-        toggle_y = int(sh * 0.90) - 5
-        label = font.render("Auto-Sync", True, (200, 200, 200))
-        screen.blit(label, (sw*0.85, toggle_y))
-        box_size = int(sh * 0.06)
-        _auto_rect = pygame.Rect(sw * 0.81, toggle_y, box_size, box_size)
+        label = font.render("Auto-Sync", True, WHITE) # type: ignore
+        screen.blit(label, (text_x, start_y))
+        sub = small_font.render("Automatically syncs data from other devices", True, GRAY) # type: ignore
+        screen.blit(sub, (text_x, start_y + 28))
+        
+        _auto_rect = pygame.Rect(left_x, start_y, box_size, box_size)
         pygame.draw.rect(screen, (180, 180, 180), _auto_rect, width=3, border_radius=6)
         inner = pygame.Rect(_auto_rect.x, _auto_rect.y, _auto_rect.w, _auto_rect.h)
         if get_auto_download_flag():
@@ -178,10 +197,12 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
             screen.blit(rx, inner.topleft)
 
         # Toggle: Social Features Enabled
-        label = font.render("Social Features", True, (200, 200, 200))
-        screen.blit(label, (sw*0.17, toggle_y))
-        box_size = int(sh * 0.06)
-        _social_rect = pygame.Rect(sw * 0.13, toggle_y, box_size, box_size)
+        label = font.render("Social Features", True, WHITE) # type: ignore
+        screen.blit(label, (text_x, start_y + gap_y))
+        sub = small_font.render("Enable leaderboards and friend stats", True, GRAY) # type: ignore
+        screen.blit(sub, (text_x, start_y + gap_y + 28))
+
+        _social_rect = pygame.Rect(left_x, start_y + gap_y, box_size, box_size)
         pygame.draw.rect(screen, (180, 180, 180), _social_rect, width=3, border_radius=6)
         inner = pygame.Rect(_social_rect.x, _social_rect.y, _social_rect.w, _social_rect.h)
         if get_social_enabled_flag():
@@ -191,22 +212,17 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
             rx = pygame.transform.smoothscale(floppy_disk_redx, (inner.w, inner.h))
             screen.blit(rx, inner.topleft)
 
-        # Log out / Log in button
-        btn_w, btn_h = int(sw * 0.28), int(sh * 0.10)
-        _logout_rect = pygame.Rect(((sw+82)  - btn_w) // 2, int(sh * 0.5), btn_w, btn_h)
-        if username == "(not signed in)":
-            pygame.draw.rect(screen, (70, 200, 70), _logout_rect, border_radius=16)
-            label = font.render("Log In", True, (255, 255, 255))
-        else:
-            pygame.draw.rect(screen, (200, 70, 70), _logout_rect, border_radius=16)
-            label = font.render("Log out", True, (255, 255, 255))
-        screen.blit(label, (_logout_rect.centerx - label.get_width() // 2, _logout_rect.centery - label.get_height() // 2))
-
         # Upload & download floppies (as before)
-        _upload_pos = (int(sw * 0.90), int(sh * 0.90 - 75))
-        screen.blit(floppy_disk_upload, _upload_pos)
+        label = font.render("Upload", True, WHITE) # type: ignore
+        screen.blit(label, (text_x, start_y + gap_y*2))
+        sub = small_font.render("Saves your progress to the cloud", True, GRAY) # type: ignore
+        screen.blit(sub, (text_x, start_y + gap_y*2 + 28))
+
+        _upload_pos = (left_x, start_y + gap_y * 2)
         uw, uh = floppy_disk_upload.get_size()
-        _upload_rect = pygame.Rect(_upload_pos[0], _upload_pos[1], uw, uh)
+        floppy_disk_upload_small = pygame.transform.scale(floppy_disk_upload, (uw*scale, uh*scale))
+        screen.blit(floppy_disk_upload_small, _upload_pos)
+        _upload_rect = pygame.Rect(_upload_pos[0], _upload_pos[1], uw*scale, uh*scale)
 
         now = pygame.time.get_ticks()
         if _upload_state["uploading"]:
@@ -214,6 +230,7 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
             dw, dh = floppy_disk_dots.get_size()
             third = dw // 3
             x0, y0 = _upload_pos
+            x0 = x0 - 5
             visible_count = 0 if _upload_state["anim_step"] == 3 else (_upload_state["anim_step"] + 1)
             if visible_count >= 1:
                 screen.blit(floppy_disk_dots.subsurface(pygame.Rect(0, 0, third, dh)), (x0, y0))
@@ -223,32 +240,91 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
                 screen.blit(floppy_disk_dots.subsurface(pygame.Rect(third * 2, 0, third, dh)), (x0 + third * 2, y0))
         elif _upload_state["done"]:
             _draw_result_overlay(screen, _upload_state["ok"], _upload_pos, "upload")
+        
+        label = font.render("Download", True, WHITE) # type: ignore
+        screen.blit(label, (text_x, start_y + gap_y*3))
+        sub = small_font.render("Retrieves your saved progress from the cloud", True, GRAY) # type: ignore
+        screen.blit(sub, (text_x, start_y + gap_y*3 + 28))
 
-        _download_pos = (int(sw * 0.80), int(sh * 0.90 - 75))
-        screen.blit(floppy_disk_download, _download_pos)
+        _download_pos = (left_x, start_y + gap_y * 3)
         dw, dh = floppy_disk_download.get_size()
-        _download_rect = pygame.Rect(_download_pos[0], _download_pos[1], dw, dh)
+        floppy_disk_download_small = pygame.transform.scale(floppy_disk_download, (dw*scale, dh*scale))
+        screen.blit(floppy_disk_download_small, _download_pos)
+        _download_rect = pygame.Rect(_download_pos[0], _download_pos[1], dw*scale, dh*scale)
+
+        if _download_state["done"]:
+            _draw_result_overlay(screen, _download_state["ok"], _download_pos, "download")
+
         if _download_state["done"]:
             _draw_result_overlay(screen, _download_state["ok"], _download_pos, "download")
     
     elif _active_settings_tab == "spoons":
-        prompts = [
-            prompt_font.render(f"Daily Wake-up {spoon_name}", True, (255,255,255)),
-        ]
+        global _spoons_debt_rect, _spoons_debt_cons_rect
+        sw, sh = screen.get_size()
+        input_gap_x = 10
+        font_color = (255, 255, 255)
+        sub_color = (180, 180, 180)
 
-        # --- Spoons-related toggles ---
-        global _spoons_debt_rect
-        global _spoons_debt_cons_rect
-        box_size = int(sh * 0.06)
+        # === DAILY WAKE-UP SPOONS ===
+        title = font.render("Daily Wake-up Spoons", True, font_color)
+        screen.blit(title, (text_x, start_y))
+        sub = small_font.render("Set how many spoons you wake up with", True, sub_color)
+        screen.blit(sub, (text_x, start_y + 28))
 
-        toggle_start_y = int(sh * 0.8)
-        toggle_gap = int(sh * 0.1)
+        # Daily input boxes
+        dy = start_y
+        box_w, box_h = int(sw * 0.04), 30
+        for i, day in enumerate(days):
+            label = day_font.render(f"{day}:", True, font_color)
+            lx = left_x + i * (box_w + input_gap_x)
+            screen.blit(label, (lx, dy))
+            input_rect = pygame.Rect(left_x + i * (box_w + input_gap_x), dy + 27, box_w, box_h)
+            value = str(daily_spoons.get(day, ""))
+            active = input_active == day
+            draw_input_box(screen, input_rect, active, value, LIGHT_GRAY, DARK_SLATE_GRAY, True, background_color, "light", 9, 0.045)  # type: ignore
 
-        # Spoons Debt toggle
-        debt_label = font.render("Enable Spoons Debt", True, (255,255,255))
-        screen.blit(debt_label, (sw*0.17, toggle_start_y))
-        _spoons_debt_rect = pygame.Rect(sw*0.13, toggle_start_y, box_size, box_size)
-        pygame.draw.rect(screen, (180,180,180), _spoons_debt_rect, width=3, border_radius=6)
+        # === REST SPOONS SECTION ===
+        rest_y = dy + 65
+        title = font.render("Rest Spoons", True, font_color)
+        screen.blit(title, (text_x, rest_y))
+        sub = small_font.render("The number of spoons you get from resting", True, sub_color)
+        screen.blit(sub, (text_x, rest_y + 28))
+
+        rest_labels = ["Short Rest", "Half Rest", "Full Rest"]
+        rest_y += 5
+        rest_box_w = int(sw * 0.08)
+        rest_gap = 40
+        # === REST SPOONS INPUTS ===
+        for i, key in enumerate(["short", "half", "full"]):
+            r_label = rest_labels[i]
+            lx = left_x + i * (rest_box_w + rest_gap)
+            label = day_font.render(r_label, True, font_color)
+            screen.blit(label, (lx, rest_y))
+            input_rect = pygame.Rect(lx, rest_y + 27, rest_box_w, box_h)
+            value = str(rest_spoons.get(key, 0))
+            active = input_active == key
+            draw_input_box(screen, input_rect, active, value, LIGHT_GRAY, DARK_SLATE_GRAY, True, background_color, "light", 9, 0.045)   # type: ignore
+
+        # === TIME PER SPOON SECTION ===
+        tps_y = rest_y + 65
+        label = font.render("Time per Spoon", True, font_color)
+        sub = small_font.render("Spoon to minute ratio (used in timers)", True, sub_color)
+        input_w = int(sw * 0.08)
+        input_rect = pygame.Rect(left_x, tps_y + 20, input_w, box_h)
+        value = str(time_per_spoon)
+        active = input_active == "time_per_spoon"
+        draw_input_box(screen, input_rect, active, value, LIGHT_GRAY, DARK_SLATE_GRAY, True, background_color, "light", 9, 0.045)  # type: ignore
+        screen.blit(label, (text_x, tps_y))
+        screen.blit(sub, (text_x, tps_y + 28))
+
+        # === ENABLE SPOONS DEBT ===
+        debt_y = tps_y + gap_y
+        debt_label = font.render("Enable Spoons Debt", True, font_color)
+        sub = small_font.render("Allows your spoons to go negative", True, sub_color)
+        screen.blit(debt_label, (text_x, debt_y))
+        screen.blit(sub, (text_x, debt_y + 28))
+        _spoons_debt_rect = pygame.Rect(left_x, debt_y, box_size, box_size)
+        pygame.draw.rect(screen, (180, 180, 180), _spoons_debt_rect, width=3, border_radius=6)
         if spoons_debt_toggle:
             chk = pygame.transform.smoothscale(floppy_disk_checkmark, (box_size, box_size))
             screen.blit(chk, _spoons_debt_rect.topleft)
@@ -256,11 +332,14 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
             rx = pygame.transform.smoothscale(floppy_disk_redx, (box_size, box_size))
             screen.blit(rx, _spoons_debt_rect.topleft)
 
-        # Spoons Debt Consequences toggle
-        cons_label = font.render("Spoons Debt Consequences", True, (255,255,255))
-        screen.blit(cons_label, (sw*0.17, toggle_start_y + toggle_gap))
-        _spoons_debt_cons_rect = pygame.Rect(sw*0.13, toggle_start_y + toggle_gap, box_size, box_size)
-        pygame.draw.rect(screen, (180,180,180), _spoons_debt_cons_rect, width=3, border_radius=6)
+        # === SPOONS DEBT CONSEQUENCES ===
+        cons_y = debt_y + gap_y
+        cons_label = font.render("Spoons Debt Consequences", True, font_color)
+        sub = small_font.render("Negative spoons roll over to next day", True, sub_color)
+        screen.blit(cons_label, (text_x, cons_y))
+        screen.blit(sub, (text_x, cons_y + 28))
+        _spoons_debt_cons_rect = pygame.Rect(left_x, cons_y, box_size, box_size)
+        pygame.draw.rect(screen, (180, 180, 180), _spoons_debt_cons_rect, width=3, border_radius=6)
         if spoons_debt_consequences_toggle:
             chk = pygame.transform.smoothscale(floppy_disk_checkmark, (box_size, box_size))
             screen.blit(chk, _spoons_debt_cons_rect.topleft)
@@ -268,28 +347,9 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
             rx = pygame.transform.smoothscale(floppy_disk_redx, (box_size, box_size))
             screen.blit(rx, _spoons_debt_cons_rect.topleft)
 
-        px1 = 130
-        py = int(sh * layout_heights["daily_prompt"])
-        for surf in prompts:
-            screen.blit(surf, (px1, py))
-            py += surf.get_height()
-
-        # — daily input labels & boxes —
-        dx = px1
-        dy = int(sh * layout_heights["daily_prompt"]) + 40
-        box_w, box_h = int(sw * 0.06), 30
-
-        for i, day in enumerate(days):
-            label = day_font.render(f"{day}:", True, (255,255,255))
-            screen.blit(label, (dx + 10 + i * (box_w + 10), dy))
-
-            input_rect = pygame.Rect(dx + i * (box_w + 10), dy + 30, box_w, box_h)
-            value = str(daily_spoons.get(day, ""))
-            active = input_active == day
-            draw_input_box(screen, input_rect, active, value, LIGHT_GRAY, DARK_SLATE_GRAY, True, background_color, "light", 9, 0.045) #type: ignore
 
 
-def logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, *inventory_args):
+def logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, *inventory_args):
     """Handles tab switching and normal settings logic."""
     global _active_settings_tab
 
@@ -322,7 +382,7 @@ def logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons
 
             if _logout_rect and _logout_rect.collidepoint(event.pos):
                 clear_credentials()
-                return ("login", daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, *updated)
+                return ("login", daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, *updated)
 
             if _upload_rect and _upload_rect.collidepoint(event.pos) and not _upload_state["uploading"]:
                 _upload_state["uploading"] = True
@@ -357,19 +417,42 @@ def logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons
 
                     # --- Spoons tab daily input box logic ---
         if _active_settings_tab == "spoons":
-            dx = 130
-            box_h = 30
-            dy = int(sh * layout_heights["daily_prompt"])
-            box_w = int(pygame.display.get_surface().get_width() * 0.06)
+            sw, sh = pygame.display.get_surface().get_size()
+            text_x = 150
+            left_x = 575
+            dy = int(sh * .21)
+            box_w, box_h = int(sw * 0.04), 30
+            input_gap_x = 10
+            font_color = (255, 255, 255)
+            sub_color = (180, 180, 180)
 
-            # Handle clicks
+            # --- Daily spoon input clicks (matches draw layout) ---
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 for i, day in enumerate(days):
-                    rect = pygame.Rect(dx + i * (box_w + 10), dy, box_w, box_h)
+                    rect = pygame.Rect(left_x + i * (box_w + input_gap_x), dy + 27, box_w, box_h)
                     if rect.collidepoint(event.pos):
                         input_active = day
-                        return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, *updated)
+                        return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, *updated)
                 input_active = ""
+
+                # --- Rest spoon input clicks (matches draw positions) ---
+                rest_y = dy + 65 + 5
+                rest_box_w = int(sw * 0.08)
+                rest_gap = 40
+                for i, key in enumerate(["short", "half", "full"]):
+                    lx = left_x + i * (rest_box_w + rest_gap)
+                    rect = pygame.Rect(lx, rest_y + 27, rest_box_w, box_h)
+                    if rect.collidepoint(event.pos):
+                        input_active = key
+                        return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, *updated)
+
+                # --- Time per spoon input click (matches draw layout) ---
+                tps_y = rest_y + 65
+                input_w = int(sw * 0.08)
+                rect_tps = pygame.Rect(left_x, tps_y + 20, input_w, box_h)
+                if rect_tps.collidepoint(event.pos):
+                    input_active = "time_per_spoon"
+                    return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, *updated)
 
     # --- Handle all typing centrally ---
     elif event.type == pygame.KEYDOWN:
@@ -383,6 +466,42 @@ def logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons
             elif event.unicode.isdigit() and len(current_val) < 2:
                 current_val += event.unicode
             daily_spoons[input_active] = int(current_val) if current_val else 0
+        
+        # 1.5) Editing Rest Spoon values
+        elif input_active in ("short", "half", "full"):
+            current_val = str(rest_spoons.get(input_active, ""))
+            if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+                input_active = ""
+            elif event.key == pygame.K_BACKSPACE:
+                current_val = current_val[:-1]
+            elif event.unicode.isdigit() and len(current_val) < 3:
+                current_val += event.unicode
+            rest_spoons[input_active] = int(current_val) if current_val else 0
+
+        # 1.6) Editing Time per Spoon (integer only, min enforced on confirm)
+        elif input_active == "time_per_spoon":
+            current_val = str(time_per_spoon)
+
+            if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+                # finalize value when pressing Enter
+                if not current_val or int(current_val) < 1:
+                    time_per_spoon = 1
+                else:
+                    time_per_spoon = int(current_val)
+                input_active = ""
+
+            elif event.key == pygame.K_BACKSPACE:
+                current_val = current_val[:-1]
+                time_per_spoon = int(current_val) if current_val.isdigit() else 0
+
+            elif event.unicode.isdigit() and len(current_val) < 3:
+                current_val += event.unicode
+                time_per_spoon = int(current_val)
+
+            # prevent invalid input (non-digits)
+            elif event.unicode not in ("\r", "\n", ""):
+                pass
+
 
         # 2) If editing spoon/folder names in graphics tab
         elif _active_settings_tab == "graphics" and input_active in ("spoon_name","folder_one","folder_two","folder_three","folder_four","folder_five","folder_six"):
@@ -414,7 +533,7 @@ def logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons
             # push modifications into "updated" so the return actually carries the typed value
             updated = buf
             
-    return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, *updated)
+    return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, *updated)
 
 
 

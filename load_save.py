@@ -183,7 +183,8 @@ def save_data(
     folder_five, folder_six, streak_dates,
     border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder,
     taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, label_favorites,
-    spoons_used_today, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle):
+    spoons_used_today, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
+    rest_spoons, time_per_spoon):
 
 
     # resolve icon file name
@@ -208,6 +209,8 @@ def save_data(
         TASK_CATEGORY_JSON_MAP["projects_tasks_list"]: [task_to_serializable(t) for t in projects_tasks_list],
     	},
         "daily_spoons": daily_spoons,
+        "rest_spoons": rest_spoons,
+        "time_per_spoon": time_per_spoon,
         "theme": theme,
         "icon_image": icon_image_name,
         "spoon_name_input": spoon_name_input,
@@ -324,7 +327,7 @@ def load_data():
     global calendarImages_name, themeBackgroundsImages_name, intro_name
     global label_favorites, spoons_used_today
     global sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle
-
+    global rest_spoons, time_per_spoon
 
     try:
         with open("data.json", "r") as f:
@@ -338,6 +341,10 @@ def load_data():
 
 
         daily_spoons = data.get("daily_spoons", {"Mon":0,"Tue":0,"Wed":0,"Thu":0,"Fri":0,"Sat":0,"Sun":0})
+        # NEW: Rest spoons and time per spoon
+        rest_spoons = data.get("rest_spoons", {"short": 0, "half": 0, "full": 0})
+        time_per_spoon = data.get("time_per_spoon", 0)
+
         loaded_theme = data.get("theme", "")
 
         # icon_image mapping…
@@ -470,5 +477,6 @@ def load_data():
         border_name, hubIcons_name, spoonIcons_name, restIcons_name,
         hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
         calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites,
-        last_save_date, spoons_used_today, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle
+        last_save_date, spoons_used_today, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
+        rest_spoons, time_per_spoon
     )
