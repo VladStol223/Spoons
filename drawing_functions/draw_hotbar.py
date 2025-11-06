@@ -105,6 +105,7 @@ def draw_hotbar(screen, spoons, icon_image, spoon_name_input, daily_spoons, toda
         screen.blit(shadow, shadow_rect)
         screen.blit(text_surface, text_rect)
 
+# TODO: Fix it so that the editable spoons field disappears when info is hovered over.
 def draw_spoons(screen, spoons, input_active, icon_image, spoon_name, today_needed, y_offset=0):
     import pygame
     from drawing_functions.draw_input_box import draw_input_box
