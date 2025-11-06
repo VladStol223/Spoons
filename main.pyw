@@ -240,7 +240,7 @@ from drawing_functions.draw_logic_social import draw_social, logic_social
 from drawing_functions.logic_task_toggle import logic_task_toggle
 from drawing_functions.draw_logic_settings import draw_settings, logic_settings
 from drawing_functions.draw_border import draw_border
-from drawing_functions.draw_hotbar import draw_hotbar
+from drawing_functions.draw_hotbar import draw_hotbar, logic_hotbar
 from drawing_functions.draw_logic_login import draw_login, logic_login
 
 # Miscellanous Functions
@@ -495,7 +495,7 @@ while running:
                       folders_dropdown_open)
 
     if page not in ("calendar", "social", "settings"):
-        draw_hotbar(screen, spoons, icon_image, spoon_name_input, daily_spoons, spoons_needed_today, spoons_used_today)
+        draw_hotbar(screen, spoons, icon_image, spoon_name_input, daily_spoons, spoons_needed_today, spoons_used_today, input_active)
 
     draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
         
@@ -641,6 +641,9 @@ while running:
             switch_theme(current_theme, globals())
             if not spoons_debt_toggle and spoons < 0:
                 spoons = 0
+        
+        if page not in ("calendar", "social", "settings"):
+            (input_active, spoons) = logic_hotbar(event, input_active, spoons)
     pygame.display.flip()
 
 pygame.quit()

@@ -6,7 +6,7 @@ from config import *
 font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.06))
 
 
-def draw_hotbar(screen, spoons, icon_image, spoon_name_input, daily_spoons, today_needed, spoons_used_today):
+def draw_hotbar(screen, spoons, icon_image, spoon_name_input, daily_spoons, today_needed, spoons_used_today, input_active):
     # ----------------------------
     # Hover Animation Settings
     # ----------------------------
@@ -45,7 +45,7 @@ def draw_hotbar(screen, spoons, icon_image, spoon_name_input, daily_spoons, toda
     # ----------------------------
     # Draw spoons + fatigue bar (move by bar offset)
     # ----------------------------
-    draw_spoons(screen, spoons, icon_image, spoon_name_input, today_needed=today_needed, y_offset=y_offset_bar)
+    draw_spoons(screen, spoons, input_active, icon_image, spoon_name_input, today_needed=today_needed, y_offset=y_offset_bar)
 
     fatigue_bar = hotbar['fatigue_bar']
 
@@ -105,12 +105,17 @@ def draw_hotbar(screen, spoons, icon_image, spoon_name_input, daily_spoons, toda
         screen.blit(shadow, shadow_rect)
         screen.blit(text_surface, text_rect)
 
-def draw_spoons(screen, spoons, icon_image, spoon_name, today_needed, y_offset=0):
+def draw_spoons(screen, spoons, input_active, icon_image, spoon_name, today_needed, y_offset=0):
     import pygame
+    from drawing_functions.draw_input_box import draw_input_box
 
-    spoon_text = font.render(f"{spoons}", True, WHITE)  # type: ignore
-    text_x, text_y = 125, 30 + y_offset
-    screen.blit(spoon_text, (text_x, text_y))
+    sw, sh = screen.get_size()
+    box_w, box_h = int(sw * 0.04), 30
+    input_rect = pygame.Rect(125, 30, box_w, box_h)
+    value = str(spoons)
+    active = input_active == "daily_spoons"
+    # TODO: Fix color scheme -- for some reason the drawn input box does not have the right colors.
+    draw_input_box(screen, input_rect, active, value, LIGHT_GRAY, DARK_SLATE_GRAY, True, background_color, "light", 9, 0.045) # type: ignore
 
     total_slots = 11
     slot_spacing = 33
@@ -236,3 +241,38 @@ def draw_spoons(screen, spoons, icon_image, spoon_name, today_needed, y_offset=0
             ex_x = x + 5 + (iw - ex.get_width()) // 2
             ex_y = y + (ih - ex.get_height()) // 2
             screen.blit(ex, (ex_x, ex_y))
+
+# TODO: Fix so that when clicking off it deselects the input box.
+def logic_hotbar(event, input_active, spoons):
+    sh, sw = pygame.display.get_surface().get_size()
+    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        input_w = int(sw * 0.08)
+        rect_tps = pygame.Rect(125, 30, input_w, 30)
+        if rect_tps.collidepoint(event.pos):
+            input_active = "daily_spoons"
+            return (input_active, spoons)
+        
+    if input_active == "daily_spoons" and event.type == pygame.KEYDOWN:
+        current_val = str(spoons)
+
+        if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+            # finalize value when pressing Enter
+            if not current_val or int(current_val) < 1:
+                spoons = 1
+            else:
+                spoons = int(current_val)
+            input_active = ""
+
+        elif event.key == pygame.K_BACKSPACE:
+            current_val = current_val[:-1]
+            spoons = int(current_val) if current_val.isdigit() else 0
+
+        elif event.unicode.isdigit() and len(current_val) < 2:
+            current_val += event.unicode
+            spoons = int(current_val)
+
+        # prevent invalid input (non-digits)
+        elif event.unicode not in ("\r", "\n", ""):
+            pass
+    
+    return (input_active, spoons)
