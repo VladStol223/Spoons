@@ -48,6 +48,8 @@ for name, value in COLORS.items():
 import pygame
 import sys
 import calendar
+import webbrowser
+
 
 import subprocess
 from copyparty_sync import (
@@ -66,6 +68,9 @@ from state_data import _download_state #type: ignore
 IS_WINDOWS = platform.system() == "Windows"
 IS_LINUX   = platform.system() == "Linux"
 IS_MAC     = platform.system() == "Darwin"
+
+# Put your version number here
+reference_version = 1.47
 
 if IS_WINDOWS:
     ctypes.windll.user32.SetProcessDpiAwarenessContext(ctypes.c_void_p(-4))
@@ -247,6 +252,8 @@ from drawing_functions.draw_logic_login import draw_login, logic_login
 from load_save import save_data, load_data
 from switch_themes import switch_theme
 from handle_scroll import handle_task_scroll
+from copyparty_sync import download_file
+
 
 #loading save data
 (spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,  
@@ -261,6 +268,45 @@ calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites,
 last_save_date ,spoons_used_today, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
 rest_spoons, time_per_spoon) = load_data()
 current_theme = switch_theme(loaded_theme, globals())
+
+#check for updates
+print("Looking for version info")
+try:
+    download_file("/version/info.txt")
+except Exception as e:
+    print(f"Error downloading version info: {e}")
+
+if os.path.exists("info.txt"):
+    
+    with open("info.txt", "r") as f:
+        content = f.read().strip()
+
+    try:
+        print("Local install is", reference_version)
+        number = float(content)
+        # Compare and print result
+        if number > reference_version:
+            print("Oh no! Local install is out of date!")
+            print("latest version is", number)
+            print("please visit https://github.com/VladStol223/Spoons/tree/main for latest version")
+            try:
+                webbrowser.open("https://github.com/VladStol223/Spoons/tree/main")
+            except Exception as e:
+                print(f"Could not open web browser: {e}")
+        elif number < reference_version:
+            print("congrats smart guy you found an endge case. Someone didnt update the version folder")
+        else:
+            print("Spoons is up to date!")
+    except ValueError:
+        print("Error: The file does not contain a valid float. This means some dingus didnt put the right file in the version folder")
+
+    # Delete file afterward
+    try:
+        os.remove("info.txt")
+    except Exception as e:
+        print(f"Error deleting info.txt: {e}")
+else:
+    print(f"info.txt not found. Skipping version check.")
 
 # --- Startup daily spoons grant + per-day counter reset ---
 try:
