@@ -240,20 +240,28 @@ def upload_data_json():
         return False
 
 #generalized download function for use in updates or whatever maybe build a bot net idk
+from urllib.parse import urlparse
+
 def download_file(path: str, local_path: str = None):
     """
-    Downloads a file from the default COPYPARTY_BASE_URL.
+    Downloads a file from either a full URL or from the default COPYPARTY_BASE_URL.
 
-    path: path on the site relative to the base URL (e.g., "info.txt" or "some/folder/file.txt").
+    path: full URL (http/https) or path relative to the base URL.
     local_path: where to save the file locally. Defaults to current folder with same filename as path.
     """
     cfg = _load_cfg()
     base_url = (cfg.get("COPYPARTY_BASE_URL") or "").rstrip("/")
-    if not base_url:
-        print("[copyparty] no base URL configured")
-        return False
 
-    url = f"{base_url}/{path.lstrip('/')}"
+    # Check if path is a full URL
+    parsed = urlparse(path)
+    if parsed.scheme in ("http", "https"):
+        url = path
+    else:
+        if not base_url:
+            print("[copyparty] no base URL configured")
+            return False
+        url = f"{base_url}/{path.lstrip('/')}"
+
     if local_path is None:
         local_path = os.path.join(".", os.path.basename(path))
     os.makedirs(os.path.dirname(local_path) or ".", exist_ok=True)
