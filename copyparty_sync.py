@@ -239,6 +239,40 @@ def upload_data_json():
         print(f"[copyparty] upload error: {e}")
         return False
 
+#generalized download function for use in updates or whatever maybe build a bot net idk
+def download_file(path: str, local_path: str = None):
+    """
+    Downloads a file from the default COPYPARTY_BASE_URL.
+
+    path: path on the site relative to the base URL (e.g., "info.txt" or "some/folder/file.txt").
+    local_path: where to save the file locally. Defaults to current folder with same filename as path.
+    """
+    cfg = _load_cfg()
+    base_url = (cfg.get("COPYPARTY_BASE_URL") or "").rstrip("/")
+    if not base_url:
+        print("[copyparty] no base URL configured")
+        return False
+
+    url = f"{base_url}/{path.lstrip('/')}"
+    if local_path is None:
+        local_path = os.path.join(".", os.path.basename(path))
+    os.makedirs(os.path.dirname(local_path) or ".", exist_ok=True)
+
+    try:
+        r = requests.get(url, timeout=cfg["COPYPARTY_TIMEOUT_S"])
+        if r.status_code == 200:
+            with open(local_path, "wb") as f:
+                f.write(r.content)
+            print(f"[copyparty] downloaded {url} -> {local_path}")
+            return True
+        else:
+            print(f"[copyparty] download failed {r.status_code}: {r.text[:200]}")
+            return False
+    except Exception as e:
+        print(f"[copyparty] download error from {url}: {e}")
+        return False
+
+#way less generalized function which only downloads user config data.jsons then calls for decryption
 def download_data_json_if_present():
     """
     Downloads /<username>/data.json.
