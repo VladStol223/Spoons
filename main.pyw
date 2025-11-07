@@ -1,7 +1,7 @@
 #Vladislav Stolbennikov
 #8/7/2024
 #Spoons App
-#VS1.26.1
+#version lives in reference_version
 
 '''
 Total pages:
@@ -272,14 +272,14 @@ current_theme = switch_theme(loaded_theme, globals())
 #check for updates
 print("Looking for version info")
 try:
-    download_file("/version/info.txt")
+    download_file("https://raw.githubusercontent.com/VladStol223/Spoons/main/Readme.md")
 except Exception as e:
     print(f"Error downloading version info: {e}")
 
-if os.path.exists("info.txt"):
+if os.path.exists("Readme.md"):
     
-    with open("info.txt", "r") as f:
-        content = f.read().strip()
+    with open("Readme.md", "r") as f:
+        content = f.readline().strip()
 
     try:
         print("Local install is", reference_version)
@@ -294,19 +294,19 @@ if os.path.exists("info.txt"):
             except Exception as e:
                 print(f"Could not open web browser: {e}")
         elif number < reference_version:
-            print("congrats smart guy you found an endge case. Someone didnt update the version folder")
+            print("congrats smart guy you found an endge case. Someone didnt update the version")
         else:
             print("Spoons is up to date!")
     except ValueError:
-        print("Error: The file does not contain a valid float. This means some dingus didnt put the right file in the version folder")
+        print("Error: The file does not contain a valid float. This means some dingus messed with the readme")
 
     # Delete file afterward
     try:
-        os.remove("info.txt")
+        os.remove("Readme.md")
     except Exception as e:
-        print(f"Error deleting info.txt: {e}")
+        print(f"Error deleting Readme.md: {e}")
 else:
-    print(f"info.txt not found. Skipping version check.")
+    print(f"Readme.md not found. Skipping version check.")
 
 # --- Startup daily spoons grant + per-day counter reset ---
 try:
