@@ -50,6 +50,7 @@ import sys
 import calendar
 import webbrowser
 import threading
+import urllib.request
 
 import subprocess
 from copyparty_sync import (
@@ -278,40 +279,74 @@ last_save_date ,spoons_used_today, sound_toggle, spoons_debt_toggle, spoons_debt
 rest_spoons, time_per_spoon, folder_days_ahead) = load_data()
 current_theme = switch_theme(loaded_theme, globals())
 
-#check for updates
+# --- Check for updates (robust version) ---
 print("Looking for version info")
-try:
-    download_file("https://raw.githubusercontent.com/VladStol223/Spoons/main/Readme.md")
-except Exception as e:
-    print(f"Error downloading version info: {e}")
 
-if os.path.exists("Readme.md"):
-    
-    with open("Readme.md", "r") as f:
-        content = f.readline().strip()
+# Possible README file names (case-insensitive)
+possible_files = ["README.md", "Readme.md", "readme.md"]
+download_success = False
+downloaded_path = None
 
+# Try each possible file name until one works
+for remote_name in possible_files:
+    url = f"https://raw.githubusercontent.com/VladStol223/Spoons/main/{remote_name}"
     try:
+        if download_file(url, remote_name):
+            downloaded_path = remote_name
+            download_success = True
+            break
+    except Exception as e:
+        print(f"Error downloading {remote_name}: {e}")
+
+if not download_success:
+    print("Could not download README or version file. Skipping version check.")
+    v_number = 0.0
+else:
+    # Safely open file (UTF-8 encoding, tolerant to weird chars)
+    try:
+        with open(downloaded_path, "r", encoding="utf-8", errors="replace") as f:
+            # Search for a version number pattern like "1.49" or "Version 1.49"
+            version_line = None
+            for line in f:
+                if "version" in line.lower() or line.strip().replace(".", "", 1).isdigit():
+                    version_line = line.strip()
+                    break
+
+        if version_line is None:
+            print("Error: Could not find a version number in README.")
+            v_number = 0.0
+        else:
+            # Extract numeric portion safely
+            import re
+            match = re.search(r"(\d+\.\d+)", version_line)
+            if match:
+                v_number = float(match.group(1))
+                print("Remote version detected:", v_number)
+            else:
+                print("Error: Version number format not recognized in line:", version_line)
+                v_number = 0.0
+
         print("Local install is", reference_version)
-        v_number = float(content)
-        # Compare and print result
         if v_number > reference_version:
             print("Oh no! Local install is out of date!")
-            print("latest version is", v_number)
-            print("please visit https://github.com/VladStol223/Spoons/tree/main for latest version")
-        elif v_number < reference_version:
-            print("congrats smart guy you found an edge case. Someone didnt update the version (Vlad)")
+            print("Latest version is", v_number)
+            print("Please visit https://github.com/VladStol223/Spoons for the newest release.")
+        elif v_number < reference_version and v_number != 0.0:
+            print("Congrats smart guy — you found an edge case. Someone didn’t update the README (probably Vlad).")
+        elif v_number == 0.0:
+            print("Version number check failed — fallback mode.")
         else:
             print("Spoons is up to date!")
-    except ValueError:
-        print("Error: The file does not contain a valid float. This means some dingus messed with the readme")
 
-    # Delete file afterward
-    try:
-        os.remove("Readme.md")
     except Exception as e:
-        print(f"Error deleting Readme.md: {e}")
-else:
-    print(f"Readme.md not found. Skipping version check.")
+        print(f"Error reading README file: {e}")
+        v_number = 0.0
+
+    # Clean up file
+    try:
+        os.remove(downloaded_path)
+    except Exception as e:
+        print(f"Error deleting {downloaded_path}: {e}")
 
 # --- Startup daily spoons grant + per-day counter reset ---
 try:
