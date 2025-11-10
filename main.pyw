@@ -79,7 +79,7 @@ IS_LINUX   = platform.system() == "Linux"
 IS_MAC     = platform.system() == "Darwin"
 
 # Put your version v_number here
-reference_version = 1.48
+reference_version = 1.49
 
 if IS_WINDOWS:
     ctypes.windll.user32.SetProcessDpiAwarenessContext(ctypes.c_void_p(-4))

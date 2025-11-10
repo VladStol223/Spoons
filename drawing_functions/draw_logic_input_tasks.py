@@ -726,6 +726,8 @@ def logic_input_tasks(event,screen,current_task, current_description, current_sp
             description_toggle_on = not description_toggle_on
         elif time_btn_rect.collidepoint(event.pos):
             time_toggle_on = not time_toggle_on
+            if not time_toggle_on:
+                start_time[:] = [0, 0]
         elif recurring_btn_rect.collidepoint(event.pos):
             if input_active == "month": task_month = _commit_month({"month_typed": month_typed}, task_month, months); month_typed = ""
             if input_active == "day": task_day = _commit_day({"day_typed": day_typed}, task_day, max_days); day_typed = ""
