@@ -184,7 +184,7 @@ def save_data(
     border, hubIcons, spoonIcons, restIcons, hotbar, manillaFolder,
     taskBorder, scrollBar, calendarImages, themeBackgroundsImages, intro, label_favorites,
     spoons_used_today, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
-    rest_spoons, time_per_spoon):
+    rest_spoons, time_per_spoon, folder_days_ahead):
 
 
     # resolve icon file name
@@ -211,6 +211,7 @@ def save_data(
         "daily_spoons": daily_spoons,
         "rest_spoons": rest_spoons,
         "time_per_spoon": time_per_spoon,
+        "folder_days_ahead": folder_days_ahead, 
         "theme": theme,
         "icon_image": icon_image_name,
         "spoon_name_input": spoon_name_input,
@@ -344,7 +345,14 @@ def load_data():
         # NEW: Rest spoons and time per spoon
         rest_spoons = data.get("rest_spoons", {"short": 0, "half": 0, "full": 0})
         time_per_spoon = data.get("time_per_spoon", 0)
-
+        folder_days_ahead = data.get("folder_days_ahead", {
+            "folder_one": 7,
+            "folder_two": 7,
+            "folder_three": 7,
+            "folder_four": 7,
+            "folder_five": 7,
+            "folder_six": 7
+        })
         loaded_theme = data.get("theme", "")
 
         # icon_image mapping…
@@ -478,5 +486,5 @@ def load_data():
         hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
         calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites,
         last_save_date, spoons_used_today, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
-        rest_spoons, time_per_spoon
+        rest_spoons, time_per_spoon, folder_days_ahead
     )

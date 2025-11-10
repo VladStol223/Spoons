@@ -49,7 +49,7 @@ import pygame
 import sys
 import calendar
 import webbrowser
-
+import threading
 
 import subprocess
 from copyparty_sync import (
@@ -65,12 +65,21 @@ import os
 
 from state_data import _download_state #type: ignore
 
+_upload_hotbar_state = {
+    "uploading": False,
+    "done": False,
+    "ok": False,
+    "anim_step": 0,
+    "next_tick_ms": 0,
+    "done_started_at": None,
+}
+
 IS_WINDOWS = platform.system() == "Windows"
 IS_LINUX   = platform.system() == "Linux"
 IS_MAC     = platform.system() == "Darwin"
 
-# Put your version number here
-reference_version = 1.47
+# Put your version v_number here
+reference_version = 1.48
 
 if IS_WINDOWS:
     ctypes.windll.user32.SetProcessDpiAwarenessContext(ctypes.c_void_p(-4))
@@ -145,7 +154,7 @@ def sync_and_reload(flag):
         hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
         calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites,
         last_save_date ,spoons_used_today, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
-        rest_spoons, time_per_spoon) = load_data()
+        rest_spoons, time_per_spoon, folder_days_ahead) = load_data()
     print(f"[local] loaded data.json")
 
 def compute_spoons_needed_today(*task_lists):
@@ -225,7 +234,7 @@ def hub_buttons(event):
             border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
             scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today, 
             sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
-            rest_spoons, time_per_spoon)
+            rest_spoons, time_per_spoon, folder_days_ahead)
 
             if page == "manage_tasks":
                 scroll_offset = 0
@@ -266,7 +275,7 @@ border_name, hubIcons_name, spoonIcons_name, restIcons_name,
 hotbar_name, manillaFolder_name, taskBorder_name, scrollBar_name,
 calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites,
 last_save_date ,spoons_used_today, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
-rest_spoons, time_per_spoon) = load_data()
+rest_spoons, time_per_spoon, folder_days_ahead) = load_data()
 current_theme = switch_theme(loaded_theme, globals())
 
 #check for updates
@@ -283,18 +292,14 @@ if os.path.exists("Readme.md"):
 
     try:
         print("Local install is", reference_version)
-        number = float(content)
+        v_number = float(content)
         # Compare and print result
-        if number > reference_version:
+        if v_number > reference_version:
             print("Oh no! Local install is out of date!")
-            print("latest version is", number)
+            print("latest version is", v_number)
             print("please visit https://github.com/VladStol223/Spoons/tree/main for latest version")
-            try:
-                webbrowser.open("https://github.com/VladStol223/Spoons/tree/main")
-            except Exception as e:
-                print(f"Could not open web browser: {e}")
-        elif number < reference_version:
-            print("congrats smart guy you found an endge case. Someone didnt update the version")
+        elif v_number < reference_version:
+            print("congrats smart guy you found an edge case. Someone didnt update the version (Vlad)")
         else:
             print("Spoons is up to date!")
     except ValueError:
@@ -361,7 +366,7 @@ if (last_date is None) or (today > last_date):
             border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
             scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today, 
             sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
-            rest_spoons, time_per_spoon)
+            rest_spoons, time_per_spoon, folder_days_ahead)
 else:
     streak_task_completed = False
 
@@ -447,7 +452,7 @@ while running:
             border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
             scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today, 
             sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
-            rest_spoons, time_per_spoon)
+            rest_spoons, time_per_spoon, folder_days_ahead)
 
     spoons_needed_today = compute_spoons_needed_today(homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list)
 
@@ -483,7 +488,7 @@ while running:
         folder_rects = draw_manage_tasks_hub(screen, spoons,
                             homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,exams_tasks_list, projects_tasks_list,
                             complete_tasks_hub_folder_color, icon_image, spoon_name_input,
-                            folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, manillaFolder)
+                            folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, manillaFolder, folder_days_ahead)
         
     elif page == "complete_homework_tasks":
         set_favorites_binding(label_favorites.get(slot_key_for_page(page), []))
@@ -537,14 +542,65 @@ while running:
         
     elif page == "settings":
         draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, icon_image,
-                      manillaFolder_name, rest_spoons, time_per_spoon ,spoon_name_input, inventory_tab, background_color, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, 
+                      manillaFolder_name, rest_spoons, time_per_spoon, v_number, reference_version, folder_days_ahead,spoon_name_input, inventory_tab, background_color, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, 
                       folders_dropdown_open)
 
     if page not in ("calendar", "social", "settings"):
         draw_hotbar(screen, spoons, icon_image, spoon_name_input, daily_spoons, spoons_needed_today, spoons_used_today)
 
     draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
-        
+
+    # --- Ctrl+S upload animation overlay ---
+    if "settings" in hub_icon_rects:
+        hub_rect = hub_icon_rects["settings"]
+        icon_pos = (hub_rect.centerx + 25, hub_rect.centery - 20)  # adjust as needed
+        scale = 0.7  # smaller floppy
+
+        now_ms = pygame.time.get_ticks()
+        if _upload_hotbar_state["uploading"]:
+            # animate 3 blinking dots
+            if now_ms >= _upload_hotbar_state["next_tick_ms"]:
+                _upload_hotbar_state["anim_step"] = (_upload_hotbar_state["anim_step"] + 1) % 4
+                _upload_hotbar_state["next_tick_ms"] = now_ms + 500
+
+            uw, uh = floppy_disk_upload.get_size()
+            upload_icon = pygame.transform.scale(floppy_disk_upload, (int(uw*scale), int(uh*scale)))
+            screen.blit(upload_icon, icon_pos)
+
+            dw, dh = floppy_disk_dots.get_size()
+            third = dw // 3
+            visible = _upload_hotbar_state["anim_step"]
+            for i in range(min(visible, 3)):
+                dot = floppy_disk_dots.subsurface(pygame.Rect(i*third, 0, third, dh))
+                screen.blit(dot, (icon_pos[0] + i*10, icon_pos[1]))
+        elif _upload_hotbar_state["done"]:
+            # fade both floppy and result mark together
+            if _upload_hotbar_state["done_started_at"] is None:
+                _upload_hotbar_state["done_started_at"] = now_ms
+            elapsed = now_ms - _upload_hotbar_state["done_started_at"]
+
+            # scale the base floppy
+            uw, uh = floppy_disk_upload.get_size()
+            base_icon = pygame.transform.scale(floppy_disk_upload, (int(uw*scale), int(uh*scale)))
+
+            # choose overlay mark
+            mark_icon = (floppy_disk_checkmark if _upload_hotbar_state["ok"] else floppy_disk_redx).convert_alpha()
+            mark_icon = pygame.transform.scale(mark_icon, (int(uw*scale), int(uh*scale)))
+
+            # fade timing
+            if elapsed < 3000:
+                screen.blit(base_icon, icon_pos)
+                screen.blit(mark_icon, icon_pos)
+            elif elapsed < 6000:
+                fade = int(255 * (1 - (elapsed - 3000) / 3000))
+                base_copy = base_icon.copy(); base_copy.set_alpha(fade)
+                mark_copy = mark_icon.copy(); mark_copy.set_alpha(fade)
+                screen.blit(base_copy, icon_pos)
+                screen.blit(mark_copy, icon_pos)
+            else:
+                _upload_hotbar_state["done"] = False
+                _upload_hotbar_state["done_started_at"] = None
+       
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             save_data(
@@ -555,7 +611,7 @@ while running:
             border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
             scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today, 
             sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
-            rest_spoons, time_per_spoon)
+            rest_spoons, time_per_spoon, folder_days_ahead)
 
             # make the window vanish instantly
             try:
@@ -583,7 +639,7 @@ while running:
                         border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
                         scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today, 
                         sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
-                        rest_spoons, time_per_spoon)
+                        rest_spoons, time_per_spoon, folder_days_ahead)
                         prev_page = page
                         if page_key == "manage_tasks":
                             scroll_offset = 0
@@ -598,6 +654,49 @@ while running:
                     break
 
         elif event.type == pygame.KEYDOWN:
+            # ctrl+s save crap
+            ctrl_held = bool(pygame.key.get_mods() & (pygame.KMOD_CTRL | pygame.KMOD_LCTRL | pygame.KMOD_RCTRL))
+            # --- Ctrl+S manual cloud upload ---
+            if ctrl_held and event.key == pygame.K_s and not _upload_hotbar_state["uploading"]:
+                # Save locally first
+                save_data(
+                    spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,
+                    exams_tasks_list, projects_tasks_list, daily_spoons, theme, icon_image,
+                    spoon_name_input, folder_one, folder_two, folder_three, folder_four,
+                    folder_five, folder_six, streak_dates,
+                    border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name,
+                    manillaFolder_name, taskBorder_name, scrollBar_name, calendarImages_name,
+                    themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today,
+                    sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
+                    rest_spoons, time_per_spoon, folder_days_ahead
+                )
+
+                # Launch upload animation
+                _upload_hotbar_state.update({
+                    "uploading": True,
+                    "done": False,
+                    "ok": False,
+                    "anim_step": 3,
+                    "next_tick_ms": pygame.time.get_ticks() + 500,
+                    "done_started_at": None,
+                })
+
+                def _worker():
+                    ok = False
+                    try:
+                        from copyparty_sync import upload_data_json
+                        ok = upload_data_json()
+                    except Exception:
+                        ok = False
+                    finally:
+                        _upload_hotbar_state["uploading"] = False
+                        _upload_hotbar_state["done"] = True
+                        _upload_hotbar_state["ok"] = ok
+                        _upload_hotbar_state["done_started_at"] = None
+
+                threading.Thread(target=_worker, daemon=True).start()
+
+
             # --- F11 toggle fullscreen ---
             if event.key == pygame.K_F11:
                 scale_factor = get_scale_factor()
@@ -637,7 +736,7 @@ while running:
                                   daily_spoons, theme, icon_image, spoon_name_input, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
                                   streak_dates, border_name, hubIcons_name, spoonIcons_name, restIcons_name, hotbar_name, manillaFolder_name, taskBorder_name, 
                                   scrollBar_name, calendarImages_name, themeBackgroundsImages_name, intro_name, label_favorites, spoons_used_today, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle,
-                                  rest_spoons, time_per_spoon)
+                                  rest_spoons, time_per_spoon, folder_days_ahead)
                         prev_page = page
                         if new_page_key == "manage_tasks":
                             scroll_offset = 0
@@ -665,25 +764,58 @@ while running:
         elif page == "manage_tasks":
             page = logic_manage_tasks_hub(event, page, folder_rects)
         elif page == "complete_homework_tasks":
-            task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(homework_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
+            result = logic_complete_tasks(homework_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, confetti_particles, level, spoons_used_today, page)
+            if isinstance(result[0], tuple):
+                (page, folder), spoons, confetti_particles, streak_dates, level, spoons_used_today = result
+            else:
+                task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = result
+
         elif page == "complete_chores_tasks":
-            task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(chores_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
+            result = logic_complete_tasks(chores_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today, page)
+            if isinstance(result[0], tuple):
+                (page, folder), spoons, confetti_particles, streak_dates, level, spoons_used_today = result
+            else:
+                task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = result
+
         elif page == "complete_work_tasks":
-            task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(work_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
+            result = logic_complete_tasks(work_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today, page)
+            if isinstance(result[0], tuple):
+                (page, folder), spoons, confetti_particles, streak_dates, level, spoons_used_today = result
+            else:
+                task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = result
+
         elif page == "complete_misc_tasks":
-            task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(misc_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
+            result = logic_complete_tasks(misc_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today, page)
+            if isinstance(result[0], tuple):
+                (page, folder), spoons, confetti_particles, streak_dates, level, spoons_used_today = result
+            else:
+                task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = result
+
         elif page == "complete_exams_tasks":
-            task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(exams_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
+            result = logic_complete_tasks(exams_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today, page)
+            if isinstance(result[0], tuple):
+                (page, folder), spoons, confetti_particles, streak_dates, level, spoons_used_today = result
+            else:
+                task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = result
+
         elif page == "complete_projects_tasks":
-            task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = logic_complete_tasks(projects_tasks_list, task_buttons_projects, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today)
+            result = logic_complete_tasks(projects_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today, page)
+            if isinstance(result[0], tuple):
+                (page, folder), spoons, confetti_particles, streak_dates, level, spoons_used_today = result
+            else:
+                task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = result
+
         elif page == "calendar": 
             day_range_index, displayed_week_offset, displayed_month, displayed_year = logic_calendar(event, day_range_index, displayed_week_offset, displayed_month, displayed_year)
         elif page == "social":
             tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_social(event, tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         elif page == "settings":
-            (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, inventory_tab, spoon_name_input, icon_image, 
+            (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, folder_days_ahead, inventory_tab, spoon_name_input, icon_image, 
              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open,
-            border, border_name, manillaFolder, manillaFolder_name, current_theme) = logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, inventory_tab, spoon_name_input, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open, border, border_name, manillaFolder, manillaFolder_name, current_theme)
+            border, border_name, manillaFolder, manillaFolder_name, current_theme) = logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, 
+                                                                                                    rest_spoons, time_per_spoon, folder_days_ahead, inventory_tab, spoon_name_input, icon_image, 
+                                                                                                    folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open, 
+                                                                                                    border, border_name, manillaFolder, manillaFolder_name, current_theme)
             switch_theme(current_theme, globals())
             if not spoons_debt_toggle and spoons < 0:
                 spoons = 0

@@ -16,6 +16,7 @@ frame_buttons      = []  # (pygame.Rect, task_index, frame_index)
 edit_buttons       = []  # (pygame.Rect, field_name)
 cancel_button_rect = None
 done_button_rect   = None
+add_task_button_rect = None
 
 # State
 currently_editing = None  # index of the task being edited
@@ -132,6 +133,26 @@ def draw_complete_tasks(
     dropdown_outer_rects.clear()
     new_label_buttons.clear()
     new_label_rect = None
+
+    global add_task_button_rect
+    add_task_button_rect = None
+
+    # If there are no tasks in this folder, draw "Add Task?" button
+    if len(task_list) == 0:
+        button_w, button_h = 200, 60
+        screen_w, screen_h = screen.get_size()
+        bx = (screen_w - button_w) // 2 + 25
+        by = (screen_h - button_h) // 2
+
+        add_task_button_rect = pygame.Rect(bx, by, button_w, button_h)
+        draw_rounded_button(screen, add_task_button_rect, DARK_BROWN, WHITE, border_radius=12) #type: ignore
+
+        font_btn = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen.get_height() * 0.05))
+        text_surf = font_btn.render("Add Task?", True, WHITE) #type: ignore
+        screen.blit(text_surf, (bx + (button_w - text_surf.get_width()) // 2, by + (button_h - text_surf.get_height()) // 2))
+
+        return scroll_offset_px, 0
+
 
     # If we're editing, draw the edit UI instead of the list
     if currently_editing is not None:
@@ -1460,7 +1481,7 @@ def handle_task_scroll(event, scroll_offset_px, total_content_height):
     return max(0, min(scroll_offset_px, max_scroll))
 
 
-def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_dates, confetti_particles, level, spoons_used_today):
+def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_dates, confetti_particles, level, spoons_used_today, page):
     """
     Handles clicks and key events for both list and edit form.
     """
@@ -1469,6 +1490,22 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
     global dragging_label
     global new_label_active_task, new_label_text, new_label_rect, new_label_buttons
     global expanded_label_tasks, hover_insert_index_per_task, dropdown_outer_rects, task_drop_rects, favorites_drop_rect
+
+    global add_task_button_rect
+
+    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        if add_task_button_rect and add_task_button_rect.collidepoint(event.pos):
+            # Identify folder name based on the page’s current type
+            folder_map = {
+                "complete_homework_tasks": "homework",
+                "complete_chores_tasks": "chores",
+                "complete_work_tasks": "work",
+                "complete_misc_tasks": "misc",
+                "complete_exams_tasks": "exams",
+                "complete_projects_tasks": "projects"
+            }
+            # Return a signal to change page and preselect folder
+            return (("input_tasks", folder_map.get(page, "homework")), spoons, confetti_particles, streak_dates, level, spoons_used_today)
 
     def _commit_new_label():
         global new_label_active_task, new_label_text

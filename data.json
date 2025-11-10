@@ -1,5 +1,5 @@
 {
-  "spoons": 12,
+  "spoons": 10,
   "folder_1_tasks": [],
   "folder_2_tasks": [],
   "folder_3_tasks": [],
@@ -21,15 +21,23 @@
     "full": 10
   },
   "time_per_spoon": 15,
+  "folder_days_ahead": {
+    "folder_one": 7,
+    "folder_two": 7,
+    "folder_three": 7,
+    "folder_four": 7,
+    "folder_five": 7,
+    "folder_six": 7
+  },
   "theme": "foresty",
-  "icon_image": "stardew.png",
+  "icon_image": "spoon.png",
   "spoon_name_input": "Icons",
-  "folder_one": "School",
-  "folder_two": "Work",
-  "folder_three": "Chores",
-  "folder_four": "Exams",
-  "folder_five": "Olivia",
-  "folder_six": "Therapy",
+  "folder_one": "Folder 1",
+  "folder_two": "Folder 2",
+  "folder_three": "Folder 3",
+  "folder_four": "Folder 4",
+  "folder_five": "Folder 5",
+  "folder_six": "Folder 6",
   "assets": {
     "border": "spruceWood",
     "hubIcons": "default",
@@ -52,8 +60,8 @@
     "folder_six": []
   },
   "last_save_date": [
-    "2025-11-03",
-    3
+    "2025-11-10",
+    0
   ],
   "sound_toggle": false,
   "spoons_debt_toggle": true,

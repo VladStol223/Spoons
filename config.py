@@ -161,6 +161,7 @@ image_categories = {
         'soundButton': ('soundButton.png', (60,60)),
         'infoButton': ('infoToggle.png', (30,30)),
         'taskDescriptionToggle': ('taskDescriptionToggle.png', (30,30)),
+        'openLinkIcon': ('openLinkIcon.png', (35,35)),
     },
 }
 
@@ -689,3 +690,12 @@ spoons_debt_consequences_toggle = False
 
 time_per_spoon = 15  # minutes per spoon (can change anytime)
 rest_spoons = {"short": 2, "half": 5, "full": 10}
+
+folder_days_ahead = {
+    "folder_one": 7,
+    "folder_two": 7,
+    "folder_three": 7,
+    "folder_four": 7,
+    "folder_five": 7,
+    "folder_six": 7,
+}

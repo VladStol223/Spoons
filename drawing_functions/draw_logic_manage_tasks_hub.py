@@ -20,7 +20,8 @@ def draw_manage_tasks_hub(
     folder_four,
     folder_five,
     folder_six,
-    manillaFolder
+    manillaFolder,
+    folder_days_ahead  # dict: {"folder_one":7, ... "folder_six":7}
 ):
     # --- 1) Recompute "days left" and resort each list ---
     for lst in (homework_tasks_list, chores_tasks_list,
@@ -28,40 +29,51 @@ def draw_manage_tasks_hub(
                 exams_tasks_list, projects_tasks_list):
         for task in lst:
             try:
-                days_left = (task[4] - datetime.now()).days
-                task[3] = days_left + 1
-            except:
-                pass
+                if isinstance(task[5], datetime):
+                    task[4] = (task[5].date() - datetime.now().date()).days
+                else:
+                    task[4] = int(task[4])
+            except Exception:
+                task[3] = 9999
         # Sort: incomplete (done_count < cost) first, then by days_left
         lst.sort(key=lambda t: (t[3] >= t[2], t[4]))
 
-    # --- 2) Summaries (only overdue, today, and next 7 days) ---
-    def summarize(lst):
+    # --- 2) Summaries (use per-folder window) ---
+    def summarize(lst, window_days):
         total_spoons = 0
         total_tasks  = 0
         for t in lst:
             try:
+                # prefer shape [name, cost, done, days_left, ...]
                 name, cost, done, days_left = t[0], int(t[2]), int(t[3]), int(t[4])
             except Exception:
-                # fallback if tuple shape is off
                 try:
-                    cost = int(t[1]); done = int(t[2]); days_left = int(t[3])
+                    # fallback to your original alt-shape
+                    cost = int(t[2]); done = int(t[3]); days_left = int(t[4])
                 except Exception:
                     continue
 
-            if done < cost and days_left <= 7:  # includes overdue (negative), today (0), and 1..7
+            # includes overdue (negative), today (0), and up to window_days
+            if done < cost and days_left is not None and days_left <= int(window_days):
                 total_tasks  += 1
                 total_spoons += (cost - done)
 
         return total_spoons, total_tasks
 
+    # Map each list to its folder's configured window
+    w_hw = int(folder_days_ahead.get("folder_one", 7))
+    w_ch = int(folder_days_ahead.get("folder_two", 7))
+    w_wk = int(folder_days_ahead.get("folder_three", 7))
+    w_mi = int(folder_days_ahead.get("folder_four", 7))
+    w_ex = int(folder_days_ahead.get("folder_five", 7))
+    w_pr = int(folder_days_ahead.get("folder_six", 7))
 
-    hw_spoons, hw_tasks = summarize(homework_tasks_list)
-    ch_spoons, ch_tasks = summarize(chores_tasks_list)
-    wk_spoons, wk_tasks = summarize(work_tasks_list)
-    mi_spoons, mi_tasks = summarize(misc_tasks_list)
-    ex_spoons, ex_tasks = summarize(exams_tasks_list)
-    pr_spoons, pr_tasks = summarize(projects_tasks_list)
+    hw_spoons, hw_tasks = summarize(homework_tasks_list, w_hw)
+    ch_spoons, ch_tasks = summarize(chores_tasks_list,   w_ch)
+    wk_spoons, wk_tasks = summarize(work_tasks_list,     w_wk)
+    mi_spoons, mi_tasks = summarize(misc_tasks_list,     w_mi)
+    ex_spoons, ex_tasks = summarize(exams_tasks_list,    w_ex)
+    pr_spoons, pr_tasks = summarize(projects_tasks_list, w_pr)
 
     # --- 3) Layout & fonts ---
     folder_w, folder_h = 200, 150
@@ -124,7 +136,7 @@ def draw_manage_tasks_hub(
 
         # Content
         if len(raw_list) == 0:
-            msg = " "
+            msg = "No Tasks yet!"
             surf = small_font.render(msg, True, BLACK) #type: ignore
             screen.blit(surf, (x + (folder_w - surf.get_width())//2,
                                y + (folder_h - surf.get_height())//2 + 5))
