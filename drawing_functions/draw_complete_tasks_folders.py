@@ -4,7 +4,7 @@ import pygame
 # Global list of clickable folder rects
 folder_rects = []
 
-def draw_complete_tasks_folders(screen,selected_folder,folder_one,folder_two,folder_three,folder_four,folder_five,folder_six,homework_tasks_list,chores_tasks_list,work_tasks_list,misc_tasks_list,exams_tasks_list,projects_tasks_list, manillaFolder):
+def draw_complete_tasks_folders(screen,selected_folder,folder_one,folder_two,folder_three,folder_four,folder_five,folder_six,manillaFolder, manilla_folder_text_color):
     global folder_rects; folder_rects=[]
     # config
     right_offset=0; top_offset=85; vertical_spacing=-24
@@ -27,9 +27,10 @@ def draw_complete_tasks_folders(screen,selected_folder,folder_one,folder_two,fol
         screen.blit(tab_img,(x,y))
         screen.blit(img,(x,y+th))
         # text centered on tab
-        text_surf=font.render(name,True, BLACK if key == selected_folder else DARK_SLATE_GRAY) #type: ignore
+        text_surf=font.render(name,True, manilla_folder_text_color[0] if key == selected_folder else manilla_folder_text_color[1]) #type: ignore
         tx= (x+tw+(fw-tw-text_surf.get_width())//2 - 20) if key ==selected_folder else (x+tw+(fw-tw-text_surf.get_width())//2 - 30)
         ty= (y+th+(fh-th-text_surf.get_height())//2 ) if key ==selected_folder else (y+th+(fh-th-text_surf.get_height())//2 - 10)
         screen.blit(text_surf,(tx,ty))
         # click rect covers tab+body
         folder_rects.append((key,pygame.Rect(x,y,fw,fh+th)))
+

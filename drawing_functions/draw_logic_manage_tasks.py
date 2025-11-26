@@ -1,16 +1,57 @@
 # draw_logic_manage_tasks.py
 from config import *
 from drawing_functions.draw_rounded_button import draw_rounded_button
-from drawing_functions.draw_input_box import draw_input_box
-
+from drawing_functions.draw_input_box import draw_input_box, InputBox, logic_input_box
 import pygame
 import math
 import calendar
 from datetime import datetime, timedelta
 
+input_boxes = {
+    "task":        InputBox(None, text="", multiline=False, fontsize=0.06, box_type="text"),
+    "spoons_cost": InputBox(None, text="", multiline=False, fontsize=0.06, box_type="spoons"),
+    "spoons_done": InputBox(None, text="", multiline=False, fontsize=0.06, box_type="spoons"), 
+    "description": InputBox(None, text="", multiline=True,  fontsize=0.05, box_type="text"),
+    "year":        InputBox(None, text="", multiline=False, fontsize=0.06, box_type="number"),
+    "month":       InputBox(None, text="", multiline=False, fontsize=0.06, box_type="month"),
+    "day":         InputBox(None, text="", multiline=False, fontsize=0.06, box_type="day"),
+    "start_time":  InputBox(None, text="", multiline=False, fontsize=0.06, box_type="time"),
+}
+
+
 # Globals for click handling
 remove_buttons     = []  # (pygame.Rect, idx)
 frame_buttons      = []  # (pygame.Rect, task_index, frame_index)
+focus_buttons = []
+
+# --- Focus mode timer state (per-task focus) ---
+focus_timer_active       = False
+focus_timer_paused       = False
+focus_timer_start        = None
+focus_timer_last_update  = None
+focus_total_secs         = 0.0
+focus_remaining_secs     = 0.0
+focus_total_spoons       = 0          # how many spoon-intervals this focus session covers
+focus_spoons_spent       = 0          # how many spoon-intervals have actually fired
+
+# Start / Pause / Exit buttons in focus UI
+focus_start_rect         = None
+focus_pause_rect         = None
+focus_exit_rect          = None
+
+# Spoon-debt / out-of-spoons popup
+focus_popup_text         = ""
+focus_popup_start        = None       # datetime
+focus_popup_duration     = 5.0        # seconds
+focus_warning_shown_for_debt = False  # only show debt warning once per session
+
+# Visual timer state (for smooth drawing independent of events)
+focus_visual_start_time   = None      # datetime when focus session started
+focus_pause_start_visual  = None      # datetime when pause began
+focus_pause_accum_visual  = 0.0       # total paused seconds
+
+# Focus timer uses the same time_per_spoon from config
+deg_per_spoon_focus      = time_per_spoon * 6
 
 # Globals for click handling
 edit_buttons       = []  # (pygame.Rect, field_name)
@@ -21,6 +62,7 @@ add_task_button_rect = None
 # State
 currently_editing = None  # index of the task being edited
 edit_state = {}
+focus_task = None
 
 spoons_xp = 0
 
@@ -75,6 +117,70 @@ LIGHT_BROWN     = (85, 50, 43)
 VERY_DARK_BROWN = (20, 12, 10)
 DROPDOWN_BROWN = (65, 40, 33)
 
+MONTHS = ["January", "February","March","April","May","June","July","August","September","October","November","December"]
+
+def finalize_month_input(box):
+    """
+    Centralized commit logic for the month input box.
+    Called when leaving the month field (Tab or clicking off).
+    """
+
+    # 1. If autofill already determined a match, commit it
+    if getattr(box, "pending_full_month", None):
+        box.text = box.pending_full_month
+
+    else:
+        # 2. Recompute from prefix
+        prefix = box.text.strip().lower()
+        match = None
+
+        if prefix:
+            for m in MONTHS:
+                if m.lower().startswith(prefix):
+                    match = m
+                    break
+
+        if match:
+            box.text = match
+        else:
+            # 3. Invalid input → revert to last known valid text
+            box.text = box.saved_text
+
+    # 4. Reset autofill state
+    box.pending_full_month = None
+    box.autofill_text = ""
+
+    # 5. Reset caret + selection
+    box.caret = len(box.text)
+    box.sel_start = box.caret
+    box.sel_end = box.caret
+
+def _extract_sortable_start_time(task):
+    """
+    Returns a sortable integer HHMM.
+    Tasks with no start time return a large number so they go last.
+    """
+    try:
+        # dict format
+        if isinstance(task, tuple):
+            st = task[7]   # start time list [hh,mm,...]
+        else:
+            st = task.get("start_time", None)
+
+        if isinstance(st, (list, tuple)) and len(st) >= 2:
+            hh = int(st[0])
+            mm = int(st[1])
+            return hh * 100 + mm
+
+        # string "HHMM"
+        if isinstance(st, str) and st.isdigit() and len(st) >= 3:
+            st = st.zfill(4)
+            return int(st[:2]) * 100 + int(st[2:])
+    except:
+        pass
+
+    return 9999  # tasks with no time go LAST
+
 def _blit_task_name_fit(screen, text, x_left, y, x_limit, base_px):
     """
     Render `text` starting at x_left,y with a font size that fits entirely
@@ -107,19 +213,14 @@ def draw_complete_tasks(
     scroll_offset_px,
     background_color,
     icon_image,
-    folder_one,
-    folder_two,
-    folder_three,
-    folder_four,
-    folder_five,
-    folder_six
+    time_per_spoon
 ):
     """
     Draws the manage-tasks page, or the edit form if currently_editing is set.
     """
     global edit_buttons, remove_buttons, frame_buttons, label_buttons, label_chip_buttons, dragging_label
     global favorites_chip_buttons, favorites_drop_rect, task_drop_rects, hover_insert_index_per_task
-    global dropdown_outer_rects, new_label_rect, new_label_buttons
+    global dropdown_outer_rects, new_label_rect, new_label_buttons, focus_task, focus_buttons
     edit_buttons.clear()
     remove_buttons.clear()
     buttons.clear()
@@ -133,9 +234,11 @@ def draw_complete_tasks(
     dropdown_outer_rects.clear()
     new_label_buttons.clear()
     new_label_rect = None
+    focus_buttons.clear()
 
     global add_task_button_rect
     add_task_button_rect = None
+    exit_rect = None
 
     # If there are no tasks in this folder, draw "Add Task?" button
     if len(task_list) == 0:
@@ -151,14 +254,19 @@ def draw_complete_tasks(
         text_surf = font_btn.render("Add Task?", True, WHITE) #type: ignore
         screen.blit(text_surf, (bx + (button_w - text_surf.get_width()) // 2, by + (button_h - text_surf.get_height()) // 2))
 
-        return scroll_offset_px, 0
+        return scroll_offset_px, 0, exit_rect
 
 
     # If we're editing, draw the edit UI instead of the list
     if currently_editing is not None:
         _draw_edit_form(screen, background_color, icon_image, spoons, task_list)
-        return scroll_offset_px, 0
-
+        return scroll_offset_px, 0, exit_rect
+    
+    if focus_task is not None:
+        exit_rect = _draw_focus_mode(screen, task_list[focus_task])
+        # Tick focus timer each time logic runs (time-based spoon spending)
+        spoons, task_list = _update_focus_timer(task_list, spoons, spoons_debt_toggle, time_per_spoon)
+        return scroll_offset_px, 0, exit_rect  # include exit_rect
 
     # --- existing drawing logic below ---
     border_img   = task_spoons_border
@@ -171,6 +279,9 @@ def draw_complete_tasks(
     bottom_img   = pygame.transform.flip(top_img, False, True)
     right_siding = pygame.transform.flip(siding_img, True, False)
     remove_edit  = remove_edit_icons
+    timer_background = avatarBackgrounds['timer_background']
+    timer_hand = avatarBackgrounds['timer_hand']
+    timer_top = avatarBackgrounds['timer_top']
 
     t       = pygame.time.get_ticks() / 300.0
     pulse   = (math.sin(t) + 1) / 2.0
@@ -189,6 +300,10 @@ def draw_complete_tasks(
             overdue.append((idx, name, desc, cost, done, days, date, st, et, labels,))
         else:
             upcoming.setdefault(days, []).append((idx, name, desc, cost, done, days, date, st, et, labels,))
+
+    # sort upcoming dict
+    for d in upcoming:
+        upcoming[d].sort(key=lambda t: _extract_sortable_start_time(t))
     overdue.sort(key=lambda x: x[4])
     days_sorted = sorted(upcoming.keys())
 
@@ -511,8 +626,42 @@ def draw_complete_tasks(
 
                 # draw frames
                 for i, (fx, fy, fw2, fh2) in enumerate(rects):
+                    icon_override = None
+                    # COMPLETED SPOON — now supports undo hover
                     if i < done:
-                        bg, draw_icon = LIGHT_BROWN, True
+                        # Check if the cursor is over ANY completed spoon
+                        hovered_completed_index = None
+                        for j in range(done):
+                            jx, jy, jw, jh = rects[j]
+                            if pygame.Rect(jx, jy, jw, jh).collidepoint(mx, my):
+                                hovered_completed_index = j
+                                break
+
+                        # Should this spoon animate undo?
+                        # YES if:
+                        #   - it's completed (i < done)
+                        #   - AND the hovered spoon index is <= this spoon index
+                        if hovered_completed_index is not None and i >= hovered_completed_index:
+                            # Animated undo effect
+                            bg = (140, 60, 60)  # reddish tint
+                            draw_icon = True
+
+                            # inward pressed look
+                            fx += 2
+                            fy += 1
+
+                            # pulse opacity between 128–255
+                            alpha = int(128 + pulse * 127)
+                            tmp = icon_image.copy()
+                            tmp.set_alpha(alpha)
+                            icon_override = tmp
+
+                        else:
+                            # normal completed spoon appearance
+                            bg = LIGHT_BROWN
+                            draw_icon = True
+                            icon_override = None
+
                     elif i <= hover_index:
                         to_fill = (i+1)-done
                         if spoons >= to_fill:
@@ -540,11 +689,15 @@ def draw_complete_tasks(
                     screen.blit(right_siding, (fx+fw2-6, fy+2))
 
                     if draw_icon:
-                        tmp = icon_image.copy()
-                        tmp.set_alpha(255 if i<done else 128)
+                        if icon_override:
+                            tmp = icon_override
+                        else:
+                            tmp = icon_image.copy()
+                            tmp.set_alpha(255 if i < done else 128)
+
                         iw2, ih2 = tmp.get_size()
-                        cx = fx+6 + iw//2 - iw2//2
-                        cy = fy+2 + 17 - ih2//2
+                        cx = fx + 6 + iw // 2 - iw2 // 2
+                        cy = fy + 2 + 17 - ih2 // 2
                         screen.blit(tmp, (cx, cy))
 
                 # --- Description toggle and hover text ---
@@ -607,6 +760,22 @@ def draw_complete_tasks(
                     screen.blit(remove_edit, remove_rect.topleft)
                     remove_buttons.append((remove_rect, idx))
 
+                # --- Focus mode timer icon ---
+                timer_small = pygame.transform.scale(timer_background, (32, 32))
+                hand_small = pygame.transform.scale(timer_hand, (32, 32))
+                top_small = pygame.transform.scale(timer_top, (32, 32))
+                timer_rect = pygame.Rect(remove_rect.right + 735, remove_rect.y + 5, 30, 30)
+
+                # show timer icon only on hover (same rule as remove_edit)
+                if remove_rect.collidepoint(mx,my) or btn.collidepoint(mx,my) or timer_rect.collidepoint(mx,my):
+                    screen.blit(timer_small, timer_rect.topleft)
+                    screen.blit(hand_small, timer_rect.topleft)
+                    screen.blit(top_small, timer_rect.topleft)
+
+                # store hitbox
+                focus_buttons.append((timer_rect, idx))
+
+
             y_cur += 52
         y_cur += 4
         return y_cur
@@ -664,8 +833,357 @@ def draw_complete_tasks(
             tw, th = trashcan_image.get_size()
             screen.blit(trashcan_image, (chip_x + lbw - tw, chip_y + lbh - th + 2))
 
+    #draw a small rect with background color to cover artifacts on the top of the screen
+    pygame.draw.rect(screen, background_color, (100, 0, screen.get_width(), 80))
 
-    return scroll_offset_px, total_content_height
+    return scroll_offset_px, total_content_height, None
+
+def _start_focus_timer(task_list, time_per_spoon):
+    """
+    Initialize / restart the focus timer for the currently selected focus_task.
+    Session length = (cost - done) spoons for that task.
+    """
+    global focus_timer_active, focus_timer_paused, focus_timer_start, focus_timer_last_update
+    global focus_total_secs, focus_remaining_secs, focus_total_spoons, focus_spoons_spent
+    global focus_warning_shown_for_debt
+    global focus_visual_start_time, focus_pause_start_visual, focus_pause_accum_visual
+
+    if focus_task is None:
+        return
+
+    if focus_task < 0 or focus_task >= len(task_list):
+        return
+
+    name, desc, cost, done, days, date, st, et, labels = task_list[focus_task]
+
+    remaining_spoons_needed = max(0, cost - done)
+    if remaining_spoons_needed <= 0:
+        # Task already complete; nothing to time.
+        return
+
+    focus_total_spoons       = remaining_spoons_needed
+    focus_total_secs         = remaining_spoons_needed * time_per_spoon * 60.0
+    focus_remaining_secs     = focus_total_secs
+    focus_spoons_spent       = 0
+
+    # Core timer state
+    focus_timer_start        = datetime.now()
+    focus_timer_last_update  = None
+    focus_timer_active       = True
+    focus_timer_paused       = False
+    focus_warning_shown_for_debt = False
+
+    # Visual timer (for smooth draw independent of events)
+    focus_visual_start_time   = focus_timer_start
+    focus_pause_start_visual  = None
+    focus_pause_accum_visual  = 0.0
+
+def _update_focus_timer(task_list, spoons, spoons_debt_toggle, time_per_spoon):
+    """
+    Time-based focus logic:
+    - Every time_per_spoon minutes:
+        * spoons -= 1
+        * current task.done += 1
+    - If spoons_debt_toggle is False and spoons hits 0, timer PAUSES and
+      shows an 'out of spoons' popup.
+    - If spoons_debt_toggle is True, timer continues into negative spoons
+      but shows a one-time 'debt' warning when crossing 0.
+    """
+    global focus_timer_active, focus_timer_paused, focus_timer_last_update
+    global focus_remaining_secs, focus_spoons_spent
+    global focus_popup_text, focus_popup_start, focus_warning_shown_for_debt
+
+    if not focus_timer_active or focus_timer_paused or focus_task is None:
+        return spoons, task_list
+
+    if focus_task < 0 or focus_task >= len(task_list):
+        focus_timer_active = False
+        return spoons, task_list
+
+    now = datetime.now()
+
+    # First call after (re)start: just set last_update
+    if focus_timer_last_update is None:
+        focus_timer_last_update = now
+        return spoons, task_list
+
+    dt = (now - focus_timer_last_update).total_seconds()
+    focus_timer_last_update = now
+
+    if dt <= 0 or focus_total_secs <= 0 or focus_remaining_secs <= 0:
+        focus_timer_active = False
+        return spoons, task_list
+
+    # Update remaining seconds
+    focus_remaining_secs = max(0.0, focus_remaining_secs - dt)
+
+    # How many ticks should have occurred total?
+    seconds_per_tick = time_per_spoon * 60.0
+    ticks_total      = int((focus_total_secs - focus_remaining_secs) // seconds_per_tick)
+
+    # How many NEW ticks to apply this call?
+    ticks_to_apply   = max(0, ticks_total - int(focus_spoons_spent))
+
+    for _ in range(ticks_to_apply):
+        if focus_task is None or focus_task < 0 or focus_task >= len(task_list):
+            focus_timer_active = False
+            break
+
+        name, desc, cost, done, days, date, st, et, labels = task_list[focus_task]
+
+        # Stop if task is already complete
+        if done >= cost:
+            focus_timer_active = False
+            break
+
+        prev_spoons = spoons
+
+        # If user does NOT allow spoon debt and we are out of spoons → pause & popup
+        if spoons <= 0 and not spoons_debt_toggle:
+            focus_timer_paused = True
+            focus_popup_text   = "You have run out of spoons, please rest before continuing focus mode."
+            focus_popup_start  = now
+            break
+
+        # Spend one spoon and advance task progress
+        spoons -= 1
+        done   += 1
+        focus_spoons_spent += 1
+
+        # Save updated task tuple back
+        task_list[focus_task] = (name, desc, cost, done, days, date, st, et, labels)
+
+        # If user allows spoon debt, show warning once when crossing 0
+        if spoons_debt_toggle and prev_spoons > 0 and spoons <= 0 and not focus_warning_shown_for_debt:
+            focus_popup_text  = "Warning: You are now in spoon debt."
+            focus_popup_start = now
+            focus_warning_shown_for_debt = True
+
+        # If we just finished the task, stop the timer
+        if done >= cost:
+            focus_timer_active = False
+            break
+
+    # Hard stop if time is over
+    if focus_remaining_secs <= 0:
+        focus_timer_active = False
+
+    return spoons, task_list
+
+def _draw_focus_mode(screen, task):
+    """
+    Renders focus mode:
+    - Task preview with spoon frames
+    - Circular timer using same art as input_spoons
+    - Start / Restart button (left)
+    - Pause / Unpause button (right)
+    - Popup that fades away after 5 seconds when out of spoons or in debt
+    """
+    global focus_start_rect, focus_pause_rect, focus_exit_rect
+    global focus_popup_text, focus_popup_start
+    global focus_visual_start_time, focus_pause_start_visual, focus_pause_accum_visual
+
+    name, desc, cost, done, days, date, st, et, labels = task
+
+    screen_w, screen_h = screen.get_size()
+
+    header_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_h * 0.05))
+    task_font   = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_h * 0.06))
+    timer_font  = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_h * 0.047))
+    button_font = header_font
+
+    # --- Header (same rules as edit mode) ---
+    now = datetime.now()
+    days_left = (date - now).days + 1
+
+    if done >= cost:
+        header = "Completed"
+    elif days_left < 0:
+        header = "Overdue"
+    elif days_left == 0:
+        header = "Due Today"
+    elif days_left == 1:
+        header = "Due in 1 Day"
+    else:
+        header = f"Due in {days_left} Days"
+
+    hdr = header_font.render(header, True, BLACK)  # type: ignore
+    screen.blit(hdr, (140, 110))
+
+    # --- Task border container ---
+    border_img = task_spoons_border
+    py = 105 + hdr.get_height() + 10
+    screen.blit(border_img, (138, py))
+
+    # Task name
+    name_surf = task_font.render(name, True, BLACK)  # type: ignore
+    screen.blit(name_surf, (148, py + 12))
+
+    # Spoon frames
+    region_x = 138 + 297
+    region_w = 450
+    sp = 10
+    frame_h = 2 + 34 + 2
+    vpad = (50 - frame_h) // 2
+    fw = (region_w - (cost + 1) * sp) // max(cost, 1)
+    extra = (region_w - (cost * fw + (cost + 1) * sp)) // 2
+
+    siding_img = progress_bar_spoon_siding
+    top_img    = progress_bar_spoon_top
+    bottom_img = pygame.transform.flip(top_img, False, True)
+    right_siding = pygame.transform.flip(siding_img, True, False)
+
+    for i in range(cost):
+        fx = region_x + sp + extra + i * (fw + sp)
+        fy = py + vpad
+
+        if i < done:
+            bg = (85, 60, 53)
+        else:
+            bg = (40, 25, 22)
+
+        pygame.draw.rect(screen, bg, (fx + 2, fy + 4, fw - 4, frame_h - 8))
+        screen.blit(siding_img, (fx, fy + 2))
+
+        iw = max(fw - 12, 0)
+        tx = fx + 6
+        ty = fy + 3
+        d = 0
+        while d + 10 <= iw:
+            screen.blit(top_img, (tx + d, ty))
+            d += 10
+        if iw - d > 0:
+            screen.blit(top_img, (tx + d, ty), pygame.Rect(0, 0, iw - d, 2))
+
+        by2 = fy + 2 + 34 - 3
+        d = 0
+        while d + 10 <= iw:
+            screen.blit(bottom_img, (tx + d, by2))
+            d += 10
+        if iw - d > 0:
+            screen.blit(bottom_img, (tx + d, by2), pygame.Rect(0, 0, iw - d, 2))
+
+        screen.blit(right_siding, (fx + fw - 6, fy + 2))
+
+    # --- Circular timer (same art as input_spoons) ---
+    timer_background = avatarBackgrounds['timer_background']
+    timer_hand       = avatarBackgrounds['timer_hand']
+    timer_top        = avatarBackgrounds['timer_top']
+
+    tw, th = timer_background.get_size()
+    timer_x = 200
+    timer_y = int(screen_h * 0.42)
+
+    screen.blit(timer_background, (timer_x, timer_y))
+
+    # Smooth visual timer based on wall clock + pause accumulation
+    now = datetime.now()
+    if focus_total_secs > 0 and focus_visual_start_time is not None:
+        paused_offset = focus_pause_accum_visual
+        if focus_timer_paused and focus_pause_start_visual is not None:
+            paused_offset += (now - focus_pause_start_visual).total_seconds()
+
+        elapsed_secs = max(0.0, (now - focus_visual_start_time).total_seconds() - paused_offset)
+        if elapsed_secs > focus_total_secs:
+            elapsed_secs = focus_total_secs
+
+        remaining_secs = int(focus_total_secs - elapsed_secs)
+        progress = 0.0 if focus_total_secs <= 0 else (elapsed_secs / focus_total_secs)
+        total_rotation = focus_total_spoons * deg_per_spoon_focus
+        angle = 45 + (1.0 - progress) * total_rotation
+    else:
+        angle = 45
+        remaining_secs = 0
+
+    # Remaining time label (H:MM:SS)
+    rh = remaining_secs // 3600
+    rm = (remaining_secs % 3600) // 60
+    rs = remaining_secs % 60
+    time_str = f"{rh}:{rm:02}:{rs:02}"
+
+    text_surf = timer_font.render(time_str, True, BLACK)  # type: ignore
+    text_rect = text_surf.get_rect(center=(timer_x + tw // 2, timer_y + th // 2 - 42))
+    screen.blit(text_surf, text_rect)
+
+    # Draw rotating hand + top overlay
+    rotated_hand = pygame.transform.rotate(timer_hand, -angle)
+    hand_rect = rotated_hand.get_rect(center=(timer_x + tw // 2, timer_y + th // 2))
+    screen.blit(rotated_hand, hand_rect)
+    screen.blit(timer_top, (timer_x, timer_y))
+
+    # --- Start / Pause buttons ---
+    btn_w, btn_h = 160, 50
+    gap          = 30
+    base_y       = timer_y + 150
+    total_w      = btn_w * 2 + gap
+    base_x       = timer_x + 350
+
+    # Left button: Start Focus / Restart
+    focus_start_rect = pygame.Rect(base_x, base_y - gap*3, btn_w, btn_h)
+    pygame.draw.rect(screen, (230, 230, 230), focus_start_rect, border_radius=12)
+
+    if not focus_timer_active and focus_spoons_spent == 0:
+        start_label = "Start Focus"
+    else:
+        start_label = "Restart"
+
+    start_surf = button_font.render(start_label, True, BLACK)  # type: ignore
+    screen.blit(start_surf, start_surf.get_rect(center=focus_start_rect.center).topleft)
+
+    # Right button: Pause / Unpause
+    focus_pause_rect = pygame.Rect(base_x, base_y, btn_w, btn_h)
+    pygame.draw.rect(screen, (230, 230, 230), focus_pause_rect, border_radius=12)
+
+    if not focus_timer_active:
+        pause_label = "Pause"
+    elif focus_timer_paused:
+        pause_label = "Unpause"
+    else:
+        pause_label = "Pause"
+
+    pause_surf = button_font.render(pause_label, True, BLACK)  # type: ignore
+    screen.blit(pause_surf, pause_surf.get_rect(center=focus_pause_rect.center).topleft)
+
+    # --- EXIT button (top right) ---
+    exit_font = header_font
+    exit_surf = exit_font.render("Exit Focus", True, BLACK)  # type: ignore
+    exit_rect = exit_surf.get_rect()
+    exit_rect.topleft = (800, 105)
+
+    pygame.draw.rect(screen, (220, 220, 220), exit_rect.inflate(20, 5))
+    screen.blit(exit_surf, exit_rect.topleft)
+
+    # Keep exit rect in a global so logic can see it
+    focus_exit_rect = exit_rect
+
+    # --- Popup overlay (out of spoons / debt warning) ---
+    if focus_popup_text and focus_popup_start:
+        elapsed_popup = (datetime.now() - focus_popup_start).total_seconds()
+        if elapsed_popup < focus_popup_duration:
+            # Fade alpha from ~200 down to 0 over popup_duration
+            fade = max(0.0, 1.0 - elapsed_popup / focus_popup_duration)
+            alpha = int(200 * fade)
+
+            overlay = pygame.Surface((screen_w, screen_h), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, alpha))
+            screen.blit(overlay, (0, 0))
+
+            box_w, box_h = 800, 140
+            box_x = (screen_w - box_w) // 2
+            box_y = (screen_h - box_h) // 2
+            pygame.draw.rect(screen, (255, 255, 255), (box_x, box_y, box_w, box_h), border_radius=18)
+            pygame.draw.rect(screen, (60, 40, 30), (box_x, box_y, box_w, box_h), 2, border_radius=18)
+
+            msg_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_h * 0.045))
+            msg_surf = msg_font.render(focus_popup_text, True, BLACK)  # type: ignore
+            msg_rect = msg_surf.get_rect(center=(box_x + box_w // 2, box_y + box_h // 2))
+            screen.blit(msg_surf, msg_rect.topleft)
+        else:
+            # Clear popup after it has fully faded
+            focus_popup_text  = ""
+            focus_popup_start = None
+
+    return exit_rect
 
 def _draw_label_dropdown(screen, attach_x, attach_y, attach_w, rows_count):
     # rows_count controls inner height; tweak ROW_H to taste
@@ -907,72 +1425,109 @@ def _draw_edit_form(screen, background_color, icon_image, spoons, task_list):
     """
     Draws the edit form for the selected task, including:
     - Live preview of the current task (header + task box with spoon slots & icons)
-    - Input fields in three layers:
-      * Task Name (400px)
-      * Due Month / Due Day (200px each)
-      * Cost / Done (100px each)
+    - Input fields:
+        * Task Name / Cost / Done
+        * Description (multiline)
+        * Year / Month / Day / Start Time
+    Uses the shared `input_boxes` registry for all fields.
     """
     global edit_buttons, cancel_button_rect, done_button_rect
-    global dragging_label
+    global dragging_label, label_buttons, new_label_buttons, label_chip_buttons
+    global dropdown_outer_rects, task_drop_rects, favorites_drop_rect
+    global hover_insert_index_per_task, favorites_labels
+    global input_boxes
+    global confirm_one_rect, confirm_all_rect
+
     edit_buttons.clear()
 
-    DARK_BROWN      = (40, 25, 22)
-    LIGHT_BROWN     = (85, 60, 53)
+    DARK_BROWN  = (40, 25, 22)
+    LIGHT_BROWN = (85, 60, 53)
     r, g, b = background_color
-    arrow_color = (max(0, r-20), max(0, g-20), max(0, b-20))
-    input_box_color = (max(0, r+20), max(0, g+20), max(0, b+20))
+    arrow_color     = (max(0, r - 20), max(0, g - 20), max(0, b - 20))
+    input_box_color = (max(0, r + 20), max(0, g + 20), max(0, b + 20))
 
-    # --- Live Preview ---
-    screen_h = screen.get_height()
+    # --- Live Preview header + due calculation (from input_boxes) ---
+    screen_h    = screen.get_height()
     header_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_h * 0.05))
     task_font   = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_h * 0.06))
 
-    # Gather state
-    name = edit_state.get("name", "")
-    label = edit_state.get("labels", "")
-    # after: never let cost > 10, and never let done > cost
-    raw_cost = int(edit_state.get("cost", "0") or 0)
-    cost = max(0, min(10, raw_cost))
-    raw_done = int(edit_state.get("done", "0") or 0)
-    done = max(0, min(cost, raw_done))
+    # Get the currently-editing task as fallback for date/time
+    if currently_editing is not None and 0 <= currently_editing < len(task_list):
+        orig_task = task_list[currently_editing]
+    else:
+        orig_task = ["", "", 0, 0, 0, datetime.now(), [0, 0, 0, 0], None, []]
+    orig_name, orig_desc, orig_cost, orig_done, orig_days, orig_date, orig_st, orig_et, orig_labels = orig_task
 
-    def _safe_month_to_int(val, fallback_month):
-        # accepts int, "3", or full month name (any case). otherwise fallback.
-        try:
-            if isinstance(val, int):
-                return max(1, min(12, val))
-            s = str(val).strip()
-            if s.isdigit():
-                return max(1, min(12, int(s)))
-            # try exact full month name (case-insensitive)
-            names = list(calendar.month_name)  # ["", "January", ...]
-            for i in range(1, 13):
-                if names[i].lower() == s.lower():
-                    return i
-        except Exception:
-            pass
+    # Read current input values
+    name_text  = input_boxes["task"].text if input_boxes["task"].text is not None else ""
+    desc_text  = input_boxes["description"].text if input_boxes["description"].text is not None else ""
+    cost_text  = input_boxes["spoons_cost"].text if input_boxes["spoons_cost"].text is not None else ""
+    done_text  = input_boxes["spoons_done"].text if input_boxes["spoons_done"].text is not None else ""
+    year_text  = input_boxes["year"].text if input_boxes["year"].text is not None else ""
+    month_text = input_boxes["month"].text if input_boxes["month"].text is not None else ""
+    day_text   = input_boxes["day"].text if input_boxes["day"].text is not None else ""
+    st_text    = input_boxes["start_time"].text if input_boxes["start_time"].text is not None else ""
+
+    # Cost / done numeric with clamps (0–10 for cost, 0–cost for done)
+    try:
+        cost_val = int(cost_text) if cost_text.strip() != "" else orig_cost
+    except Exception:
+        cost_val = orig_cost
+    cost_val = max(0, min(10, cost_val))
+
+    try:
+        done_val = int(done_text) if done_text.strip() != "" else orig_done
+    except Exception:
+        done_val = orig_done
+    done_val = max(0, min(cost_val, done_val))
+
+    # Year/month/day numeric for due date
+    now = datetime.now()
+
+    try:
+        year_val = int(year_text) if year_text.strip() != "" else orig_date.year
+    except Exception:
+        year_val = orig_date.year
+
+    # Month: accept digit or full name (case-insensitive)
+    def _month_to_int(s, fallback_month):
+        s = (s or "").strip()
+        if s == "":
+            return fallback_month
+        if s.isdigit():
+            try:
+                mv = int(s)
+                if 1 <= mv <= 12:
+                    return mv
+            except Exception:
+                pass
+        names = list(calendar.month_name)
+        low = s.lower()
+        for i in range(1, 13):
+            if names[i].lower() == low:
+                return i
         return fallback_month
 
-    now = datetime.now()
-    raw_month_for_draw = edit_state.get("month", str(now.month)) or str(now.month)
-    if input_active == "month" and edit_state.get("_month_orig_pretty"): raw_month_for_draw = edit_state["_month_orig_pretty"]
-    mon = _safe_month_to_int(raw_month_for_draw, now.month)
-    try: year = int(edit_state.get("year", now.year))
-    except Exception: year = now.year
-    max_day_ctx = calendar.monthrange(year, mon)[1]
-    raw_day_for_draw = edit_state.get("day", str(min(now.day, max_day_ctx))) or str(min(now.day, max_day_ctx))
-    if input_active == "day" and (edit_state.get("day", "") == ""): raw_day_for_draw = edit_state.get("_day_orig", str(min(now.day, max_day_ctx)))
-    try: day = max(1, min(int(str(raw_day_for_draw).strip()), max_day_ctx))
-    except Exception: day = min(now.day, max_day_ctx)
-    due = datetime(year, mon, day)
+    month_val = _month_to_int(month_text, orig_date.month)
 
+    max_day_ctx = calendar.monthrange(year_val, month_val)[1]
+    try:
+        day_val = int(day_text) if day_text.strip() != "" else orig_date.day
+    except Exception:
+        day_val = orig_date.day
+    day_val = max(1, min(max_day_ctx, day_val))
 
+    try:
+        due = datetime(year_val, month_val, day_val)
+    except Exception:
+        # fallback if insane
+        due = datetime(orig_date.year, orig_date.month, orig_date.day)
     days_left = (due - now).days + 1
 
-    if cost > 0 and done >= cost:
+    if cost_val > 0 and done_val >= cost_val:
         header = "Completed"
     elif days_left < 0:
-        header = "Overdue"
+        header = "Overdue"  
     elif days_left == 0:
         header = "Due Today"
     elif days_left == 1:
@@ -980,110 +1535,98 @@ def _draw_edit_form(screen, background_color, icon_image, spoons, task_list):
     else:
         header = f"Due in {days_left} Days"
 
-    # draw header
-    hdr_s = header_font.render(header, True, BLACK) #type: ignore
-    screen.blit(hdr_s, (140, 140))
+    hdr_s = header_font.render(header, True, BLACK)  # type: ignore
+    screen.blit(hdr_s, (140, 92))
 
-    # prepare images
+    # --- Task preview box + spoons bar ---
     border_img   = task_spoons_border
     siding_img   = progress_bar_spoon_siding
     top_img      = progress_bar_spoon_top
     bottom_img   = pygame.transform.flip(top_img, False, True)
     right_siding = pygame.transform.flip(siding_img, True, False)
 
-    # preview container
-    py = 135 + hdr_s.get_height() + 10
+    py = 92 + hdr_s.get_height()
     screen.blit(border_img, (138, py))
 
-    # --- In EDIT view we show the label button + dropdown (moved from list) ---
-    label_img        = task_label_border
-    label_img_blank  = task_label_border_blank
-    label_img_hover  = task_label_border_hover
-    label_img_hover_blank = task_label_border_hover_blank
+    # Label button UI (unchanged logic)
+    label_img              = task_label_border
+    label_img_blank        = task_label_border_blank
+    label_img_hover        = task_label_border_hover
+    label_img_hover_blank  = task_label_border_hover_blank
 
-    # Draw the label button in the same place as list preview UI
     edit_label_x, edit_label_y = 395, py + 7
     lw, lh = label_img.get_size()
     edit_label_rect = pygame.Rect(edit_label_x, edit_label_y, lw, lh)
 
-    # ---- task name (fit so it stops before the label button) ----
-    name_x = 148
-    name_y = py + 12
-    x_limit = edit_label_x  # left edge of the label button
-    base_px = int(screen.get_height() * 0.06)  # same size as task_font
-    _blit_task_name_fit(screen, name, name_x, name_y, x_limit, base_px)
+    name_x    = 148
+    name_y    = py + 12
+    x_limit   = edit_label_x
+    base_px   = int(screen.get_height() * 0.06)
+    _blit_task_name_fit(screen, name_text, name_x, name_y, x_limit, base_px)
 
-    # Current task labels are edited directly on the live task_list
-    labels_ref = task_list[currently_editing][8] if (isinstance(currently_editing, int) and 0 <= currently_editing < len(task_list)) else []
+    labels_ref = orig_labels if (isinstance(currently_editing, int) and 0 <= currently_editing < len(task_list)) else []
 
     mx2, my2 = pygame.mouse.get_pos()
     if len(labels_ref) > 0:
-        if edit_label_rect.collidepoint(mx2, my2): screen.blit(label_img_hover, (edit_label_x, edit_label_y))
-        else:                                      screen.blit(label_img,        (edit_label_x, edit_label_y))
+        if edit_label_rect.collidepoint(mx2, my2):
+            screen.blit(label_img_hover, (edit_label_x, edit_label_y))
+        else:
+            screen.blit(label_img, (edit_label_x, edit_label_y))
     else:
-        if edit_label_rect.collidepoint(mx2, my2): screen.blit(label_img_hover_blank, (edit_label_x, edit_label_y))
-        else:                                      screen.blit(label_img_blank,       (edit_label_x, edit_label_y))
+        if edit_label_rect.collidepoint(mx2, my2):
+            screen.blit(label_img_hover_blank, (edit_label_x, edit_label_y))
+        else:
+            screen.blit(label_img_blank, (edit_label_x, edit_label_y))
 
-    # Reuse global label_buttons as the click target in EDIT view
     label_buttons.append((edit_label_rect, currently_editing))
 
-    # If the edit task's dropdown is open, render it directly under the preview
+    # --- Dropdown for labels (unchanged) ---
     if currently_editing in expanded_label_tasks:
         border_w = border_img.get_width()
         attach_x = 145
         attach_y = py + 49
         attach_w = border_w - 14
 
-        # --- Compute dropdown inner height based on task labels and favorites (same rules) ---
         LABEL_COLS = 3
-        ROW_H = max(28, label_border.get_height() + 8)
+        ROW_H      = max(28, label_border.get_height() + 8)
 
-        labels_count_for_layout = max(1, len(labels_ref) + 1)  # +1 for add chip
-        label_rows = math.ceil(labels_count_for_layout / LABEL_COLS)
-        labels_h_px = label_rows * ROW_H
+        labels_count_for_layout = max(1, len(labels_ref) + 1)
+        label_rows              = math.ceil(labels_count_for_layout / LABEL_COLS)
+        labels_h_px             = label_rows * ROW_H
 
-        FAV_COLS = 2
-        fav_chip_h = label_favorite_border.get_height() - 2
-        FAV_GAP_Y = 4
-        fav_rows = max(1, math.ceil(len(favorites_labels) / FAV_COLS))
+        FAV_COLS      = 2
+        fav_chip_h    = label_favorite_border.get_height() - 2
+        FAV_GAP_Y     = 4
+        fav_rows      = max(1, math.ceil(len(favorites_labels) / FAV_COLS))
         favorites_h_px = fav_rows * (fav_chip_h + FAV_GAP_Y)
 
         inner_needed_px = max(labels_h_px, favorites_h_px)
-        rows_count = max(1, math.ceil(inner_needed_px / ROW_H))
+        rows_count      = max(1, math.ceil(inner_needed_px / ROW_H))
 
-        # Build dropdown outer and remember its rect for drag-delete
         content_x, content_y, content_w, content_h = _draw_label_dropdown(screen, attach_x, attach_y, attach_w, rows_count)
         tc_h = drop_down_top_corners.get_height()
         bc_h = drop_down_corner.get_height()
         dropdown_outer_rects[currently_editing] = pygame.Rect(attach_x, attach_y, attach_w, tc_h + content_h + bc_h)
 
-        # Favorites panel (right-docked)
         _draw_favorites_panel(screen, attach_x, attach_y, attach_w, content_y, content_h, favorites_labels)
 
-        # Task labels area (left of favorites)
         task_labels_rect = pygame.Rect(content_x, content_y, attach_w - 260, content_h + 30)
         task_drop_rects[currently_editing] = task_labels_rect
 
-        # Draw label chips + add-chip (same as list, but bound to labels_ref)
         inner_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen.get_height() * 0.045))
-        lb = label_border
-        lbw, lbh = lb.get_size()
-        row_h = max(28, lbh + 8)
-        PAD_X = 12
-        GAP_X = 7
-        COLS = 3
+        lb         = label_border
+        lbw, lbh   = lb.get_size()
+        row_h      = max(28, lbh + 8)
+        PAD_X      = 12
+        GAP_X      = 7
+        COLS       = 3
 
-        # Build working lists respecting drag reordering (same logic as list)
         orig_labels   = labels_ref
         orig_indices  = list(range(len(orig_labels)))
         working_labels  = orig_labels[:]
         working_indices = orig_indices[:]
 
-        is_drag_from_this_task = (
-            dragging_label is not None
-            and dragging_label.get("source") == "task"
-            and dragging_label.get("task_idx") == currently_editing
-        )
+        is_drag_from_this_task = dragging_label is not None and dragging_label.get("source") == "task" and dragging_label.get("task_idx") == currently_editing
         if is_drag_from_this_task:
             drag_i = dragging_label["label_idx"]
             if 0 <= drag_i < len(working_labels):
@@ -1104,8 +1647,8 @@ def _draw_edit_form(screen, background_color, icon_image, spoons, task_list):
 
         hover_insert_index = None
         if dragging_label is not None:
-            drag_txt = dragging_label.get("text", "")
-            is_reorder = (dragging_label.get("source") == "task" and dragging_label.get("task_idx") == currently_editing)
+            drag_txt    = dragging_label.get("text", "")
+            is_reorder  = dragging_label.get("source") == "task" and dragging_label.get("task_idx") == currently_editing
             allow_preview = True
             if not is_reorder and drag_txt in orig_labels:
                 allow_preview = False
@@ -1116,13 +1659,9 @@ def _draw_edit_form(screen, background_color, icon_image, spoons, task_list):
                         hover_insert_index = i
                         break
                 if hover_insert_index is None and slot_rects:
-                    last = slot_rects[-1]
-                    right_tail = pygame.Rect(last.right, task_labels_rect.top,
-                                            max(0, task_labels_rect.right - last.right),
-                                            task_labels_rect.height)
-                    below_tail = pygame.Rect(task_labels_rect.left, last.bottom,
-                                            task_labels_rect.width,
-                                            max(0, task_labels_rect.bottom - last.bottom))
+                    last       = slot_rects[-1]
+                    right_tail = pygame.Rect(last.right, task_labels_rect.top, max(0, task_labels_rect.right - last.right), task_labels_rect.height)
+                    below_tail = pygame.Rect(task_labels_rect.left, last.bottom, task_labels_rect.width, max(0, task_labels_rect.bottom - last.bottom))
                     if right_tail.collidepoint(mx3, my3) or below_tail.collidepoint(mx3, my3):
                         hover_insert_index = len(working_labels) - 1
             else:
@@ -1130,11 +1669,11 @@ def _draw_edit_form(screen, background_color, icon_image, spoons, task_list):
 
         display_labels  = working_labels[:]
         display_indices = working_indices[:]
-        is_end_slot = (hover_insert_index == len(working_labels) - 1) if hover_insert_index is not None else False
+        is_end_slot     = hover_insert_index is not None and hover_insert_index == len(working_labels) - 1
         if hover_insert_index is not None:
             display_labels.insert(hover_insert_index, "Temporary Label")
             display_indices.insert(hover_insert_index, None)
-        hover_insert_index_per_task[currently_editing] = ("END" if is_end_slot else hover_insert_index)
+        hover_insert_index_per_task[currently_editing] = "END" if is_end_slot else hover_insert_index
 
         for disp_i, lab in enumerate(display_labels):
             row = disp_i // COLS
@@ -1144,37 +1683,35 @@ def _draw_edit_form(screen, background_color, icon_image, spoons, task_list):
             chip_rect = pygame.Rect(chip_x, chip_y, lbw, lbh)
 
             if lab == "Temporary Label":
-                ghost = lb.copy(); ghost.set_alpha(90)
+                ghost = lb.copy()
+                ghost.set_alpha(90)
                 screen.blit(ghost, (chip_x, chip_y))
                 continue
 
             if lab == ADD_SENTINEL:
                 add_w, add_h = label_new_border.get_size()
                 screen.blit(label_new_border, (chip_x, chip_y))
-                # Reuse the inline new-label editor already handled by logic_complete_tasks
                 global new_label_rect
                 if new_label_active_task == currently_editing:
-                    inner_font2 = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen.get_height() * 0.045))
-                    text_surface = inner_font2.render(new_label_text, True, BLACK)  # type: ignore
-                    tx = chip_x + (add_w - text_surface.get_width()) // 2
-                    ty = chip_y + (add_h - text_surface.get_height()) // 2 - 1
+                    inner_font2   = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen.get_height() * 0.045))
+                    text_surface  = inner_font2.render(new_label_text, True, BLACK)  # type: ignore
+                    tx            = chip_x + (add_w - text_surface.get_width()) // 2
+                    ty            = chip_y + (add_h - text_surface.get_height()) // 2 - 1
                     if new_label_text:
                         screen.blit(text_surface, (tx, ty + 2))
                     if (pygame.time.get_ticks() // 400) % 2 == 0:
                         caret_x = tx + text_surface.get_width()
-                        pygame.draw.line(screen, BLACK, (caret_x + 2, ty + 4), #type: ignore
-                                        (caret_x + 2, ty + text_surface.get_height() - 2), 2)
+                        pygame.draw.line(screen, BLACK, (caret_x + 2, ty + 4), (caret_x + 2, ty + text_surface.get_height() - 2), 2)  # type: ignore
                     new_label_rect = chip_rect
                 else:
                     inner_font2 = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen.get_height() * 0.045))
-                    ts2 = inner_font2.render("+ New Label", True, BLACK)  # type: ignore
-                    tx = chip_x + (add_w - ts2.get_width()) // 2
-                    ty = chip_y + (add_h - ts2.get_height()) // 2 - 1
+                    ts2         = inner_font2.render("+ New Label", True, BLACK)  # type: ignore
+                    tx          = chip_x + (add_w - ts2.get_width()) // 2
+                    ty          = chip_y + (add_h - ts2.get_height()) // 2 - 1
                     screen.blit(ts2, (tx, ty + 2))
                     new_label_buttons.append((chip_rect, currently_editing))
                 continue
 
-            # regular label chip
             screen.blit(lb, (chip_x, chip_y))
             ts = inner_font.render(lab, True, BLACK)  # type: ignore
             tx = chip_x + (lbw - ts.get_width()) // 2
@@ -1185,258 +1722,224 @@ def _draw_edit_form(screen, background_color, icon_image, spoons, task_list):
             if original_idx is not None:
                 label_chip_buttons.append((chip_rect, currently_editing, original_idx))
 
-
-    # draw spoons frames
+    # --- Draw spoons frames based on cost_val / done_val ---
     region_x = 138 + 297
     region_w = 450
-    sp = 10
-    fw = (region_w - (cost+1)*sp)//max(cost,1)
-    extra = (region_w - (cost*fw + (cost+1)*sp))//2
-    frame_h = 2 + 34 + 2
-    vpad = (50 - frame_h)//2
+    sp       = 10
+    fw       = (region_w - (cost_val + 1) * sp) // max(cost_val, 1)
+    extra    = (region_w - (cost_val * fw + (cost_val + 1) * sp)) // 2
+    frame_h  = 2 + 34 + 2
+    vpad     = (50 - frame_h) // 2
 
-    for i in range(cost):
-        fx = region_x + sp + extra + i*(fw+sp)
+    for i in range(cost_val):
+        fx = region_x + sp + extra + i * (fw + sp)
         fy = py + vpad
-        # bg color
-        if i < done:
-            bg = LIGHT_BROWN
+        if i < done_val:
+            bg        = LIGHT_BROWN
             draw_icon = True
         else:
-            bg = DARK_BROWN
+            bg        = DARK_BROWN
             draw_icon = False
-        pygame.draw.rect(screen, bg, (fx+2, fy+4, fw-4, frame_h-8))
-        screen.blit(siding_img, (fx, fy+2))
-        # tile top/bottom
-        iw = max(fw-12,0)
-        tx, ty = fx+6, fy+3
-        d=0
-        while d+10<=iw:
-            screen.blit(top_img,(tx+d,ty)); d+=10
-        if iw-d>0:
-            screen.blit(top_img,(tx+d,ty),pygame.Rect(0,0,iw-d,2))
-        by2 = fy+2+34-3; d=0
-        while d+10<=iw:
-            screen.blit(bottom_img,(tx+d,by2)); d+=10
-        if iw-d>0:
-            screen.blit(bottom_img,(tx+d,by2),pygame.Rect(0,0,iw-d,2))
-        screen.blit(right_siding,(fx+fw-6,fy+2))
+        pygame.draw.rect(screen, bg, (fx + 2, fy + 4, fw - 4, frame_h - 8))
+        screen.blit(siding_img, (fx, fy + 2))
+
+        iw    = max(fw - 12, 0)
+        tx    = fx + 6
+        ty    = fy + 3
+        dstep = 0
+        while dstep + 10 <= iw:
+            screen.blit(top_img, (tx + dstep, ty))
+            dstep += 10
+        if iw - dstep > 0:
+            screen.blit(top_img, (tx + dstep, ty), pygame.Rect(0, 0, iw - dstep, 2))
+        by2   = fy + 2 + 34 - 3
+        dstep = 0
+        while dstep + 10 <= iw:
+            screen.blit(bottom_img, (tx + dstep, by2))
+            dstep += 10
+        if iw - dstep > 0:
+            screen.blit(bottom_img, (tx + dstep, by2), pygame.Rect(0, 0, iw - dstep, 2))
+        screen.blit(right_siding, (fx + fw - 6, fy + 2))
         if draw_icon:
-            tmp = icon_image.copy(); tmp.set_alpha(255)
-            iw2, ih2 = tmp.get_size()
-            cx = fx+6 + iw//2 - iw2//2
-            cy = fy+2 + 17 - ih2//2
-            screen.blit(tmp,(cx,cy))
+            tmp       = icon_image.copy()
+            tmp.set_alpha(255)
+            iw2, ih2  = tmp.get_size()
+            cx        = fx + 6 + iw // 2 - iw2 // 2
+            cy        = fy + 2 + 17 - ih2 // 2
+            screen.blit(tmp, (cx, cy))
 
     labels_open = (currently_editing in expanded_label_tasks)
 
     # --- Shared layout bases (used whether or not inputs are shown) ---
-    h, sp, x0, x1 = 50, 20, 230, 330
-    y0 = py + 50 + 45           # baseline under the preview box
-    y1 = y0 + h + sp + 30
+    h, sp, x0, x1 = 45, 20, 230, 330
+    y0            = py + 50 + 37
+    y1            = y0 + h + sp + 30
 
-    # --- Inputs ---
+    # --- Inputs using input_boxes (only when labels dropdown is closed) ---
     if not labels_open:
-        y0 = py + 50 + 45
-        h, sp, x0, x1 = 50, 20, 230, 330
-
-        # Task name
+        # Task name / cost / done
         name_rect = pygame.Rect(x0, y0, 300, h)
-        cost_rect=pygame.Rect(name_rect.right + sp,y0,100,h)
-        done_rect=pygame.Rect(cost_rect.right + sp,y0,100,h)
+        cost_rect = pygame.Rect(name_rect.right + sp, y0, 100, h)
+        done_rect = pygame.Rect(cost_rect.right + sp, y0, 100, h)
 
-        screen.blit(header_font.render("Task Name:",True,WHITE),(x0 + 87,y0 - 30)) #type: ignore
-        draw_input_box(screen,name_rect,input_active == "name",name,LIGHT_GRAY,DARK_SLATE_GRAY,False,background_color,"light") #type: ignore
-        edit_buttons.append((name_rect,"name"))
+        screen.blit(header_font.render("Task Name:", True, WHITE), (name_rect.x + 87, y0 - 30))  # type: ignore
+        screen.blit(header_font.render("Cost:", True, WHITE), (cost_rect.x + 25, y0 - 30))       # type: ignore
+        screen.blit(header_font.render("Done:", True, WHITE), (done_rect.x + 20, y0 - 30))       # type: ignore
 
-        screen.blit(header_font.render("Cost:",True,WHITE),(cost_rect.left + 25,y0 - 30)) #type: ignore
-        draw_input_box(screen,cost_rect,input_active == "cost",str(cost),LIGHT_GRAY,DARK_SLATE_GRAY,True,background_color,"light") #type: ignore
-        screen.blit(header_font.render("Done:",True,WHITE),(done_rect.left + 20,y0 - 30)) #type: ignore
-        draw_input_box(screen,done_rect,input_active == "done",str(done),LIGHT_GRAY,DARK_SLATE_GRAY,True,background_color,"light") #type: ignore
-        edit_buttons.append((cost_rect,"cost")); edit_buttons.append((done_rect,"done"))
+        input_boxes["task"].rect        = name_rect
+        input_boxes["spoons_cost"].rect = cost_rect
+        input_boxes["spoons_done"].rect = done_rect
 
-        # Year / Month / Day + Start Time
+        draw_input_box(screen, input_boxes["task"], LIGHT_GRAY, DARK_SLATE_GRAY, background_color=background_color, infill="light")         # type: ignore
+        draw_input_box(screen, input_boxes["spoons_cost"], LIGHT_GRAY, DARK_SLATE_GRAY, background_color=background_color, infill="light")  # type: ignore
+        draw_input_box(screen, input_boxes["spoons_done"], LIGHT_GRAY, DARK_SLATE_GRAY, background_color=background_color, infill="light")  # type: ignore
+
+        # Description multiline box
+        description_rect = pygame.Rect(325, 290, 350, 80)
+        screen.blit(header_font.render("Description:", True, WHITE), (description_rect.x + 120, description_rect.y - 30))  # type: ignore
+        input_boxes["description"].rect = description_rect
+        draw_input_box(screen, input_boxes["description"], LIGHT_GRAY, DARK_SLATE_GRAY, background_color=background_color, infill="light")  # type: ignore
+
+        # Year / Month / Day / Start Time
         due_horizontal_shift = 25
-        y1 = y0 + h + sp + 30
+        y1                   = y0 + h + sp + 135
+        x1_shifted           = x1 + due_horizontal_shift
 
-        x1_shifted = x1 + due_horizontal_shift
         year_rect = pygame.Rect(x1_shifted - 120 - sp, y1, 120, h)
         mon_rect  = pygame.Rect(x1_shifted, y1, 160, h)
         day_rect  = pygame.Rect(mon_rect.right + sp, y1, 100, h)
-        st_rect   = pygame.Rect(day_rect.right + sp, y1, 140, h)  # start time to the right
+        st_rect   = pygame.Rect(day_rect.right + sp, y1, 140, h)
 
-        # Labels (aligned with shifted rects)
-        screen.blit(header_font.render("Due Year:",  True, WHITE), (year_rect.x + 15, y1 - 30))      # type: ignore
-        screen.blit(header_font.render("Due Month:", True, WHITE), (mon_rect.x  + 30, y1 - 30))      # type: ignore
-        screen.blit(header_font.render("Due Day:",   True, WHITE), (day_rect.x + 10,  y1 - 30))      # type: ignore
-        screen.blit(header_font.render("Start Time:",True, WHITE), (st_rect.x  + 4,   y1 - 30))      # type: ignore
+        screen.blit(header_font.render("Due Year:", True, WHITE), (year_rect.x + 15, y1 - 30))    # type: ignore
+        screen.blit(header_font.render("Due Month:", True, WHITE), (mon_rect.x + 30, y1 - 30))    # type: ignore
+        screen.blit(header_font.render("Due Day:", True, WHITE), (day_rect.x + 10, y1 - 30))      # type: ignore
+        screen.blit(header_font.render("Start Time:", True, WHITE), (st_rect.x + 4, y1 - 30))     # type: ignore
 
-        # Get display values
-        raw_year = str(edit_state.get("year", str(datetime.now().year)))
-        raw_mon  = str(edit_state.get("month", calendar.month_name[mon]))
-        raw_day  = str(edit_state.get("day", day))
-        year_display = raw_year
-        mon_display  = raw_mon if input_active == "month" else calendar.month_name[mon]
-        day_display  = raw_day if input_active == "day"   else str(day)
+        input_boxes["year"].rect       = year_rect
+        input_boxes["month"].rect      = mon_rect
+        input_boxes["day"].rect        = day_rect
+        input_boxes["start_time"].rect = st_rect
 
-        # Draw input boxes
-        draw_input_box(screen, year_rect, input_active == "year", year_display,
-                       LIGHT_GRAY, DARK_SLATE_GRAY, True, background_color, "light") # type: ignore
-        draw_input_box(screen, mon_rect, input_active == "month", mon_display,
-                       LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light") # type: ignore
-        draw_input_box(screen, day_rect, input_active == "day", day_display,
-                       LIGHT_GRAY, DARK_SLATE_GRAY, True,  background_color, "light") # type: ignore
+        draw_input_box(screen, input_boxes["year"], LIGHT_GRAY, DARK_SLATE_GRAY, background_color=background_color, infill="light")       # type: ignore
+        draw_input_box(screen, input_boxes["month"], LIGHT_GRAY, DARK_SLATE_GRAY, background_color=background_color, infill="light")      # type: ignore
+        draw_input_box(screen, input_boxes["day"], LIGHT_GRAY, DARK_SLATE_GRAY, background_color=background_color, infill="light")        # type: ignore
+        draw_input_box(screen, input_boxes["start_time"], LIGHT_GRAY, DARK_SLATE_GRAY, background_color=background_color, infill="light") # type: ignore
 
-        # Start time
-        raw_st = edit_state.get("start_time", "")
-        def _fmt_st_display(s):
-            if input_active == "start_time": return s
-            if s and s.isdigit():
-                s = s.zfill(4)[:4]
-                return f"{s[:2]}:{s[2:]}"
-            return "HH:MM"
-        draw_input_box(screen, st_rect, input_active == "start_time", _fmt_st_display(raw_st),
-                       LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light") # type: ignore
+        # --- Restore month/day if user clicked in then clicked off without typing ---
+        if not input_boxes["month"].active:
+            finalize_month_input(input_boxes["month"])
 
-        # --- Arrows ---
+        # Spinner arrows
         arrow = font.render(">", True, arrow_color)
         up    = pygame.transform.rotate(arrow, 90)
         dn    = pygame.transform.rotate(arrow, 270)
 
-        y_up = pygame.Rect(year_rect.right - 23, year_rect.y + 5, 15, 15)
-        y_dn = pygame.Rect(year_rect.right - 23, year_rect.y + year_rect.height - 20, 15, 15)
-        m_up = pygame.Rect(mon_rect.right - 23, mon_rect.y + 5, 15, 15)
-        m_dn = pygame.Rect(mon_rect.right - 23, mon_rect.y + mon_rect.height - 20, 15, 15)
-        d_up = pygame.Rect(day_rect.right - 23, day_rect.y + 5, 15, 15)
-        d_dn = pygame.Rect(day_rect.right - 23, day_rect.y + day_rect.height - 20, 15, 15)
+        y_up  = pygame.Rect(year_rect.right - 23, year_rect.y + 5, 15, 15)
+        y_dn  = pygame.Rect(year_rect.right - 23, year_rect.y + year_rect.height - 20, 15, 15)
+        m_up  = pygame.Rect(mon_rect.right - 23, mon_rect.y + 5, 15, 15)
+        m_dn  = pygame.Rect(mon_rect.right - 23, mon_rect.y + mon_rect.height - 20, 15, 15)
+        d_up  = pygame.Rect(day_rect.right - 23, day_rect.y + 5, 15, 15)
+        d_dn  = pygame.Rect(day_rect.right - 23, day_rect.y + day_rect.height - 20, 15, 15)
         st_up = pygame.Rect(st_rect.right - 23, st_rect.y + 5, 15, 15)
         st_dn = pygame.Rect(st_rect.right - 23, st_rect.y + st_rect.height - 20, 15, 15)
 
         for b in (y_up, y_dn, m_up, m_dn, d_up, d_dn, st_up, st_dn):
             pygame.draw.rect(screen, input_box_color, b)
-        for u, d in ((y_up, y_dn), (m_up, m_dn), (d_up, d_dn), (st_up, st_dn)):
+        for u, drect in ((y_up, y_dn), (m_up, m_dn), (d_up, d_dn), (st_up, st_dn)):
             screen.blit(up, (u.left - 6, u.top + 3))
-            screen.blit(dn, (d.left - 9, d.top - 3))
+            screen.blit(dn, (drect.left - 9, drect.top - 3))
 
-        # add a reduced hitbox for text typing
-        year_text_rect = pygame.Rect(year_rect.x, year_rect.y, year_rect.w - 24, year_rect.h)
+        # mark blocked regions so clicks here don't trigger text selection
+        input_boxes["year"].blocked_regions       = [y_up, y_dn]
+        input_boxes["month"].blocked_regions      = [m_up, m_dn]
+        input_boxes["day"].blocked_regions        = [d_up, d_dn]
+        input_boxes["start_time"].blocked_regions = [st_up, st_dn]
+
+        # edit_buttons: spinner arrows first, then text boxes
         edit_buttons += [
-            (year_text_rect, "year"),
             (y_up, "year_up"), (y_dn, "year_down"),
             (m_up, "month_up"), (m_dn, "month_down"),
             (d_up, "day_up"), (d_dn, "day_down"),
-            (st_up, "start_time_up"), (st_dn, "start_time_down")
+            (st_up, "start_time_up"), (st_dn, "start_time_down"),
         ]
-
-
-        # Month/Day display values (pretty when inactive, raw when active)
-        raw_mon = str(edit_state.get("month", calendar.month_name[mon]))
-        raw_day = str(edit_state.get("day", day))
-        mon_display = raw_mon if input_active == "month" else calendar.month_name[mon]
-        day_display = raw_day if input_active == "day"   else str(day)
-
-        # Inputs
-        draw_input_box(screen, mon_rect, input_active == "month", mon_display,
-                    LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light")  # type: ignore
-        draw_input_box(screen, day_rect, input_active == "day", day_display,
-                    LIGHT_GRAY, DARK_SLATE_GRAY, True,  background_color, "light")  # type: ignore
-
-        # Start time: HH:MM when not editing; raw digits while editing
-        raw_st = edit_state.get("start_time", "")
-        def _fmt_st_display(s):
-            if input_active == "start_time":
-                return s  # raw digits (no colon)
-            if s and s.isdigit():
-                s = s.zfill(4)[:4]
-                return f"{s[:2]}:{s[2:]}"
-            return "HH:MM"
-        draw_input_box(screen, st_rect, input_active == "start_time", _fmt_st_display(raw_st),
-                    LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light")  # type: ignore
-
-        # -------- month ghost-autocomplete rendering (only while typing) --------
-        if input_active == "month":
-            typed = edit_state.get("month", "")
-            # find completion (case-insensitive) from full month names
-            month_names = [calendar.month_name[i] for i in range(1, 13)]
-            comp = ""
-            if typed:
-                for mname in month_names:
-                    if mname.lower().startswith(typed.lower()):
-                        comp = mname[len(typed):]
-                        # stash the full suggestion so logic can commit on blur/tab
-                        edit_state["_month_suggestion_full"] = mname
-                        break
-                else:
-                    edit_state["_month_suggestion_full"] = None
-            else:
-                edit_state["_month_suggestion_full"] = None
-
-            # draw the completion at 50% opacity right after the typed text
-            if comp:
-                typed_surf = font.render(typed, True, LIGHT_GRAY)   # type: ignore
-                comp_surf  = font.render(comp,  True, LIGHT_GRAY)   # type: ignore
-                comp_surf.set_alpha(128)
-
-                # left padding similar to other chips: ~12px, vertically centered
-                tx = mon_rect.x + 5
-                ty = mon_rect.y + (mon_rect.height - typed_surf.get_height()) // 2 - 1 + 6
-                screen.blit(typed_surf, (tx, ty))
-                screen.blit(comp_surf,  (tx + typed_surf.get_width(), ty))
-
-        # --- Click hitboxes ---
-        # text-area rects are 24px narrower on the right (so arrows don't grab focus)
-        mon_text_rect = pygame.Rect(mon_rect.x, mon_rect.y, mon_rect.w - 24, mon_rect.h)
-        day_text_rect = pygame.Rect(day_rect.x, day_rect.y, day_rect.w - 24, day_rect.h)
-        st_text_rect  = pygame.Rect(st_rect.x,  st_rect.y,  st_rect.w  - 24, st_rect.h)
-
-        # only these text-area rects activate typing focus
-        edit_buttons.append((mon_text_rect, "month"))
-        edit_buttons.append((day_text_rect, "day"))
-        edit_buttons.append((st_text_rect,  "start_time"))
-
-        # spinner arrows (Month, Day, Start Time)
-        arrow = font.render(">", True, arrow_color)
-        up    = pygame.transform.rotate(arrow, 90)
-        dn    = pygame.transform.rotate(arrow, 270)
-
-        m_up = pygame.Rect(mon_rect.right - 23, mon_rect.y + 5,                  15, 15)
-        m_dn = pygame.Rect(mon_rect.right - 23, mon_rect.y + mon_rect.height-20, 15, 15)
-        d_up = pygame.Rect(day_rect.right - 23, day_rect.y + 5,                  15, 15)
-        d_dn = pygame.Rect(day_rect.right - 23, day_rect.y + day_rect.height-20, 15, 15)
-        st_up = pygame.Rect(st_rect.right - 23, st_rect.y + 5,                   15, 15)
-        st_dn = pygame.Rect(st_rect.right - 23, st_rect.y + st_rect.height - 20, 15, 15)
-
-        for b in (m_up, m_dn, d_up, d_dn, st_up, st_dn):
-            pygame.draw.rect(screen, input_box_color, b)
-
-        screen.blit(up, (m_up.left - 6,  m_up.top + 3));  screen.blit(dn, (m_dn.left - 9,  m_dn.top - 3))
-        screen.blit(up, (d_up.left - 6,  d_up.top + 3));  screen.blit(dn, (d_dn.left - 9,  d_dn.top - 3))
-        screen.blit(up, (st_up.left - 6, st_up.top + 3)); screen.blit(dn, (st_dn.left - 9, st_dn.top - 3))
-
         edit_buttons += [
-            (m_up, "month_up"), (m_dn, "month_down"),
-            (d_up, "day_up"),   (d_dn, "day_down"),
-            (st_up, "start_time_up"), (st_dn, "start_time_down")
+            (input_boxes["task"].rect, "task"),
+            (input_boxes["spoons_cost"].rect, "spoons_cost"),
+            (input_boxes["spoons_done"].rect, "spoons_done"),
+            (input_boxes["description"].rect, "description"),
+            (input_boxes["year"].rect, "year"),
+            (input_boxes["month"].rect, "month"),
+            (input_boxes["day"].rect, "day"),
+            (input_boxes["start_time"].rect, "start_time"),
         ]
 
-    # Buttons (image-backed with text, robust to name collisions)
-    yb = y1 + h + sp + 15
-    cancel_button_rect = pygame.Rect(x1, yb, 120, 40)
-    done_button_rect   = pygame.Rect(x1 + 200 + sp, yb, 120, 40)
+    # Buttons (cancel / confirm)
+    # Detect if this task appears to be part of a recurring series
+    is_recurring = False
+    recurring_indices = []
+    if 0 <= currently_editing < len(task_list):
+        orig = task_list[currently_editing]
+        orig_name_l = orig[0].strip().lower()
+        orig_desc_l = orig[1].strip().lower()
+        orig_cost_i = int(orig[2])
+        orig_st_h   = int(orig[6][0])
+        orig_st_m   = int(orig[6][1])
 
-    screen.blit(cancel_edit_button, cancel_button_rect.topleft)
-    screen.blit(confirm_edit_button,   done_button_rect.topleft)
+        for i, t in enumerate(task_list):
+            try:
+                n, d, c, dn, dy, dt, st, et, lbs = t
+            except:
+                continue
+            if (n.strip().lower() == orig_name_l and 
+                d.strip().lower() == orig_desc_l and
+                int(c) == orig_cost_i and 
+                int(st[0]) == orig_st_h and 
+                int(st[1]) == orig_st_m):
+                recurring_indices.append(i)
 
-    # overlay labels
-    cancel_text  = font.render("cancel",  True, WHITE)  # type: ignore
-    confirm_text = font.render("confirm", True, WHITE)  # type: ignore
+        # 2 or more → recurring
+        if len(recurring_indices) >= 2:
+            is_recurring = True
 
-    # center text on buttons
-    screen.blit(cancel_text,  cancel_text.get_rect(center=cancel_button_rect.center).topleft)
-    screen.blit(confirm_text, confirm_text.get_rect(center=done_button_rect.center).topleft)
+    # Button layout
+    yb = y1 + h + sp - 5
+
+    if is_recurring:
+        # Cancel left, then Confirm(One), Confirm(All)
+        confirm_edit_button = toggleButtons['ConfirmButtonThick']
+        cancel_button_rect = pygame.Rect(x1 - 130, yb, 120, 40)
+        confirm_one_rect   = pygame.Rect(cancel_button_rect.right + 20, yb, 230, 40)
+        confirm_all_rect   = pygame.Rect(confirm_one_rect.right + 20, yb, 230, 40)
 
 
-    # --- Dragged label chip overlay (edit view) ---
+        screen.blit(cancel_edit_button, cancel_button_rect.topleft)
+        screen.blit(confirm_edit_button, confirm_one_rect.topleft)
+        screen.blit(confirm_edit_button, confirm_all_rect.topleft)
+
+        txt_cancel = font.render("cancel", True, WHITE)  # type: ignore
+        txt_one    = font.render("confirm (one)", True, WHITE)  # type: ignore
+        txt_all    = font.render("confirm (all)", True, WHITE)  # type: ignore
+
+        screen.blit(txt_cancel, txt_cancel.get_rect(center=cancel_button_rect.center).topleft)
+        screen.blit(txt_one,    txt_one.get_rect(center=confirm_one_rect.center).topleft)
+        screen.blit(txt_all,    txt_all.get_rect(center=confirm_all_rect.center).topleft)
+
+    else:
+        # Original: cancel + confirm
+        confirm_edit_button = toggleButtons['ConfirmButton']
+        cancel_button_rect = pygame.Rect(x1, yb, 120, 40)
+        done_button_rect   = pygame.Rect(x1 + 200 + sp, yb, 120, 40)
+
+        screen.blit(cancel_edit_button, cancel_button_rect.topleft)
+        screen.blit(confirm_edit_button, done_button_rect.topleft)
+
+        txt_cancel  = font.render("cancel", True, WHITE)  # type: ignore
+        txt_confirm = font.render("confirm", True, WHITE)  # type: ignore
+
+        screen.blit(txt_cancel,  txt_cancel.get_rect(center=cancel_button_rect.center).topleft)
+        screen.blit(txt_confirm, txt_confirm.get_rect(center=done_button_rect.center).topleft)
+
+    # Dragged label chip overlay (unchanged)
     if dragging_label is not None:
         mx2, my2 = pygame.mouse.get_pos()
         chip_img = label_favorite_border if dragging_label.get("source") == "fav" else label_border
@@ -1445,22 +1948,20 @@ def _draw_edit_form(screen, background_color, icon_image, spoons, task_list):
         chip_x = mx2 - lbw // 2
         chip_y = my2 - lbh // 2
 
-        # Is cursor outside this task's dropdown? (show trash can)
         outer_rect = dropdown_outer_rects.get(currently_editing)
-        deleting = (outer_rect is not None and not outer_rect.collidepoint(mx2, my2))
+        deleting   = outer_rect is not None and not outer_rect.collidepoint(mx2, my2)
 
         screen.blit(chip_img, (chip_x, chip_y))
 
         inner_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen.get_height() * 0.045))
-        ts = inner_font.render(dragging_label["text"], True, BLACK)  # type: ignore
-        tx = chip_x + (lbw - ts.get_width()) // 2
-        ty = chip_y + (lbh - ts.get_height()) // 2 - 1
+        ts         = inner_font.render(dragging_label["text"], True, BLACK)  # type: ignore
+        tx         = chip_x + (lbw - ts.get_width()) // 2
+        ty         = chip_y + (lbh - ts.get_height()) // 2 - 1
         screen.blit(ts, (tx, ty + 2))
 
         if deleting:
             tw, th = trashcan_image.get_size()
             screen.blit(trashcan_image, (chip_x + lbw - tw, chip_y + lbh - th + 2))
-
     
 def handle_task_scroll(event, scroll_offset_px, total_content_height):
     if event.type == pygame.MOUSEBUTTONDOWN:
@@ -1481,142 +1982,234 @@ def handle_task_scroll(event, scroll_offset_px, total_content_height):
     return max(0, min(scroll_offset_px, max_scroll))
 
 
-def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_dates, confetti_particles, level, spoons_used_today, page):
+def _apply_edit_to_one(task_list, idx, boxes, orig_et, orig_labels, preserve_date=False):
+    # Read fields
+    name_text  = boxes["task"].text or ""
+    desc_text  = boxes["description"].text or ""
+    cost_text  = boxes["spoons_cost"].text or ""
+    done_text  = boxes["spoons_done"].text or ""
+    year_text  = boxes["year"].text or ""
+    month_text = boxes["month"].text or ""
+    day_text   = boxes["day"].text or ""
+    st_text    = boxes["start_time"].text or ""
+
+    # Cost/done
+    try: cost_val = int(cost_text) if cost_text.strip() != "" else 0
+    except: cost_val = 0
+    cost_val = max(0, min(10, cost_val))
+
+    try: done_val = int(done_text) if done_text.strip() != "" else 0
+    except: done_val = 0
+    done_val = max(0, min(cost_val, done_val))
+
+    # Original per-task values
+    orig = task_list[idx]
+    _, _, _, _, old_days, old_date, old_st, _, _ = orig
+
+    # If preserving the date (Confirm-All), keep the original
+    if preserve_date:
+        new_date = old_date
+        new_days = old_days
+    else:
+        # Compute new date normally (Confirm-One)
+        try: year_val = int(year_text) if year_text.strip() != "" else old_date.year
+        except: year_val = old_date.year
+
+        def _month_to_int__(s, fallback):
+            s = (s or "").strip()
+            if s == "":
+                return fallback
+            if s.isdigit():
+                try:
+                    iv = int(s)
+                    if 1 <= iv <= 12:
+                        return iv
+                except:
+                    pass
+            import calendar
+            names = list(calendar.month_name)
+            low = s.lower()
+            for i in range(1, 13):
+                if names[i].lower() == low:
+                    return i
+            return fallback
+
+        month_val = _month_to_int__(month_text, old_date.month)
+
+        import calendar
+        max_day = calendar.monthrange(year_val, month_val)[1]
+        try: day_val = int(day_text) if day_text.strip() != "" else old_date.day
+        except: day_val = old_date.day
+        day_val = max(1, min(max_day, day_val))
+
+        try: new_date = datetime(year_val, month_val, day_val)
+        except: new_date = old_date
+        new_days = (new_date - datetime.now()).days + 1
+
+    # Start time
+    s = (st_text or "").strip()
+    s = s.zfill(4)[:4] if s.isdigit() else ""
+    try:
+        if s:
+            hh = int(s[:2])
+            mm = int(s[2:])
+        else:
+            hh = int(old_st[0])
+            mm = int(old_st[1])
+        hh = max(0, min(23, hh))
+        mm = max(0, min(59, mm))
+    except:
+        hh, mm = int(old_st[0]), int(old_st[1])
+    new_st = [hh, mm, 0, 0]
+
+    # Apply update
+    task_list[idx] = [
+        name_text,
+        desc_text,
+        cost_val,
+        done_val,
+        new_days,
+        new_date,
+        new_st,
+        orig_et,
+        orig_labels
+    ]
+
+def _exit_edit_mode():
+    global currently_editing, input_active
+    global expanded_label_tasks, dragging_label
+    global hover_insert_index_per_task, dropdown_outer_rects, task_drop_rects
+    global favorites_drop_rect, new_label_active_task, new_label_text, new_label_rect
+    global input_boxes
+
+    expanded_label_tasks.clear()
+    dragging_label = None
+    hover_insert_index_per_task.clear()
+    dropdown_outer_rects.clear()
+    task_drop_rects.clear()
+    favorites_drop_rect = None
+    new_label_active_task = None
+    new_label_text = ""
+    new_label_rect = None
+    currently_editing = None
+    input_active = None
+    for b in input_boxes.values():
+        b.active = False
+        b.selecting = False
+
+def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_dates, confetti_particles, level, spoons_used_today, page, time_per_spoon):
     """
     Handles clicks and key events for both list and edit form.
+    Uses the shared `input_boxes` registry for the edit form (no edit_state).
+    Also advances the per-task focus timer when focus mode is active.
     """
-    global currently_editing, edit_state, input_active, cancel_button_rect, done_button_rect
+    global currently_editing, input_active, cancel_button_rect, done_button_rect
     global spoons_xp
     global dragging_label
     global new_label_active_task, new_label_text, new_label_rect, new_label_buttons
     global expanded_label_tasks, hover_insert_index_per_task, dropdown_outer_rects, task_drop_rects, favorites_drop_rect
+    global add_task_button_rect, focus_task, focus_buttons
+    global focus_timer_active, focus_timer_paused, focus_timer_start, focus_timer_last_update
+    global focus_total_secs, focus_remaining_secs, focus_total_spoons, focus_spoons_spent
+    global focus_popup_text, focus_popup_start, focus_warning_shown_for_debt
+    global focus_start_rect, focus_pause_rect, focus_exit_rect
+    global focus_visual_start_time, focus_pause_start_visual, focus_pause_accum_visual
+    global label_buttons, label_chip_buttons, favorites_chip_buttons, favorites_labels
+    global frame_buttons, remove_buttons
+    global input_boxes
 
-    global add_task_button_rect
-
+    # --- Focus mode top-level mouse handling ---
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        if focus_task is not None:
+            if focus_start_rect and focus_start_rect.collidepoint(event.pos):
+                _start_focus_timer(task_list, time_per_spoon)
+                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
+            if focus_pause_rect and focus_pause_rect.collidepoint(event.pos):
+                if focus_timer_active:
+                    now = datetime.now()
+                    if not focus_timer_paused:
+                        focus_timer_paused       = True
+                        focus_pause_start_visual = now
+                    else:
+                        focus_timer_paused = False
+                        if focus_pause_start_visual is not None:
+                            focus_pause_accum_visual += (now - focus_pause_start_visual).total_seconds()
+                        focus_pause_start_visual = None
+                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
+            if focus_exit_rect and focus_exit_rect.collidepoint(event.pos):
+                focus_task          = None
+                focus_timer_active  = False
+                focus_timer_paused  = False
+                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
+
         if add_task_button_rect and add_task_button_rect.collidepoint(event.pos):
-            # Identify folder name based on the page’s current type
             folder_map = {
                 "complete_homework_tasks": "homework",
-                "complete_chores_tasks": "chores",
-                "complete_work_tasks": "work",
-                "complete_misc_tasks": "misc",
-                "complete_exams_tasks": "exams",
-                "complete_projects_tasks": "projects"
+                "complete_chores_tasks":   "chores",
+                "complete_work_tasks":     "work",
+                "complete_misc_tasks":     "misc",
+                "complete_exams_tasks":    "exams",
+                "complete_projects_tasks": "projects",
             }
-            # Return a signal to change page and preselect folder
-            return (("input_tasks", folder_map.get(page, "homework")), spoons, confetti_particles, streak_dates, level, spoons_used_today)
+            return (("input_tasks", folder_map.get(page, "homework")), spoons, confetti_particles, streak_dates, level, spoons_used_today
+
+                   )
+
+    if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+        if focus_task is not None:
+            focus_task = None
+            return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
+        if currently_editing is not None:
+            currently_editing = None
+            input_active      = None
+            for box in input_boxes.values():
+                box.active     = False
+                box.selecting  = False
+            return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
     def _commit_new_label():
         global new_label_active_task, new_label_text
         if new_label_active_task is not None:
-            t = new_label_active_task
+            t   = new_label_active_task
             txt = (new_label_text or "").strip()
             if txt:
-                # append to the end (it is drawn after all labels)
-                if txt not in task_list[t][8]:  # avoid duplicate labels; remove this line if dupes allowed
+                if txt not in task_list[t][8]:
                     task_list[t][8].append(txt)
-            # reset state
             new_label_active_task = None
-            new_label_text = ""
+            new_label_text        = ""
 
-    def _begin_month_typing():
-        """Start month typing: clear field, remember original pretty month."""
-        raw = edit_state.get("month", str(datetime.now().month))
-        if str(raw).isdigit():
-            cur_mon = calendar.month_name[int(raw)]
-        else:
-            # if not a full valid name, fall back to current pretty month
-            names = list(calendar.month_name)
-            cur_mon = raw if raw in names else calendar.month_name[datetime.now().month]
-        edit_state["_month_orig_pretty"] = cur_mon
-        edit_state["_month_suggestion_full"] = None
-        edit_state["month"] = ""  # clear visible text
-
-    def _commit_month_on_exit():
-        """Commit suggestion if present, else revert to original pretty month, then clamp day to month/year max."""
-        sugg = edit_state.get("_month_suggestion_full"); orig = edit_state.get("_month_orig_pretty")
-        if sugg: edit_state["month"] = sugg
-        elif orig: edit_state["month"] = orig
-        edit_state.pop("_month_suggestion_full", None); edit_state.pop("_month_orig_pretty", None)
-        try: y = int(edit_state.get("year", str(datetime.now().year)))
-        except Exception: y = datetime.now().year
-        rawm = edit_state.get("month", str(datetime.now().month)); m = int(rawm) if str(rawm).isdigit() else (list(calendar.month_name).index(rawm) or datetime.now().month); maxd = calendar.monthrange(y, m)[1]
-        try: d = int(edit_state.get("day", "1") or 1)
-        except Exception: d = 1
-        edit_state["day"] = str(min(max(d,1), maxd))
-
-    def _begin_day_typing():
-        """Start day typing: clear field, remember original."""
-        edit_state.setdefault("_day_orig", edit_state.get("day", ""))  # remember once
-        edit_state["day"] = ""
-
-    def _commit_day_on_exit():
-        """Clamp typed day to month/year max; if empty or non-digit, revert to original."""
-        val = str(edit_state.get("day", "")).strip()
-        try: y = int(edit_state.get("year", str(datetime.now().year)))
-        except Exception: y = datetime.now().year
-        rawm = edit_state.get("month", str(datetime.now().month)); m = int(rawm) if str(rawm).isdigit() else (list(calendar.month_name).index(rawm) or datetime.now().month); maxd = calendar.monthrange(y, m)[1]
-        if val.isdigit():
-            d = max(1, min(int(val), maxd)); edit_state["day"] = str(d)
-        else:
-            edit_state["day"] = edit_state.get("_day_orig", "")
-        edit_state.pop("_day_orig", None)
-
-    def _begin_start_time_typing():
-        """Start start_time typing: clear field, remember original raw digits."""
-        edit_state.setdefault("_st_orig", edit_state.get("start_time", ""))
-        edit_state["start_time"] = ""
-
-    def _commit_start_time_on_exit():
-        """If empty, revert to original; else keep typed HHMM digits as-is (validated on save/format)."""
-        val = str(edit_state.get("start_time", "")).strip()
-        if val == "":
-            edit_state["start_time"] = edit_state.get("_st_orig", "")
-        edit_state.pop("_st_orig", None)
-
+    # --- Label drag start (for list and edit views) ---
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-        # 0) Click on a "new label" chip -> start editing
         for rect, t_idx in new_label_buttons:
             if rect.collidepoint(event.pos):
-                # activate the inline editor for that task
                 new_label_active_task = t_idx
-                new_label_text = ""
+                new_label_text        = ""
                 return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
-        # 0b) If we were typing and clicked somewhere else (not on the active chip), commit
         if new_label_active_task is not None:
-            # If there's an active chip, and we clicked outside it, commit
             if not (new_label_rect and new_label_rect.collidepoint(event.pos)):
                 _commit_new_label()
                 return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
-        # 1) Start dragging a label chip (check this BEFORE other click targets)
         for rect, t_idx, l_idx in label_chip_buttons:
             if rect.collidepoint(event.pos):
-                # Start drag: store the chip info; it will be hidden from its slot while dragging
-                lab_text = task_list[t_idx][8][l_idx]  # labels list at index 7
+                lab_text      = task_list[t_idx][8][l_idx]
                 dragging_label = {"source": "task", "task_idx": t_idx, "label_idx": l_idx, "text": lab_text}
                 return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
-        # 1b) Start dragging from Favorites panel
         for rect, fav_idx in favorites_chip_buttons:
             if rect.collidepoint(event.pos):
-                lab_text = favorites_labels[fav_idx]
+                lab_text      = favorites_labels[fav_idx]
                 dragging_label = {"source": "fav", "fav_idx": fav_idx, "text": lab_text}
                 return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
     if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
         if dragging_label is not None:
-            mx, my = event.pos
+            mx, my         = event.pos
+            open_task_idx  = next(iter(expanded_label_tasks), None)
+            in_favorites   = favorites_drop_rect is not None and favorites_drop_rect.collidepoint(mx, my)
+            in_task_area   = open_task_idx is not None and task_drop_rects.get(open_task_idx) and task_drop_rects[open_task_idx].collidepoint(mx, my)
+            outer_rect     = dropdown_outer_rects.get(open_task_idx)
+            outside_dropdown = outer_rect is not None and not outer_rect.collidepoint(mx, my)
 
-            open_task_idx = next(iter(expanded_label_tasks), None)  # single-open policy
-            in_favorites  = (favorites_drop_rect is not None and favorites_drop_rect.collidepoint(mx, my))
-            in_task_area  = (open_task_idx is not None and task_drop_rects.get(open_task_idx) and task_drop_rects[open_task_idx].collidepoint(mx, my))
-
-            # NEW: outside whole dropdown?
-            outer_rect = dropdown_outer_rects.get(open_task_idx)
-            outside_dropdown = (outer_rect is not None and not outer_rect.collidepoint(mx, my))
-
-            # A) task -> favorites
             if dragging_label.get("source") == "task" and in_favorites:
                 label_text = dragging_label["text"]
                 if label_text not in favorites_labels:
@@ -1624,53 +2217,40 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
                 dragging_label = None
                 return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
-            # B) favorites -> task
             if dragging_label.get("source") == "fav" and in_task_area and open_task_idx is not None:
                 label_text = dragging_label["text"]
-                insert_i = hover_insert_index_per_task.get(open_task_idx)
+                insert_i   = hover_insert_index_per_task.get(open_task_idx)
                 labels_ref = task_list[open_task_idx][8]
                 if insert_i == "END" or insert_i is None:
-                    insert_pos = len(labels_ref)  # append
+                    insert_pos = len(labels_ref)
                 else:
                     insert_pos = int(insert_i)
-
                 if label_text not in labels_ref:
                     labels_ref.insert(insert_pos, label_text)
                 dragging_label = None
                 return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
-            # C) reorder within same task
-            if (dragging_label.get("source") == "task"
-                and open_task_idx is not None
-                and dragging_label.get("task_idx") == open_task_idx
-                and in_task_area):
+            if dragging_label.get("source") == "task" and open_task_idx is not None and dragging_label.get("task_idx") == open_task_idx and in_task_area:
                 label_text = dragging_label["text"]
-                from_i = dragging_label["label_idx"]
-                insert_i = hover_insert_index_per_task.get(open_task_idx)
+                from_i     = dragging_label["label_idx"]
+                insert_i   = hover_insert_index_per_task.get(open_task_idx)
                 labels_ref = task_list[open_task_idx][8]
 
-                # remove first
                 if 0 <= from_i < len(labels_ref) and labels_ref[from_i] == label_text:
                     del labels_ref[from_i]
-
-                # map end-slot to append *after* removal (length has changed)
                 if insert_i == "END" or insert_i is None:
                     insert_pos = len(labels_ref)
                 else:
                     insert_pos = int(insert_i)
-                    # if we removed an earlier index, and target was after it, shift left by 1
                     if from_i < insert_pos:
                         insert_pos -= 1
-
                 labels_ref.insert(insert_pos, label_text)
-
                 dragging_label = None
                 return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
-            # NEW D1) delete from TASK if dropped outside dropdown
             if dragging_label.get("source") == "task" and open_task_idx is not None and outside_dropdown:
-                t_idx = dragging_label.get("task_idx")
-                l_idx = dragging_label.get("label_idx")
+                t_idx     = dragging_label.get("task_idx")
+                l_idx     = dragging_label.get("label_idx")
                 if t_idx is not None and l_idx is not None:
                     labels_ref = task_list[t_idx][8]
                     if 0 <= l_idx < len(labels_ref) and labels_ref[l_idx] == dragging_label.get("text"):
@@ -1678,7 +2258,6 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
                 dragging_label = None
                 return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
-            # NEW D2) delete from FAVORITES if dropped outside dropdown
             if dragging_label.get("source") == "fav" and outside_dropdown:
                 f_idx = dragging_label.get("fav_idx")
                 if f_idx is not None and 0 <= f_idx < len(favorites_labels) and favorites_labels[f_idx] == dragging_label.get("text"):
@@ -1686,15 +2265,13 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
                 dragging_label = None
                 return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
-            # Fallback: cancel drag
             dragging_label = None
             return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
-    # --- Edit mode ---
+    # --- Edit mode (currently_editing) ---
     if currently_editing is not None:
-        # Mouse events
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            # Edit-view label button toggles dropdown
+            # Toggle label dropdown for the edit view
             for rect, idx in label_buttons:
                 if rect.collidepoint(event.pos) and idx == currently_editing:
                     if idx in expanded_label_tasks:
@@ -1702,334 +2279,293 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
                     else:
                         expanded_label_tasks.clear()
                         expanded_label_tasks.add(idx)
-                        # hide inputs → drop focus so typing doesn’t go to hidden fields
                         input_active = None
+                        for box in input_boxes.values():
+                            box.active    = False
+                            box.selecting = False
                         edit_buttons.clear()
                     return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
+
             # Cancel edit
             if cancel_button_rect and cancel_button_rect.collidepoint(event.pos):
                 currently_editing = None
-                edit_state.pop("_month_suggestion_full", None)
-                edit_state.pop("_month_orig_pretty", None)
-                input_active = None
-
-                # close any open dropdowns + reset drag UI
+                input_active      = None
                 expanded_label_tasks.clear()
                 dragging_label = None
                 hover_insert_index_per_task.clear()
                 dropdown_outer_rects.clear()
                 task_drop_rects.clear()
-                favorites_drop_rect = None
+                favorites_drop_rect  = None
                 new_label_active_task = None
-                new_label_text = ""
-                new_label_rect = None
-
+                new_label_text        = ""
+                new_label_rect        = None
+                for box in input_boxes.values():
+                    box.active    = False
+                    box.selecting = False
                 return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
             # Save edits
-            if done_button_rect and done_button_rect.collidepoint(event.pos):
-                # Extract values
-                name  = edit_state.get("name", "")
-                cost  = int(edit_state.get("cost", "0") or 0)
-                done_ = int(edit_state.get("done", "0") or 0)
-                # finalize special fields in case we're saving straight from focus
-                if input_active == "month":
-                    _commit_month_on_exit()
-                elif input_active == "day":
-                    _commit_day_on_exit()
-                elif input_active == "start_time":
-                    _commit_start_time_on_exit()
+            # Save edits (supports confirm one / confirm all)
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and currently_editing is not None:
 
-                # Parse year/month/day safely
-                raw_year  = str(edit_state.get("year", datetime.now().year))
-                try:
-                    year = max(1900, min(2100, int(raw_year)))
-                except Exception:
-                    year = datetime.now().year
+                # Re-detect recurring (same logic)
+                orig_task = task_list[currently_editing]
+                orig_name_l = orig_task[0].strip().lower()
+                orig_desc_l = orig_task[1].strip().lower()
+                orig_cost_i = int(orig_task[2])
+                orig_st_h   = int(orig_task[6][0])
+                orig_st_m   = int(orig_task[6][1])
 
-                raw_month = str(edit_state.get("month", datetime.now().month))
-                if raw_month.isdigit():
-                    mon = max(1, min(12, int(raw_month)))
-                else:
+                recurring_indices = []
+                for i, t in enumerate(task_list):
                     try:
-                        mon = list(calendar.month_name).index(raw_month)
-                        if mon == 0:
-                            mon = datetime.now().month
-                    except ValueError:
-                        mon = datetime.now().month
+                        tn, td, tc, tdn, tdy, tdate, tst, tet, tlb = t
+                    except:
+                        continue
+                    if (tn.strip().lower() == orig_name_l and
+                        td.strip().lower() == orig_desc_l and
+                        int(tc) == orig_cost_i and
+                        int(tst[0]) == orig_st_h and
+                        int(tst[1]) == orig_st_m):
+                        recurring_indices.append(i)
 
-                # clamp day to valid days in that month/year
-                try:
-                    day = int(str(edit_state.get("day", "1")).strip() or "1")
-                    max_day = calendar.monthrange(year, mon)[1]
-                    day = max(1, min(day, max_day))
-                except Exception:
-                    day = 1
+                is_recurring = len(recurring_indices) >= 2
 
-                # Update task date safely
-                orig = task_list[currently_editing]
-                try:
-                    new_date = datetime(year, mon, day)
-                except ValueError:
-                    # fallback: clamp day again just in case
-                    max_day = calendar.monthrange(year, mon)[1]
-                    new_date = datetime(year, mon, max_day)
+                # Confirm one
+                if is_recurring and confirm_one_rect and confirm_one_rect.collidepoint(event.pos):
+                    orig_et    = orig_task[7]
+                    orig_labels = orig_task[8]
+                    _apply_edit_to_one(task_list, currently_editing, input_boxes, orig_et, orig_labels)
+                    _exit_edit_mode()
+                    return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
+                # Confirm all
+                if is_recurring and confirm_all_rect and confirm_all_rect.collidepoint(event.pos):
+                    orig_et    = orig_task[7]
+                    orig_labels = orig_task[8]
+                    for idx in recurring_indices:
+                        _apply_edit_to_one(task_list, idx, input_boxes, orig_et, orig_labels, preserve_date=True)
 
-                new_days = (new_date - datetime.now()).days + 1
+                    _exit_edit_mode()
+                    return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
-                # parse HHMM digits to hh/mm
-                s = (edit_state.get("start_time", "") or "").strip()
-                s = s.zfill(4)[:4] if s.isdigit() else ""
-                try:
-                    hh = int(s[:2]) if s else int(orig[6][0])  # fallback to existing
-                    mm = int(s[2:]) if s else int(orig[6][1])
-                    hh = max(0, min(23, hh))
-                    mm = max(0, min(59, mm))
-                except Exception:
-                    hh, mm = 0, 0
-
-                # keep original container shape if possible
-                if isinstance(orig[6], (list, tuple)) and len(orig[6]) >= 2:
-                    new_st = list(orig[6])
-                    new_st[0] = hh
-                    new_st[1] = mm
-                else:
-                    new_st = [hh, mm, 0, 0]
-
-                # close any open dropdowns + reset drag UI
-                expanded_label_tasks.clear()
-                dragging_label = None
-                hover_insert_index_per_task.clear()
-                dropdown_outer_rects.clear()
-                task_drop_rects.clear()
-                favorites_drop_rect = None
-                new_label_active_task = None
-                new_label_text = ""
-                new_label_rect = None
-
-                task_list[currently_editing] = [name, orig[1], cost, done_, new_days, new_date, new_st, orig[7], orig[8]]
+                # Non-recurring → normal confirm button
+                if not is_recurring and done_button_rect and done_button_rect.collidepoint(event.pos):
+                    orig_et    = orig_task[7]
+                    orig_labels = orig_task[8]
+                    _apply_edit_to_one(task_list, currently_editing, input_boxes, orig_et, orig_labels)
+                    _exit_edit_mode()
+                    return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
 
-                currently_editing = None
-                edit_state.pop("_month_suggestion_full", None)
-                edit_state.pop("_month_orig_pretty", None)
-                input_active = None
-                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
-
-            # Clicked on a field or arrow
+            # Click on edit fields or spinner arrows
+            clicked_any = False
+            clicked_key = None
             for rect, key in edit_buttons:
                 if rect.collidepoint(event.pos):
-                    # Text-area focus only (month/day/start_time text rects, name/cost/done)
-                    if key in ("name", "cost", "done", "month", "day", "start_time"):
-                        # commit the field we're leaving, if it is one of the special clears
-                        if input_active == "month" and key != "month":
-                            _commit_month_on_exit()
-                        if input_active == "day" and key != "day":
-                            _commit_day_on_exit()
-                        if input_active == "start_time" and key != "start_time":
-                            _commit_start_time_on_exit()
-
-                        input_active = key
-
-                        # entering fields: clear-on-focus behavior
-                        if key == "month":
-                            _begin_month_typing()
-                        elif key == "day":
-                            _begin_day_typing()
-                        elif key == "start_time":
-                            _begin_start_time_typing()
-                    # Spinners (do not change focus)
-                    elif key == "month_up":
-                        raw = edit_state.get("month", str(datetime.now().month)); cur = int(raw) if raw.isdigit() else (list(calendar.month_name).index(raw) or 1); nxt = cur + 1 if cur < 12 else 1; edit_state["month"] = calendar.month_name[nxt]; 
-                        try: y = int(edit_state.get("year", str(datetime.now().year))); 
-                        except Exception: y = datetime.now().year
-                        maxd = calendar.monthrange(y, nxt)[1]; d = int(edit_state.get("day", "1") or 1); edit_state["day"] = str(min(max(d,1), maxd))
-                    elif key == "month_down":
-                        raw = edit_state.get("month", str(datetime.now().month)); cur = int(raw) if raw.isdigit() else (list(calendar.month_name).index(raw) or 1); prev = cur - 1 if cur > 1 else 12; edit_state["month"] = calendar.month_name[prev]; 
-                        try: y = int(edit_state.get("year", str(datetime.now().year))); 
-                        except Exception: y = datetime.now().year
-                        maxd = calendar.monthrange(y, prev)[1]; d = int(edit_state.get("day", "1") or 1); edit_state["day"] = str(min(max(d,1), maxd))
-                    elif key == "day_up":
-                        try:
-                            y = int(edit_state.get("year", str(datetime.now().year)))
-                        except Exception:
-                            y = datetime.now().year
-                        rawm = edit_state.get("month", str(datetime.now().month))
-                        m = int(rawm) if str(rawm).isdigit() else (list(calendar.month_name).index(rawm) or datetime.now().month)
-                        maxd = calendar.monthrange(y, m)[1]
-                        try:
-                            d = int(edit_state.get("day", "1") or 1)
-                        except Exception:
-                            d = 1
-                        d = d + 1 if d < maxd else 1  # wrap around to 1 if exceeding max
-                        edit_state["day"] = str(d)
-
-                    elif key == "day_down":
-                        try:
-                            y = int(edit_state.get("year", str(datetime.now().year)))
-                        except Exception:
-                            y = datetime.now().year
-                        rawm = edit_state.get("month", str(datetime.now().month))
-                        m = int(rawm) if str(rawm).isdigit() else (list(calendar.month_name).index(rawm) or datetime.now().month)
-                        maxd = calendar.monthrange(y, m)[1]
-                        try:
-                            d = int(edit_state.get("day", "1") or 1)
-                        except Exception:
-                            d = 1
-                        d = d - 1 if d > 1 else maxd  # wrap around to max if going below 1
-                        edit_state["day"] = str(d)
-                    elif key == "year_up":
-                        try: y = int(edit_state.get("year", str(datetime.now().year)))
-                        except Exception: y = datetime.now().year
-                        ny = min(2100, y + 1); edit_state["year"] = str(ny)
-                        rawm = edit_state.get("month", str(datetime.now().month)); m = int(rawm) if str(rawm).isdigit() else (list(calendar.month_name).index(rawm) or datetime.now().month); maxd = calendar.monthrange(ny, m)[1]; d = int(edit_state.get("day", "1") or 1); edit_state["day"] = str(min(max(d,1), maxd))
-                    elif key == "year_down":
-                        try: y = int(edit_state.get("year", str(datetime.now().year)))
-                        except Exception: y = datetime.now().year
-                        ny = max(2000, y - 1); edit_state["year"] = str(ny)
-                        rawm = edit_state.get("month", str(datetime.now().month)); m = int(rawm) if str(rawm).isdigit() else (list(calendar.month_name).index(rawm) or datetime.now().month); maxd = calendar.monthrange(ny, m)[1]; d = int(edit_state.get("day", "1") or 1); edit_state["day"] = str(min(max(d,1), maxd))
-
-
-                    elif key in ("start_time_up", "start_time_down"):
-                        s = (edit_state.get("start_time", "") or "").zfill(4)[:4]
-                        try:
-                            hh = int(s[:2]); mm = int(s[2:])
-                        except Exception:
-                            now = datetime.now(); hh, mm = now.hour, now.minute
-                        if key == "start_time_up":
-                            mm += 15
-                            if mm >= 60: mm = 0; hh = (hh + 1) % 24
-                        else:
-                            mm -= 15
-                            if mm < 0:  mm = 45; hh = (hh - 1) % 24
-                        edit_state["start_time"] = f"{hh:02d}{mm:02d}"
+                    clicked_any = True
+                    clicked_key = key
                     break
 
+            if clicked_any:
+                if clicked_key in ("task", "spoons_cost", "spoons_done", "description", "year", "month", "day", "start_time"):
+                    input_active = clicked_key
+                    for k, box in input_boxes.items():
+                        box.active    = (k == input_active)
+                        box.selecting = False
+                elif clicked_key == "month_up":
+                    t = input_boxes["month"].text or ""
+                    def _month_to_int(s, fallback_month):
+                        s = (s or "").strip()
+                        if s == "":
+                            return fallback_month
+                        if s.isdigit():
+                            try:
+                                mv = int(s)
+                                if 1 <= mv <= 12:
+                                    return mv
+                            except Exception:
+                                pass
+                        names = list(calendar.month_name)
+                        low   = s.lower()
+                        for i in range(1, 13):
+                            if names[i].lower() == low:
+                                return i
+                        return fallback_month
+                    cur  = _month_to_int(t, datetime.now().month)
+                    nxt  = cur + 1 if cur < 12 else 1
+                    input_boxes["month"].text = calendar.month_name[nxt]
+                elif clicked_key == "month_down":
+                    t = input_boxes["month"].text or ""
+                    def _month_to_int(s, fallback_month):
+                        s = (s or "").strip()
+                        if s == "":
+                            return fallback_month
+                        if s.isdigit():
+                            try:
+                                mv = int(s)
+                                if 1 <= mv <= 12:
+                                    return mv
+                            except Exception:
+                                pass
+                        names = list(calendar.month_name)
+                        low   = s.lower()
+                        for i in range(1, 13):
+                            if names[i].lower() == low:
+                                return i
+                        return fallback_month
+                    cur   = _month_to_int(t, datetime.now().month)
+                    prev  = cur - 1 if cur > 1 else 12
+                    input_boxes["month"].text = calendar.month_name[prev]
+                elif clicked_key == "day_up":
+                    ytxt = input_boxes["year"].text or ""
+                    mtxt = input_boxes["month"].text or ""
+                    try:
+                        yv = int(ytxt) if ytxt.strip() != "" else datetime.now().year
+                    except Exception:
+                        yv = datetime.now().year
+                    def _month_to_int(s, fallback_month):
+                        s = (s or "").strip()
+                        if s == "":
+                            return fallback_month
+                        if s.isdigit():
+                            try:
+                                mv = int(s)
+                                if 1 <= mv <= 12:
+                                    return mv
+                            except Exception:
+                                pass
+                        names = list(calendar.month_name)
+                        low   = s.lower()
+                        for i in range(1, 13):
+                            if names[i].lower() == low:
+                                return i
+                        return fallback_month
+                    mv      = _month_to_int(mtxt, datetime.now().month)
+                    maxd    = calendar.monthrange(yv, mv)[1]
+                    dtxt    = input_boxes["day"].text or ""
+                    try:
+                        dv = int(dtxt) if dtxt.strip() != "" else 1
+                    except Exception:
+                        dv = 1
+                    dv      = dv + 1 if dv < maxd else 1
+                    input_boxes["day"].text = str(dv)
+                elif clicked_key == "day_down":
+                    ytxt = input_boxes["year"].text or ""
+                    mtxt = input_boxes["month"].text or ""
+                    try:
+                        yv = int(ytxt) if ytxt.strip() != "" else datetime.now().year
+                    except Exception:
+                        yv = datetime.now().year
+                    def _month_to_int(s, fallback_month):
+                        s = (s or "").strip()
+                        if s == "":
+                            return fallback_month
+                        if s.isdigit():
+                            try:
+                                mv = int(s)
+                                if 1 <= mv <= 12:
+                                    return mv
+                            except Exception:
+                                pass
+                        names = list(calendar.month_name)
+                        low   = s.lower()
+                        for i in range(1, 13):
+                            if names[i].lower() == low:
+                                return i
+                        return fallback_month
+                    mv      = _month_to_int(mtxt, datetime.now().month)
+                    maxd    = calendar.monthrange(yv, mv)[1]
+                    dtxt    = input_boxes["day"].text or ""
+                    try:
+                        dv = int(dtxt) if dtxt.strip() != "" else maxd
+                    except Exception:
+                        dv = maxd
+                    dv      = dv - 1 if dv > 1 else maxd
+                    input_boxes["day"].text = str(dv)
+                elif clicked_key == "year_up":
+                    ytxt = input_boxes["year"].text or ""
+                    try:
+                        yv = int(ytxt) if ytxt.strip() != "" else datetime.now().year
+                    except Exception:
+                        yv = datetime.now().year
+                    ny = min(2100, yv + 1)
+                    input_boxes["year"].text = str(ny)
+                elif clicked_key == "year_down":
+                    ytxt = input_boxes["year"].text or ""
+                    try:
+                        yv = int(ytxt) if ytxt.strip() != "" else datetime.now().year
+                    except Exception:
+                        yv = datetime.now().year
+                    ny = max(2000, yv - 1)
+                    input_boxes["year"].text = str(ny)
+                elif clicked_key in ("start_time_up", "start_time_down"):
+                    s = (input_boxes["start_time"].text or "").zfill(4)[:4]
+                    try:
+                        hh = int(s[:2])
+                        mm = int(s[2:])
+                    except Exception:
+                        now = datetime.now()
+                        hh  = now.hour
+                        mm  = now.minute
+                    if clicked_key == "start_time_up":
+                        mm += 15
+                        if mm >= 60:
+                            mm = 0
+                            hh = (hh + 1) % 24
+                    else:
+                        mm -= 15
+                        if mm < 0:
+                            mm = 45
+                            hh = (hh - 1) % 24
+                    input_boxes["start_time"].text = f"{hh:02d}{mm:02d}"
+            else:
+                # Click away: if not on any edit button or labels or confirm/cancel, blur inputs
+                any_hit = False
+                for rect, key in edit_buttons:
+                    if rect.collidepoint(event.pos):
+                        any_hit = True
+                        break
+                if cancel_button_rect and cancel_button_rect.collidepoint(event.pos):
+                    any_hit = True
+                if done_button_rect and done_button_rect.collidepoint(event.pos):
+                    any_hit = True
+                for rect, idx in label_buttons:
+                    if rect.collidepoint(event.pos):
+                        any_hit = True
+                        break
+                if not any_hit:
+                    input_active = None
+                    for box in input_boxes.values():
+                        box.active    = False
+                        box.selecting = False
 
-            # --- click-away blur (if click not on any control) ---
-            hit_any = False
-            for rect, key in edit_buttons:
-                if rect.collidepoint(event.pos):
-                    hit_any = True
-                    break
-            if (cancel_button_rect and cancel_button_rect.collidepoint(event.pos)) or \
-            (done_button_rect   and done_button_rect.collidepoint(event.pos)):
-                hit_any = True
-            if key in ("name", "cost", "done", "month", "day", "start_time"):
-                # commit the field we're leaving, if it is one of the special clears
-                if input_active == "month" and key != "month":
-                    _commit_month_on_exit()
-                if input_active == "day" and key != "day":
-                    _commit_day_on_exit()
-                if input_active == "start_time" and key != "start_time":
-                    _commit_start_time_on_exit()
+        # Tab navigation and letting InputBox handle events
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_TAB:
+            tab_order = ["task", "spoons_cost", "spoons_done", "description", "year", "month", "day", "start_time"]
+            try:
+                idx = tab_order.index(input_active) if input_active in tab_order else -1
+            except ValueError:
+                idx = -1
+            input_active = tab_order[(idx + 1) % len(tab_order)]
+            for k, box in input_boxes.items():
+                box.active    = (k == input_active)
+                box.selecting = False
+            return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
-                input_active = key
+        if event.type in (pygame.MOUSEBUTTONDOWN, pygame.MOUSEMOTION, pygame.MOUSEBUTTONUP, pygame.KEYDOWN):
+            for box in input_boxes.values():
+                logic_input_box(event, box, pygame.display.get_surface())
+            return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
-                # entering fields: clear-on-focus behavior
-                if key == "month":
-                    _begin_month_typing()
-                elif key == "day":
-                    _begin_day_typing()
-                elif key == "start_time":
-                    _begin_start_time_typing()
-
-            #  --- If user clicks anywhere NOT on an edit button, clear focus ---
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                # only runs after checking all edit_buttons
-                if not any(rect.collidepoint(event.pos) for rect, _ in edit_buttons):
-                    if input_active:
-                        # commit whatever field we’re leaving
-                        if input_active == "month":
-                            _commit_month_on_exit()
-                        elif input_active == "day":
-                            _commit_day_on_exit()
-                        elif input_active == "start_time":
-                            _commit_start_time_on_exit()
-                        input_active = None
-
-        # Keyboard events for active field
-        if event.type == pygame.KEYDOWN and input_active:
-            # Tab order
-            if event.key == pygame.K_TAB:
-                # commit the field we are leaving
-                if input_active == "month":
-                    _commit_month_on_exit()
-                elif input_active == "day":
-                    _commit_day_on_exit()
-                elif input_active == "start_time":
-                    _commit_start_time_on_exit()
-
-                tab_order = ["name", "cost", "done", "month", "day", "start_time"]
-                try:
-                    i = tab_order.index(input_active)
-                except ValueError:
-                    i = -1
-                input_active = tab_order[(i + 1) % len(tab_order)]
-
-                # begin clear-on-focus for the field we enter
-                if input_active == "month":
-                    _begin_month_typing()
-                elif input_active == "day":
-                    _begin_day_typing()
-                elif input_active == "start_time":
-                    _begin_start_time_typing()
-
-                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
-
-            # Enter does nothing
-            if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
-
-            cur = edit_state.get(input_active, "")
-
-            if event.key == pygame.K_BACKSPACE:
-                edit_state[input_active] = cur[:-1]
-                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
-
-            ch = event.unicode or ""
-            if input_active == "name":
-                if ch:
-                    candidate = cur + ch
-                    if font.size(candidate)[0] <= MAX_TASK_PIXEL_WIDTH:
-                        edit_state["name"] = candidate
-
-            elif input_active in ("cost", "done"):
-                if ch.isdigit():
-                    edit_state[input_active] = cur + ch
-
-            elif input_active == "month":
-                # raw typed text; draw layer handles ghost suggestion & commit on blur/tab
-                if ch.isalpha():
-                    edit_state["month"] = cur + ch
-
-            elif input_active == "day":
-                if ch.isdigit() and len(cur) < 2:
-                    try: y = int(edit_state.get("year", str(datetime.now().year)))
-                    except Exception: y = datetime.now().year
-                    rawm = edit_state.get("month", str(datetime.now().month)); m = int(rawm) if str(rawm).isdigit() else (list(calendar.month_name).index(rawm) or datetime.now().month); maxd = calendar.monthrange(y, m)[1]
-                    candidate = (cur + ch).lstrip("0"); candidate = candidate if candidate != "" else "0"
-                    d = int(candidate)
-                    if d == 0: edit_state["day"] = "1"
-                    elif d > maxd: edit_state["day"] = str(maxd)
-                    else: edit_state["day"] = str(d)
-
-
-            elif input_active == "start_time":
-                if ch.isdigit() and len(cur) < 4:
-                    edit_state["start_time"] = cur + ch
-
-    
-    # Typing for NEW label (only in list mode)
+    # --- NEW label typing (list mode only) ---
     if new_label_active_task is not None and event.type == pygame.KEYDOWN:
         if event.key == pygame.K_RETURN:
             _commit_new_label()
             return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
         elif event.key == pygame.K_ESCAPE:
-            # cancel
             new_label_active_task = None
-            new_label_text = ""
+            new_label_text        = ""
             return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
         elif event.key == pygame.K_BACKSPACE:
             new_label_text = new_label_text[:-1]
@@ -2037,71 +2573,75 @@ def logic_complete_tasks(task_list, spoons_debt_toggle, event, spoons, streak_da
         else:
             ch = event.unicode
             if ch:
-                # prevent overflow: ensure rendered width fits inside label_new_border
-                lbw = label_new_border.get_width()
-                inner_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(pygame.display.get_surface().get_height() * 0.045))
-                test = new_label_text + ch
-                if inner_font.size(test)[0] <= (lbw - 12):  # light padding
+                lbw         = label_new_border.get_width()
+                inner_font  = pygame.font.Font("fonts/Stardew_Valley.ttf", int(pygame.display.get_surface().get_height() * 0.045))
+                test        = new_label_text + ch
+                if inner_font.size(test)[0] <= (lbw - 12):
                     new_label_text = test
             return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
-    # --- List mode: handle remove/edit icon and spoon-frame clicks ---
+    # --- List mode: focus activation, remove/edit, spoon frames ---
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-        # No label button in LIST view anymore (time badge only) — do nothing here
-        pass
+        for rect, idx in focus_buttons:
+            if rect.collidepoint(event.pos):
+                focus_task = idx
+                return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
-        # Remove or enter edit
         for icon_rect, idx in remove_buttons:
             if icon_rect.collidepoint(event.pos):
-                mid = icon_rect.y + icon_rect.height//2
+                mid = icon_rect.y + icon_rect.height // 2
                 if event.pos[1] < mid:
-                    # Remove task
                     expanded_label_tasks.discard(idx)
-                    if idx in expanded_label_tasks: expanded_label_tasks.discard(idx)
+                    if idx in expanded_label_tasks:
+                        expanded_label_tasks.discard(idx)
                     task_list.pop(idx)
                 else:
-                    # Enter edit
-                    name, desc, cost, done_, days, date, st, et, labels = task_list[idx]
-                    expanded_label_tasks.clear()
-                    # make a HHMM digits string from task start_time [hh,mm,*,*] if present
-                    def _st_to_digits(st):
+                    if 0 <= idx < len(task_list):
+                        name, desc, cost, done_, days, date, st, et, labels = task_list[idx]
+                    else:
+                        name, desc, cost, done_, days, date, st, et, labels = "", "", 0, 0, 0, datetime.now(), [0, 0, 0, 0], None, []
+
+                    def _st_to_digits(st_in):
                         try:
-                            hh = int(st[0]) % 24
-                            mm = int(st[1]) % 60
+                            hh = int(st_in[0]) % 24
+                            mm = int(st_in[1]) % 60
                             return f"{hh:02d}{mm:02d}"
                         except Exception:
                             return ""
+                    input_boxes["task"].text        = name
+                    input_boxes["description"].text = desc
+                    input_boxes["spoons_cost"].text = str(cost)
+                    input_boxes["spoons_done"].text = str(done_)
+                    input_boxes["year"].text        = str(date.year)
+                    input_boxes["month"].text       = calendar.month_name[date.month]
+                    input_boxes["day"].text         = str(date.day)
+                    input_boxes["start_time"].text  = _st_to_digits(st)
 
-                    edit_state = {
-                        "name":   name,
-                        "cost":   str(cost),
-                        "done":   str(done_),
-                        "year":   str(date.year),
-                        "month":  str(date.month),
-                        "day":    str(date.day),
-                        "labels": labels[:],
-                        "start_time": _st_to_digits(st),
-                    }
+                    for box in input_boxes.values():
+                        box.active    = False
+                        box.selecting = False
+                    input_active      = "task"
+                    input_boxes["task"].active = True
+
+                    expanded_label_tasks.clear()
                     currently_editing = idx
                 return False, spoons, confetti_particles, streak_dates, level, spoons_used_today
 
-        # Spoon-frame clicks
         for rect, idx, frame_i in frame_buttons:
             if rect.collidepoint(event.pos):
-                name, desc, cost, done_, days, date, st, et, labels= task_list[idx]
+                name, desc, cost, done_, days, date, st, et, labels = task_list[idx]
                 new_done = frame_i + 1
                 to_fill  = new_done - done_
-                if to_fill > 0 and spoons >= to_fill or spoons_debt_toggle:
-                    task_list[idx][3] = min(cost, new_done)
-                    spoons -= to_fill
-                    spoons_used_today += to_fill
-
-                    # Fractional level-up: each spoon gives 1/threshold
-                    for _ in range(to_fill):
-                        base_lvl = int(level)             # e.g. 0, 1, 2, ...
-                        threshold = 10 + 2 * base_lvl     # 10, 12, 14, ...
-                        level += 1.0 / threshold
-
+                if to_fill < 1:
+                    to_fill  = to_fill - 1
+                    new_done = new_done - 1
+                task_list[idx][3] = min(cost, new_done)
+                spoons           -= to_fill
+                spoons_used_today += to_fill
+                if spoons_used_today < 0:
+                    spoons_used_today = 0
+                if spoons > 99:
+                    spoons = 99
                 break
 
     return False, spoons, confetti_particles, streak_dates, level, spoons_used_today

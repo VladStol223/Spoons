@@ -277,6 +277,9 @@ def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offse
     lighter_background, darker_background,
     folder_one, folder_two, folder_three, folder_four, folder_five, folder_six):
 
+    global week_folder_rects
+    week_folder_rects = []
+
     def wrap_text(text, font, max_width):
         words = text.split()
         lines = []
@@ -405,7 +408,6 @@ def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offse
         except Exception:
             return ''
 
-
     # calculate current week start/end based on offset
     today = datetime.now().date()
     mid = today + timedelta(weeks=displayed_week_offset)
@@ -426,7 +428,7 @@ def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offse
 
     # week-range header
     week_str = f"{calendar.month_abbr[week_start.month]} {week_start.day}-{calendar.month_abbr[week_end.month]} {week_end.day}"
-    week_text = big_font.render(week_str, True, BLACK) #type: ignore
+    week_text = header_font.render(week_str, True, BLACK) #type: ignore
     screen.blit(week_text, week_text.get_rect(midtop=(522, 7)))
 
     # layout
@@ -435,10 +437,10 @@ def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offse
     start_x, start_y = 160, 74
 
     # day-of-week labels
-    days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
+    days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
     for i, d in enumerate(days):
         hdr_txt = font.render(d, True, BLACK) #type: ignore
-        screen.blit(hdr_txt, (start_x + i*(day_box_width + margin) + 25, 67))
+        screen.blit(hdr_txt, (start_x + i*(day_box_width + margin) + 20, 72))
 
     # single row of date-boxes
     body_y = start_y + font.get_height() + 5
@@ -505,12 +507,19 @@ def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offse
                 continue
             any_tasks_today = True
                 
-            # Centered folder name
-            label_surf = smaller_font.render(f"{folder_label}:", True, BLACK)  # type: ignore
+            # ----- FOLDER HEADER AREA -----
+            label_surf = smaller_font.render(f"{folder_label}:", True, BLACK) #type: ignore
             lw, lh = label_surf.get_width(), label_surf.get_height()
             cx = x + day_box_width // 2
             label_rect = label_surf.get_rect(midtop=(cx, ty))
-            screen.blit(label_surf, label_rect.topleft)
+
+            screen.blit(label_surf, label_rect)
+
+            # Determine folder section bounding box
+            section_top = label_rect.top
+            section_left = x
+            section_w = day_box_width
+            section_h_start = ty       # start height marker
 
             # Centered underline
             underline_y = label_rect.bottom - 3
@@ -522,6 +531,30 @@ def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offse
             )  # type: ignore
             ty = label_rect.bottom + 2
 
+            # Create temporary folder-section rect
+            folder_section_rect = pygame.Rect(
+                section_left,
+                section_top,
+                section_w,
+                0  # we will fill actual height after drawing tasks
+            )
+
+            # finalize folder section height
+            folder_section_rect.height = ty - section_top
+
+            # record clickable rect for logic
+            week_folder_rects.append((folder_section_rect, lst, folder_label, current))
+
+            mouse_x, mouse_y = pygame.mouse.get_pos()
+
+            if folder_section_rect.collidepoint(mouse_x, mouse_y):
+                icon = hubIcons["manage_task_icon"]
+                scaled_icon = pygame.transform.scale(icon, (28, 28))
+                scaled_icon.set_alpha(256)  # subtle overlay behind text
+                # blit centered behind the folder label
+                ix = label_rect.left - 27
+                iy = label_rect.centery - 11
+                screen.blit(scaled_icon, (ix, iy))
             
             # Render each task with line wrapping
             max_width = day_box_width - 15  # Allow padding on both sides
@@ -629,21 +662,22 @@ def draw_week_mode(screen, font, bigger_font, smaller_font, displayed_week_offse
                 screen.blit(surf, rect.topleft)
                 start_y += line_height
 
-
-
 def draw_month_mode(screen, font, bigger_font, smaller_font, darker_background, lighter_background,
                   homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list,
                   displayed_month, displayed_year, background_color,
                   calendar_previous_day_header_color, calendar_next_day_header_color, calendar_current_day_header_color,
                   calendar_previous_day_color, calendar_current_day_color, calendar_next_day_color,
                   streak_dates):
+    global month_day_rects
+    month_day_rects = []
+
     # Calendar grid settings
     day_box_width = 105
     margin = 0
     start_x = 160
     start_y = 97
     top_padding = 30
-    days_of_week = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    days_of_week = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
     today = datetime.now().date()
 
     # Compute month boundaries
@@ -713,6 +747,10 @@ def draw_month_mode(screen, font, bigger_font, smaller_font, darker_background, 
                 hdr_col = calendar_current_day_header_color
                 box_col = calendar_current_day_color
 
+        # Save rectangle + actual date for click logic
+        day_rect = pygame.Rect(x, y, day_box_width, day_box_height)
+        month_day_rects.append((day_rect, slot_date.month, slot_date.day))
+
         # Header rectangle
         pygame.draw.rect(screen, hdr_col, (x, y, day_box_width, day_box_height))
         pygame.draw.rect(screen, BLACK, (x, y, day_box_width, day_box_height), 1) #type: ignore
@@ -726,7 +764,17 @@ def draw_month_mode(screen, font, bigger_font, smaller_font, darker_background, 
         # Day number
         day_text = smaller_font.render(str(disp_day), True, BLACK) #type: ignore
         tx = x + day_box_width - (19 if disp_day > 9 else 11)
-        screen.blit(day_text, (tx, y + 1))
+        screen.blit(day_text, (tx, y - 1))
+
+        #draw the add task icon next to the day number on hover
+        mouse_x, mouse_y = pygame.mouse.get_pos()
+        if x <= mouse_x <= x + day_box_width and y <= mouse_y <= y + day_box_height:
+            #scale hubIcons{add_task_icon} to 16x16
+            icon_size = 32
+            scaled_icon = pygame.transform.scale(add_task_icon, (icon_size, icon_size))
+            #make opacity 50%
+            scaled_icon.set_alpha(128)
+            screen.blit(scaled_icon, (x + 38, y + 23))
 
         # Draw streak indicator if needed
         date_str = slot_date.strftime("%Y-%m-%d")
@@ -890,7 +938,7 @@ def draw_year_mode(
                 dot_y = dr.top+ 3
                 pygame.draw.circle(screen, LIGHT_GRAY, (int(dot_x), int(dot_y)), 2)  # type: ignore
 
-def logic_calendar(event, day_range_index, displayed_week_offset, displayed_month, displayed_year):
+def logic_calendar(event, day_range_index, displayed_week_offset, displayed_month, displayed_year, page, month, day, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list):
     global calendar_mode, year_month_rects
 
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -946,4 +994,34 @@ def logic_calendar(event, day_range_index, displayed_week_offset, displayed_mont
                             calendar_mode = "Month"
                             break
 
-    return day_range_index, displayed_week_offset, displayed_month, displayed_year
+        # --- Click on a day in Month mode to go to input tasks page---
+        if calendar_mode == "Month":
+            if "month_day_rects" in globals():
+                for rect, m, d in month_day_rects:
+                    if rect.collidepoint(event.pos):
+                        page = "input_tasks"
+                        task_month = m
+                        task_day   = d
+                        return day_range_index, displayed_week_offset, displayed_month, displayed_year, page, task_month, task_day
+
+        # --- Folder section click in Week Mode ---
+        if calendar_mode == "Week":
+            if "week_folder_rects" in globals():
+                for rect, task_list_ref, folder_label, day_date in week_folder_rects:
+                    if rect.collidepoint(event.pos):
+
+                        # Map the actual list reference to the correct page
+                        if task_list_ref is homework_tasks_list:
+                            page = "complete_homework_tasks"
+                        elif task_list_ref is chores_tasks_list:
+                            page = "complete_chores_tasks"
+                        elif task_list_ref is work_tasks_list:
+                            page = "complete_work_tasks"
+                        elif task_list_ref is misc_tasks_list:
+                            page = "complete_misc_tasks"
+                        elif task_list_ref is exams_tasks_list:
+                            page = "complete_exams_tasks"
+                        elif task_list_ref is projects_tasks_list:
+                            page = "complete_projects_tasks"
+
+    return day_range_index, displayed_week_offset, displayed_month, displayed_year, page, month, day

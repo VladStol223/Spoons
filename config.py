@@ -21,6 +21,8 @@ bigger_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0
 small_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.047))
 smaller_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.033))
 
+header_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.062))
+
 #input buttons
 input_active = False
 
@@ -152,6 +154,7 @@ image_categories = {
         'descriptionButton': ('descriptionToggleButton.png', (40,40)),
         'timerButton': ('timerToggleButton.png', (40,40)),
         'ConfirmButton': ('confirmButton.png', (120,40)),
+        'ConfirmButtonThick': ('confirmButtonThick.png', (230,40)),
         'CancelButton': ('cancelButton.png', (120,40)),
         'floppyDiskUpload': ('floppyDiskUpload.png', (60,60)),
         'floppyDiskDownload': ('floppyDiskDownload.png', (60,60)),
@@ -261,6 +264,8 @@ lightManillaFolder = loaded_images['manillaFolder']['light']['manilla_folder_ful
 pinkManillaFolder = loaded_images['manillaFolder']['pink']['manilla_folder_full']
 greenManillaFolder = loaded_images['manillaFolder']['green']['manilla_folder_full']
 blueManillaFolder = loaded_images['manillaFolder']['blue']['manilla_folder_full']
+lightBlueManillaFolder = loaded_images['manillaFolder']['light_blue']['manilla_folder_full']
+paleGreenManillaFolder = loaded_images['manillaFolder']['pale_green']['manilla_folder_full']
 
 # — border pieces —
 corner          = border['corner']

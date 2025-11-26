@@ -20,7 +20,7 @@
     "half": 5,
     "full": 10
   },
-  "time_per_spoon": 15,
+  "time_per_spoon": 1,
   "folder_days_ahead": {
     "folder_one": 7,
     "folder_two": 7,
@@ -30,14 +30,14 @@
     "folder_six": 7
   },
   "theme": "foresty",
-  "icon_image": "spoon.png",
+  "icon_image": "minecraft.png",
   "spoon_name_input": "Icons",
   "folder_one": "School",
-  "folder_two": "Chores",
-  "folder_three": "Work",
-  "folder_four": "Exercise",
-  "folder_five": "Events",
-  "folder_six": "Misc",
+  "folder_two": "Work",
+  "folder_three": "Chores",
+  "folder_four": "Exams",
+  "folder_five": "Olivia",
+  "folder_six": "Therapy",
   "assets": {
     "border": "spruceWood",
     "hubIcons": "default",
@@ -52,15 +52,29 @@
     "intro": ""
   },
   "label_favorites": {
-    "folder_one": [],
-    "folder_two": [],
+    "folder_one": [
+      "Homework",
+      "Exams",
+      "Projects",
+      "COE 3001",
+      "Lab",
+      "ECE 3741",
+      "Quiz"
+    ],
+    "folder_two": [
+      "DPO Project",
+      "F&M Bank Proj"
+    ],
     "folder_three": [],
     "folder_four": [],
     "folder_five": [],
-    "folder_six": []
+    "folder_six": [
+      "gatech",
+      "MRDC"
+    ]
   },
   "last_save_date": [
-    "2025-11-10",
+    "2025-11-26",
     0
   ],
   "sound_toggle": false,

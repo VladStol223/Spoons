@@ -1,12 +1,17 @@
 import pygame
 import os, json, time
 from config import *
-from drawing_functions.draw_input_box import draw_input_box
+from drawing_functions.draw_input_box import draw_input_box, InputBox, logic_input_box
 from copyparty_sync import (
     put_user_json, set_credentials, set_user_folder,
     download_data_json_if_present, put_new_user_cred, upload_data_json,
     verify_credentials_and_access, probe_login_status, set_stay_offline_flag
 )
+
+input_boxes_login = {
+    "username": InputBox(None, text="", multiline=False, fontsize=0.055, box_type="text"),
+    "password": InputBox(None, text="", multiline=False, fontsize=0.055, box_type="password")
+}
 
 # Globals for UI hitboxes so logic() can read what draw() laid out
 _main_choice_rects = {}
@@ -16,210 +21,223 @@ _status_msg = ""   # <-- NEW: shows errors to the user (e.g., registration faile
 
 def _font(size): return pygame.font.Font("fonts/Stardew_Valley.ttf", size)
 
+def draw_login(screen, login_mode, input_boxes_login, input_active, background_color):
+    global _main_choice_rects, _form_rects, _status_msg
 
-def draw_login(screen, login_mode, username_text, password_text, input_active, background_color):
-    global _main_choice_rects, _form_rects, _title_cache, _status_msg
     sw, sh = screen.get_size()
     screen_w, screen_h = sw, sh
-    screen_w -= 0  # keep parity with other draw fns
 
-    title_font = _font(int(screen_h * 0.08))
-    label_font = _font(int(screen_h * 0.045))
+    title_font  = _font(int(screen_h * 0.08))
+    label_font  = _font(int(screen_h * 0.045))
     button_font = _font(int(screen_h * 0.05))
 
+    # =============== MAIN CHOICE PAGE ===============
     if not login_mode:
-        # Main choice buttons
         btn_w, btn_h, gap = int(screen_w * 0.35), int(screen_h * 0.10), int(screen_h * 0.03)
         start_y = int(screen_h * 0.35)
         cx = (screen_w - btn_w) // 2
+
         colors = [(70, 90, 120), (70, 120, 90), (120, 90, 70)]
         labels = [("Register", "register"), ("Login", "login"), ("Stay Offline", "offline")]
+
         _main_choice_rects = {}
+
         for i, (text, key) in enumerate(labels):
             r = pygame.Rect(cx, start_y + i * (btn_h + gap), btn_w, btn_h)
             _main_choice_rects[key] = r
             pygame.draw.rect(screen, colors[i], r, border_radius=14)
-            txt = button_font.render(text, True, (255, 255, 255))
-            screen.blit(txt, (r.centerx - txt.get_width() // 2, r.centery - txt.get_height() // 2))
-        return login_mode, username_text, password_text, input_active
+            ts = button_font.render(text, True, WHITE) #type: ignore
+            screen.blit(ts, ts.get_rect(center=r.center))
 
-    # Form mode (register or login)
-    form_title = "Register New Account" if login_mode == "register" else "Login to Your Account"
-    title_surf = label_font.render(form_title, True, (255, 255, 255))
-    screen.blit(title_surf, ((screen_w - title_surf.get_width()) // 2, int(screen_h * 0.30)))
+        return
 
-    # --- NEW: error/status banner ---
+    # =============== LOGIN / REGISTER FORM ===============
+    # Title
+    form_title = "Register New Account" if login_mode == "regist #type: ignoreer" else "Login to Your Account"
+    title_surf = title_font.render(form_title, True, WHITE) #type: ignore
+    screen.blit(title_surf, ((screen_w - title_surf.get_width()) // 2, int(screen_h * 0.20)))
+
+    # Status line
     if _status_msg:
         err_font = _font(int(screen_h * 0.04))
         err_surf = err_font.render(_status_msg, True, (230, 80, 80))
-        screen.blit(err_surf, ((screen_w - err_surf.get_width()) // 2, int(screen_h * 0.36)))
+        screen.blit(err_surf, ((screen_w - err_surf.get_width()) // 2, int(screen_h * 0.28)))
 
-    # Labels
-    field_w, field_h = int(screen_w * 0.40), int(screen_h * 0.07)
+    # Layout
+    field_w = int(screen_w * 0.40)
+    field_h = int(screen_h * 0.07)
     cx = (screen_w - field_w) // 2
-    user_y = int(screen_h * 0.48)
+
+    user_y = int(screen_h * 0.40)
     pass_y = user_y + field_h + int(screen_h * 0.06)
 
-    user_label = label_font.render("Username:", True, (255, 255, 255))
-    pass_label = label_font.render("Password:", True, (255, 255, 255))
+    # Labels
+    user_label = label_font.render("Username:", True, WHITE) #type: ignore
+    pass_label = label_font.render("Password:", True, WHITE) #type: ignore
     screen.blit(user_label, (cx, user_y - int(screen_h * 0.055)))
     screen.blit(pass_label, (cx, pass_y - int(screen_h * 0.055)))
 
-    # Inputs
-    user_rect = pygame.Rect(cx, user_y, field_w, field_h)
-    pass_rect = pygame.Rect(cx, pass_y, field_w, field_h)
-    masked = "*" * len(password_text)
+    # Assign rects to input boxes
+    input_boxes_login["username"].rect = pygame.Rect(cx, user_y, field_w, field_h)
+    input_boxes_login["password"].rect = pygame.Rect(cx, pass_y, field_w, field_h)
 
-    draw_input_box(screen, user_rect, input_active == "username", username_text, LIGHT_GRAY, DARK_SLATE_GRAY, True, background_color, "light", 12, 0.050) #type: ignore
-    draw_input_box(screen, pass_rect, input_active == "password", masked, LIGHT_GRAY, DARK_SLATE_GRAY, True, background_color, "light", 12, 0.050) #type: ignore
+    # Mask password
+    input_boxes_login["password"].display_text = "*" * len(input_boxes_login["password"].text)
 
-    # Buttons (Confirm / Back) as images from config
-    btn_size = (120, 40)
+    # Draw input boxes
+    draw_input_box(screen, input_boxes_login["username"], LIGHT_GRAY, DARK_SLATE_GRAY, background_color=background_color, infill="light") #type: ignore
+    draw_input_box(screen, input_boxes_login["password"], LIGHT_GRAY, DARK_SLATE_GRAY, background_color=background_color, infill="light") #type: ignore
+
+    # Buttons (Existing images)
+    btn_size = (160, 50)
     gap = int(screen_w * 0.02)
-    confirm_img = pygame.transform.smoothscale(confirm_edit_button, btn_size)
-    back_img = pygame.transform.smoothscale(cancel_edit_button, btn_size)
     total_w = btn_size[0] * 2 + gap
     start_x = (screen_w - total_w) // 2
-    btn_y = pass_y + field_h + int(screen_h * 0.06)
+    btn_y = pass_y + field_h + int(screen_h * 0.08)
 
-    confirm_rect = pygame.Rect(start_x, btn_y, btn_size[0], btn_size[1])
-    back_rect = pygame.Rect(start_x + btn_size[0] + gap, btn_y, btn_size[0], btn_size[1])
-    screen.blit(confirm_img, confirm_rect.topleft)
-    screen.blit(back_img, back_rect.topleft)
+    confirm_rect = pygame.Rect(start_x, btn_y, *btn_size)
+    back_rect    = pygame.Rect(start_x + btn_size[0] + gap, btn_y, *btn_size)
 
-    _form_rects = {"user": user_rect, "pass": pass_rect, "confirm": confirm_rect, "back": back_rect}
-    return login_mode, username_text, password_text, input_active
+    confirm_img = pygame.transform.smoothscale(confirm_edit_button, btn_size)
+    back_img    = pygame.transform.smoothscale(cancel_edit_button, btn_size)
+
+    # Draw button backgrounds
+    screen.blit(confirm_img, confirm_rect)
+    screen.blit(back_img, back_rect)
+
+    # --- ADD TEXT ON TOP OF BUTTONS ---
+    confirm_text = "Register" if login_mode == "register" else "Login"
+    back_text    = "Cancel"
+
+    btn_font = _font(int(screen_h * 0.045))
+
+    # Confirm button text
+    c_surf = btn_font.render(confirm_text, True, WHITE) #type: ignore
+    c_rect = c_surf.get_rect(center=confirm_rect.center)
+    screen.blit(c_surf, c_rect)
+
+    # Back button text
+    b_surf = btn_font.render(back_text, True, WHITE) #type: ignore
+    b_rect = b_surf.get_rect(center=back_rect.center)
+    screen.blit(b_surf, b_rect)
+
+    _form_rects = {
+        "confirm": confirm_rect,
+        "back": back_rect,
+        "username": input_boxes_login["username"].rect,
+        "password": input_boxes_login["password"].rect
+    }
 
 
-def logic_login(event, login_mode, username_text, password_text, input_active):
+def logic_login(event, login_mode, input_boxes_login, input_active):
     global _status_msg
+
     page = "login"
+
+    # ====================== CLICK HANDLING ======================
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-        # choice buttons
+
+        # -------- main menu buttons --------
         if not login_mode and _main_choice_rects:
-            if _main_choice_rects.get("register") and _main_choice_rects["register"].collidepoint(event.pos):
-                _status_msg = ""  # clear any old errors on mode switch
-                return "register", username_text, password_text, None, page
-            if _main_choice_rects.get("login") and _main_choice_rects["login"].collidepoint(event.pos):
-                _status_msg = ""  # clear any old errors on mode switch
-                return "login", username_text, password_text, None, page
-            if _main_choice_rects.get("offline") and _main_choice_rects["offline"].collidepoint(event.pos):
+            if _main_choice_rects["register"].collidepoint(event.pos):
                 _status_msg = ""
+                return "register", input_boxes_login, "username", page
+
+            if _main_choice_rects["login"].collidepoint(event.pos):
+                _status_msg = ""
+                return "login", input_boxes_login, "username", page
+
+            if _main_choice_rects["offline"].collidepoint(event.pos):
                 set_stay_offline_flag(True)
-                return login_mode, username_text, password_text, None, "input_spoons"
+                _status_msg = ""
+                return login_mode, input_boxes_login, None, "input_spoons"
 
-        # form
-        if login_mode and _form_rects:
-            if _form_rects.get("user") and _form_rects["user"].collidepoint(event.pos):
-                return login_mode, username_text, password_text, "username", page
-            if _form_rects.get("pass") and _form_rects["pass"].collidepoint(event.pos):
-                return login_mode, username_text, password_text, "password", page
-            if _form_rects.get("back") and _form_rects["back"].collidepoint(event.pos):
-                _status_msg = ""  # clear error when backing out
-                return None, "", "", None, page
+        # -------- form mode --------
+        if login_mode:
 
-            if _form_rects.get("confirm") and _form_rects["confirm"].collidepoint(event.pos):
-                set_stay_offline_flag(False)
-                u, p = username_text.strip(), password_text
+            # Focus username
+            if _form_rects["username"].collidepoint(event.pos):
+                input_active = "username"
+                input_boxes_login["username"].active = True
+                input_boxes_login["password"].active = False
+                return login_mode, input_boxes_login, input_active, page
+
+            # Focus password
+            if _form_rects["password"].collidepoint(event.pos):
+                input_active = "password"
+                input_boxes_login["username"].active = False
+                input_boxes_login["password"].active = True
+                return login_mode, input_boxes_login, input_active, page
+
+            # Back button
+            if _form_rects["back"].collidepoint(event.pos):
+                _status_msg = ""
+                return None, input_boxes_login, None, page
+
+            # Confirm button
+            if _form_rects["confirm"].collidepoint(event.pos):
+                u = input_boxes_login["username"].text.strip()
+                p = input_boxes_login["password"].text
+
                 if not u:
                     _status_msg = "Please enter a username."
-                    return login_mode, username_text, password_text, "username", page
+                    return login_mode, input_boxes_login, "username", page
 
-                ok = True
+                set_stay_offline_flag(False)
+
+                # ---- Register ----
                 if login_mode == "register":
-                    # 1) ask backend to create the account
-                    ok = put_new_user_cred(u, u, p)  # file_stem = username
-                    # 2) if that worked, save credentials locally so future DAV calls can auth
+                    ok = put_new_user_cred(u, u, p)
                     if ok:
                         set_credentials(u, p)
-
-                elif login_mode == "login":
-                    # Store typed creds locally (so later code can use them if probe succeeds)
-                    set_credentials(u, p)
-
-                    # NEW: precise probe to distinguish wrong username vs wrong password
-                    status = probe_login_status(u, p)
-
-                    from state_data import _download_state
-
-                    if status == "ok":
                         set_user_folder(u)
-                        _status_msg = ""
-                        _download_state["trigger_download"] = True
-                        return login_mode, username_text, password_text, None, "input_spoons"
-
-                    if status == "wrong_password":
-                        _status_msg = "Wrong password. Please try again."
-                        return login_mode, username_text, "", "password", page  # clear/focus password
-
-                    if status == "no_such_user":
-                        _status_msg = "Cannot find Username. Please try again."
-                        return login_mode, username_text, password_text, "username", page
-
-                    # Any other HTTP / network issue
-                    _status_msg = "Couldn’t reach the server. Please try again."
-                    return login_mode, username_text, password_text, input_active, page
-
-                if ok:
-                    set_user_folder(u)  # make sure sync uses this user
-
-                    if login_mode == "register":
-                        # Ensure the new home dir is reachable before first upload
-                        access_ok = verify_credentials_and_access()
-                        if not access_ok:
-                            pygame.time.wait(1000)  # pause 1s then retry
-                            access_ok = verify_credentials_and_access()
-
-                        if not access_ok:
-                            print("registration failed")
-                            _status_msg = "Registration failed. Please choose a different username and password."
-                            return login_mode, username_text, password_text, "username", page
-
-                        # home is reachable -> push local data to the cloud
-                        try:
+                        if verify_credentials_and_access():
                             upload_data_json()
-                            _status_msg = ""  # success
-                        except Exception as e:
-                            _status_msg = "Upload failed after registration. Try again from Settings later."
-                            print(f"[copyparty] initial upload after register failed: {e}")
-                            # still move on to the app
-                    else:
-                        # login path keeps the existing behavior (pull if present)
-                        _status_msg = ""
-                        download_data_json_if_present()
+                        return login_mode, input_boxes_login, None, "input_spoons"
 
-                    return login_mode, username_text, password_text, None, "input_spoons"
+                    _status_msg = "Registration failed. Try a different username."
+                    return login_mode, input_boxes_login, "username", page
 
-                # Backend said “no” (e.g., dup username/password or other issue)
-                _status_msg = "Registration failed. Please choose a different username and password."
-                return login_mode, username_text, password_text, "username", page
+                # ---- Login ----
+                set_credentials(u, p)
+                status = probe_login_status(u, p)
 
-        if login_mode:
-            return login_mode, username_text, password_text, None, page
+                if status == "ok":
+                    set_user_folder(u)
+                    from state_data import _download_state
+                    _download_state["trigger_download"] = True
+                    _status_msg = ""
+                    return login_mode, input_boxes_login, None, "input_spoons"
 
-    elif event.type == pygame.KEYDOWN and login_mode:
-        target = "username" if input_active == "username" else ("password" if input_active == "password" else None)
-        if target:
-            if event.key == pygame.K_TAB:
-                next_field = "password" if input_active == "username" else "username"
-                return login_mode, username_text, password_text, next_field, page
-            elif event.key == pygame.K_RETURN:
-                # let the mouse path handle confirm; do nothing here
-                return login_mode, username_text, password_text, None, page
-            elif event.key == pygame.K_ESCAPE:
-                _status_msg = ""
-                return None, "", "", None, page
-            else:
-                if target == "username":
-                    if event.key == pygame.K_BACKSPACE: username_text = username_text[:-1]
-                    else:
-                        ch = event.unicode
-                        if ch and ch.isprintable() and len(username_text) < 32: username_text += ch
-                else:
-                    if event.key == pygame.K_BACKSPACE: password_text = password_text[:-1]
-                    else:
-                        ch = event.unicode
-                        if ch and ch.isprintable() and len(password_text) < 64: password_text += ch
-                return login_mode, username_text, password_text, input_active, page
+                if status == "wrong_password":
+                    _status_msg = "Wrong password. Try again."
+                    input_boxes_login["password"].text = ""
+                    return login_mode, input_boxes_login, "password", page
 
-    return login_mode, username_text, password_text, input_active, page
+                if status == "no_such_user":
+                    _status_msg = "Username not found."
+                    return login_mode, input_boxes_login, "username", page
+
+                _status_msg = "Could not reach server."
+                return login_mode, input_boxes_login, input_active, page
+
+    # ====================== KEY HANDLING ======================
+    if event.type == pygame.KEYDOWN and login_mode:
+
+        # Let InputBox handle typing
+        logic_input_box(event, input_boxes_login["username"], pygame.display.get_surface())
+        logic_input_box(event, input_boxes_login["password"], pygame.display.get_surface())
+
+        # Tab swapping
+        if event.key == pygame.K_TAB:
+            input_active = "password" if input_active == "username" else "username"
+            input_boxes_login["username"].active = (input_active == "username")
+            input_boxes_login["password"].active = (input_active == "password")
+            return login_mode, input_boxes_login, input_active, page
+
+        # ESC to exit
+        if event.key == pygame.K_ESCAPE:
+            _status_msg = ""
+            return None, input_boxes_login, None, page
+
+    return login_mode, input_boxes_login, input_active, page

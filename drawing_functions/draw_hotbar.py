@@ -1,12 +1,24 @@
 import pygame
 from datetime import datetime
 from config import *
+from drawing_functions.draw_input_box import draw_input_box, InputBox, logic_input_box
+import math
 
 # pre-create font so you’re not reloading every frame
 font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.06))
 
+spoon_input_box = InputBox(
+    None,
+    text="",
+    multiline=False,
+    fontsize=0.06,
+    box_type="number"
+)
+spoon_input_box.active = False
+spoon_input_box.caret = 0
+spoon_input_box.saved_text = ""
 
-def draw_hotbar(screen, spoons, icon_image, spoon_name_input, daily_spoons, today_needed, spoons_used_today):
+def draw_hotbar(screen, page, background_color, spoons, icon_image, spoon_name_input, daily_spoons, today_needed, spoons_used_today):
     # ----------------------------
     # Hover Animation Settings
     # ----------------------------
@@ -45,7 +57,7 @@ def draw_hotbar(screen, spoons, icon_image, spoon_name_input, daily_spoons, toda
     # ----------------------------
     # Draw spoons + fatigue bar (move by bar offset)
     # ----------------------------
-    draw_spoons(screen, spoons, icon_image, spoon_name_input, today_needed=today_needed, y_offset=y_offset_bar)
+    draw_spoons(screen, page, background_color, spoons, icon_image, spoon_name_input, today_needed=today_needed, y_offset=y_offset_bar)
 
     fatigue_bar = hotbar['fatigue_bar']
 
@@ -105,12 +117,38 @@ def draw_hotbar(screen, spoons, icon_image, spoon_name_input, daily_spoons, toda
         screen.blit(shadow, shadow_rect)
         screen.blit(text_surface, text_rect)
 
-def draw_spoons(screen, spoons, icon_image, spoon_name, today_needed, y_offset=0):
+def draw_spoons(screen, page, background_color, spoons, icon_image, spoon_name, today_needed, y_offset=0):
     import pygame
 
-    spoon_text = font.render(f"{spoons}", True, WHITE)  # type: ignore
-    text_x, text_y = 125, 30 + y_offset
-    screen.blit(spoon_text, (text_x, text_y))
+    # --- SPOON INPUT BOX (invisible) ---
+    spoon_input_box.rect = pygame.Rect(120, 28 + y_offset, 40, 37)
+    # Only update input text if the box is NOT active AND value changed externally
+    if not spoon_input_box.active and spoon_input_box.text != str(spoons):
+        spoon_input_box.text = str(spoons)
+        spoon_input_box.caret = len(spoon_input_box.text)
+
+
+    # Pulse border if on input spoons page
+    if page == "input_spoons":
+        t = pygame.time.get_ticks() / 1000.0
+        pulse = (math.sin(t * (2 * math.pi / 30)) + 1) * 0.5  # 30 sec cycle
+        border_color = (
+            max(0, int(background_color[0] * (1 - 0.05 * pulse))),
+            max(0, int(background_color[1] * (1 - 0.05 * pulse))),
+            max(0, int(background_color[2] * (1 - 0.05 * pulse)))
+        )
+    else:
+        border_color = background_color
+
+    draw_input_box(
+        screen,
+        spoon_input_box,
+        background_color,
+        border_color,
+        background_color=background_color,
+        infill="invisible"
+    )
+
 
     total_slots = 11
     slot_spacing = 33
@@ -236,3 +274,21 @@ def draw_spoons(screen, spoons, icon_image, spoon_name, today_needed, y_offset=0
             ex_x = x + 5 + (iw - ex.get_width()) // 2
             ex_y = y + (ih - ex.get_height()) // 2
             screen.blit(ex, (ex_x, ex_y))
+
+def logic_hotbar(event, page, spoons):
+    global spoon_input_box
+
+    # Let InputBox handle typing
+    logic_input_box(event, spoon_input_box, pygame.display.get_surface())
+
+    # Only update spoons when the user is actively typing in the box
+    if spoon_input_box.active:
+        try:
+            val = int(spoon_input_box.text)
+        except:
+            val = 0
+
+        val = max(0, min(99, val))
+        return val
+
+    return spoons

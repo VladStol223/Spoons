@@ -4,6 +4,11 @@ import pygame
 
 from state_data import _download_state
 
+from drawing_functions.draw_rounded_button import draw_rounded_button
+from drawing_functions.draw_input_box import draw_input_box, InputBox, logic_input_box
+from themes import THEMES
+from switch_themes import switch_theme
+
 from copyparty_sync import (
     clear_credentials,
     get_current_user,
@@ -23,6 +28,37 @@ layout_heights = {
 }
 
 days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+
+# --- InputBox registries for Settings tabs ---
+spoons_input_boxes = {
+    "Mon": InputBox(None, text="", multiline=False, fontsize=0.045, box_type="number"),
+    "Tue": InputBox(None, text="", multiline=False, fontsize=0.045, box_type="number"),
+    "Wed": InputBox(None, text="", multiline=False, fontsize=0.045, box_type="number"),
+    "Thu": InputBox(None, text="", multiline=False, fontsize=0.045, box_type="number"),
+    "Fri": InputBox(None, text="", multiline=False, fontsize=0.045, box_type="number"),
+    "Sat": InputBox(None, text="", multiline=False, fontsize=0.045, box_type="number"),
+    "Sun": InputBox(None, text="", multiline=False, fontsize=0.045, box_type="number"),
+    "short": InputBox(None, text="", multiline=False, fontsize=0.045, box_type="number"),
+    "half": InputBox(None, text="", multiline=False, fontsize=0.045, box_type="number"),
+    "full": InputBox(None, text="", multiline=False, fontsize=0.045, box_type="number"),
+    "time_per_spoon": InputBox(None, text="", multiline=False, fontsize=0.045, box_type="number"),
+}
+
+folders_input_boxes = {
+    "folder_one": InputBox(None, text="", multiline=False, fontsize=0.05, box_type="text"),
+    "folder_two": InputBox(None, text="", multiline=False, fontsize=0.05, box_type="text"),
+    "folder_three": InputBox(None, text="", multiline=False, fontsize=0.05, box_type="text"),
+    "folder_four": InputBox(None, text="", multiline=False, fontsize=0.05, box_type="text"),
+    "folder_five": InputBox(None, text="", multiline=False, fontsize=0.05, box_type="text"),
+    "folder_six": InputBox(None, text="", multiline=False, fontsize=0.05, box_type="text"),
+    "folder_one_days": InputBox(None, text="", multiline=False, fontsize=0.05, box_type="number"),
+    "folder_two_days": InputBox(None, text="", multiline=False, fontsize=0.05, box_type="number"),
+    "folder_three_days": InputBox(None, text="", multiline=False, fontsize=0.05, box_type="number"),
+    "folder_four_days": InputBox(None, text="", multiline=False, fontsize=0.05, box_type="number"),
+    "folder_five_days": InputBox(None, text="", multiline=False, fontsize=0.05, box_type="number"),
+    "folder_six_days": InputBox(None, text="", multiline=False, fontsize=0.05, box_type="number"),
+}
+
 
 _logout_rect = None
 
@@ -53,6 +89,28 @@ _folders_rect = None
 _sound_rect = None
 _spoons_debt_rect = None
 _spoons_debt_cons_rect = None
+
+def get_image_brightness_color(image_surface):
+    width = image_surface.get_width()
+    height = image_surface.get_height()
+
+    step = 10  # sample ~1% of pixels
+    total_lum = 0
+    count = 0
+
+    w_r = 0.2126
+    w_g = 0.7152
+    w_b = 0.0722
+
+    for x in range(0, width, step):
+        for y in range(0, height, step):
+            r, g, b, _ = image_surface.get_at((x, y))
+            total_lum += (w_r*r + w_g*g + w_b*b)
+            count += 1
+
+    avg = total_lum / count
+
+    return [BLACK,DARK_SLATE_GRAY] if avg > 60 else [WHITE,LIGHT_GRAY] #type: ignore
 
 def _start_upload_thread():
     def _worker():
@@ -98,19 +156,20 @@ _active_settings_tab = "account"  # default tab
 
 def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, icon_image, manillaFolder_name, rest_spoons, time_per_spoon, v_number, reference_version, folder_days_ahead, *inventory_args):
     """
-    Draws the Settings screen, which now contains two tabs:
-    'Graphics Settings' (shows Inventory UI)
-    'Account Settings' (shows current Settings UI)
+    Draws the Settings screen.
+    Uses:
+    - spoons_input_boxes for Spoons tab inputs
+    - folders_input_boxes for Folders tab inputs
     """
     sw, sh = screen.get_size()
-    
-    day_font = pygame.font.Font("fonts/Stardew_Valley.ttf",  int(sh * 0.045))
+    day_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(sh * 0.045))
     global _logout_rect, _upload_rect, _upload_pos, _download_rect, _download_pos, _auto_rect, _social_rect
-    global _active_settings_tab
+    global _active_settings_tab, _graphics_rect, _account_rect, _spoons_rect, _extensions_rect, _folders_rect, _sound_rect
+    global _spoons_debt_rect, _spoons_debt_cons_rect
+    global folder_days_rects
+    global spoons_input_boxes, folders_input_boxes
 
     spoon_name_input, inventory_tab, background_color, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open = inventory_args
-
-    sw, sh = screen.get_size()
 
     # --- Tab buttons ---
     tab_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(sh * 0.060))
@@ -118,39 +177,35 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
     btn_h = 45
     top_y = int(sh * 0.05)
 
-    # Tabs: Folders | Account | Customization | Spoons | Extensions
+    # Legacy rects (for click regions)
     total_tabs = 5
     total_width = total_tabs * btn_w + (total_tabs - 1)
-    start_x = (sw - total_width) // 2 + 25  # perfectly center all buttons
+    start_x_legacy = (sw - total_width) // 2 + 25
 
-    account_rect      = pygame.Rect(start_x + (btn_w) * 0, top_y, btn_w, btn_h)
-    graphics_rect     = pygame.Rect(start_x + (btn_w) * 1, top_y, btn_w, btn_h)
-    spoons_rect       = pygame.Rect(start_x + (btn_w) * 2, top_y, btn_w, btn_h)
-    folders_rect      = pygame.Rect(start_x + (btn_w) * 3, top_y, btn_w, btn_h)
-    extensions_rect   = pygame.Rect(start_x + (btn_w) * 4, top_y, btn_w, btn_h)
+    account_rect = pygame.Rect(start_x_legacy + (btn_w) * 0, top_y, btn_w, btn_h)
+    graphics_rect = pygame.Rect(start_x_legacy + (btn_w) * 1, top_y, btn_w, btn_h)
+    spoons_rect = pygame.Rect(start_x_legacy + (btn_w) * 2, top_y, btn_w, btn_h)
+    folders_rect = pygame.Rect(start_x_legacy + (btn_w) * 3, top_y, btn_w, btn_h)
+    extensions_rect = pygame.Rect(start_x_legacy + (btn_w) * 4, top_y, btn_w, btn_h)
     sound_button_rect = pygame.Rect(sw - 80, 20, 60, 60)
 
-    # --- Tab Buttons (fixed spacing version) ---
+    # --- Tab Labels with dynamic spacing ---
     tab_labels = ["Account", "Customization", "Spoons", "Folders", "Extensions"]
     start_x, end_x = 150, 850
     y_center = top_y + btn_h // 2
 
-    # Measure widths of all labels
     text_widths = [tab_font.size(t)[0] for t in tab_labels]
     total_text_width = sum(text_widths)
     space = (end_x - start_x - total_text_width) / (len(tab_labels) - 1)
 
-    # Compute positions and rects dynamically
     tab_positions = []
     cur_x = start_x
     for width in text_widths:
         tab_positions.append(cur_x)
         cur_x += width + space
 
-    for i, (text, x_pos) in enumerate(zip(tab_labels, tab_positions)):
-        active = _active_settings_tab == text.lower() or (
-            text == "Customization" and _active_settings_tab == "graphics"
-        )
+    for text, x_pos in zip(tab_labels, tab_positions):
+        active = _active_settings_tab == text.lower() or (text == "Customization" and _active_settings_tab == "graphics")
         color = (0, 0, 0) if active else (40, 40, 40)
         label = tab_font.render(text, True, color)
         screen.blit(label, (x_pos, y_center - label.get_height() // 2))
@@ -162,8 +217,6 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
         redx = pygame.transform.smoothscale(floppy_disk_redx, (sx, sy))
         screen.blit(redx, sound_button_rect)
 
-    # Store rects for click logic
-    global _graphics_rect, _account_rect, _spoons_rect, _extensions_rect, _folders_rect, _sound_rect
     _graphics_rect = graphics_rect
     _account_rect = account_rect
     _spoons_rect = spoons_rect
@@ -172,7 +225,7 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
     _sound_rect = sound_button_rect
 
     # --- Separator line below tabs ---
-    pygame.draw.line(screen, (0, 0, 0), (int(sw*0.14), top_y + btn_h), (int(sw*0.90), top_y + btn_h), 4)
+    pygame.draw.line(screen, (0, 0, 0), (int(sw * 0.14), top_y + btn_h), (int(sw * 0.90), top_y + btn_h), 4)
 
     left_x = 575
     text_x = 150
@@ -184,39 +237,33 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
     # --- Active tab content ---
     if _active_settings_tab == "graphics":
         if inventory_args:
-            # inventory_args begins with: spoon_name_input, inventory_tab, background_color, folder_one.., folders_dropdown_open
             draw_inventory(screen, icon_image, manillaFolder_name, input_active, *inventory_args)
-    elif _active_settings_tab == "account":
 
-        # draw account settings (existing content)
-        # reuse your original UI section
+    elif _active_settings_tab == "account":
         username = get_current_user() or "(not signed in)"
         logged_in = username != "(not signed in)"
-        user_surf = font.render(f"Signed in as: {username}", True, WHITE) # type: ignore
-        screen.blit(user_surf, (text_x, start_y + gap_y*4))
+        user_surf = font.render(f"Signed in as: {username}", True, WHITE)  # type: ignore
+        screen.blit(user_surf, (text_x, start_y + gap_y * 4))
 
-        # --- VERSION CHECK BUTTON ---
         if v_number > reference_version:
             msg = f"Update available! {reference_version} > {v_number}"
         elif v_number < reference_version:
             msg = "Version mismatch (dev)"
         else:
             msg = f"Version {v_number}: Up to date!"
-        label = font.render("Open GitHub Repo", True, WHITE) # type: ignore
-        sub = small_font.render(msg, True, GRAY) # type: ignore
+        label = font.render("Open GitHub Repo", True, WHITE)  # type: ignore
+        sub = small_font.render(msg, True, GRAY)  # type: ignore
         screen.blit(label, (text_x, start_y + gap_y * 3))
         screen.blit(sub, (text_x, start_y + 28 + gap_y * 3))
 
-        # --- GITHUB BUTTON ---
-        git_btn = pygame.Rect(left_x, start_y + gap_y*3, 45, 45)
-        pygame.draw.rect(screen, (70,130,180), git_btn, border_radius=8)
-        screen.blit(toggleButtons['openLinkIcon'], (git_btn.x + 5, git_btn.y + 5))
+        git_btn = pygame.Rect(left_x, start_y + gap_y * 3, 45, 45)
+        pygame.draw.rect(screen, (70, 130, 180), git_btn, border_radius=8)
+        screen.blit(toggleButtons["openLinkIcon"], (git_btn.x + 5, git_btn.y + 5))
         global _git_rect
         _git_rect = git_btn
 
-        # Log out / Log in button
-        btn_w, btn_h = int(sw * 0.25), int(sh * 0.10)
-        _logout_rect = pygame.Rect(text_x,start_y + gap_y*4 + 45, btn_w, btn_h)
+        btn_w2, btn_h2 = int(sw * 0.25), int(sh * 0.10)
+        _logout_rect = pygame.Rect(text_x, start_y + gap_y * 4 + 45, btn_w2, btn_h2)
         if username == "(not signed in)":
             pygame.draw.rect(screen, (70, 200, 70), _logout_rect, border_radius=16)
             label = font.render("Log In", True, (255, 255, 255))
@@ -225,12 +272,11 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
             label = font.render("Log out", True, (255, 255, 255))
         screen.blit(label, (_logout_rect.centerx - label.get_width() // 2, _logout_rect.centery - label.get_height() // 2))
 
-        # Toggle: Auto-download at startup
-        label = font.render("Auto-Sync", True, WHITE) # type: ignore
+        label = font.render("Auto-Sync", True, WHITE)  # type: ignore
         screen.blit(label, (text_x, start_y))
-        sub = small_font.render("Automatically syncs data from other devices", True, GRAY) # type: ignore
+        sub = small_font.render("Automatically syncs data from other devices", True, GRAY)  # type: ignore
         screen.blit(sub, (text_x, start_y + 28))
-        
+
         _auto_rect = pygame.Rect(left_x, start_y, box_size, box_size)
         pygame.draw.rect(screen, (180, 180, 180), _auto_rect, width=3, border_radius=6)
         inner = pygame.Rect(_auto_rect.x, _auto_rect.y, _auto_rect.w, _auto_rect.h)
@@ -241,86 +287,82 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
             rx = pygame.transform.smoothscale(floppy_disk_redx, (inner.w, inner.h))
             screen.blit(rx, inner.topleft)
 
-        # Upload & download floppies (as before)
         dw, dh = floppy_disk_download.get_size()
-        redx_overlay = pygame.transform.scale(floppy_disk_redx, (dw*scale, dh*scale))
-        label = font.render("Upload", True, WHITE) # type: ignore
+        redx_overlay = pygame.transform.scale(floppy_disk_redx, (dw * scale, dh * scale))
+        label = font.render("Upload", True, WHITE)  # type: ignore
         screen.blit(label, (text_x, start_y + gap_y))
-        sub = small_font.render("Saves your progress to the cloud", True, GRAY) # type: ignore
+        sub = small_font.render("Saves your progress to the cloud", True, GRAY)  # type: ignore
         screen.blit(sub, (text_x, start_y + gap_y + 28))
 
         _upload_pos = (left_x, start_y + gap_y)
         uw, uh = floppy_disk_upload.get_size()
-        floppy_disk_upload_small = pygame.transform.scale(floppy_disk_upload, (uw*scale, uh*scale))
+        floppy_disk_upload_small = pygame.transform.scale(floppy_disk_upload, (uw * scale, uh * scale))
         screen.blit(floppy_disk_upload_small, _upload_pos)
         if not logged_in:
-            #draw red x
             screen.blit(redx_overlay, _upload_pos)
-        _upload_rect = pygame.Rect(_upload_pos[0], _upload_pos[1], uw*scale, uh*scale)
+        _upload_rect = pygame.Rect(_upload_pos[0], _upload_pos[1], uw * scale, uh * scale)
 
-        label = font.render("Download", True, WHITE) # type: ignore
-        screen.blit(label, (text_x, start_y + gap_y*2))
-        sub = small_font.render("Retrieves your saved progress from the cloud", True, GRAY) # type: ignore
-        screen.blit(sub, (text_x, start_y + gap_y*2 + 28))
+        label = font.render("Download", True, WHITE)  # type: ignore
+        screen.blit(label, (text_x, start_y + gap_y * 2))
+        sub = small_font.render("Retrieves your saved progress from the cloud", True, GRAY)  # type: ignore
+        screen.blit(sub, (text_x, start_y + gap_y * 2 + 28))
 
         _download_pos = (left_x, start_y + gap_y * 2)
-        floppy_disk_download_small = pygame.transform.scale(floppy_disk_download, (dw*scale, dh*scale))
+        floppy_disk_download_small = pygame.transform.scale(floppy_disk_download, (dw * scale, dh * scale))
         screen.blit(floppy_disk_download_small, _download_pos)
         if not logged_in:
-            #draw red x
             screen.blit(redx_overlay, _download_pos)
-        _download_rect = pygame.Rect(_download_pos[0], _download_pos[1], dw*scale, dh*scale)
-
+        _download_rect = pygame.Rect(_download_pos[0], _download_pos[1], dw * scale, dh * scale)
 
         now = pygame.time.get_ticks()
         if _upload_state["uploading"]:
             _update_upload_anim(now)
-            dw, dh = floppy_disk_dots.get_size()
-            third = dw // 3
+            dw2, dh2 = floppy_disk_dots.get_size()
+            third = dw2 // 3
             x0, y0 = _upload_pos
             x0 = x0 - 5
             visible_count = 0 if _upload_state["anim_step"] == 3 else (_upload_state["anim_step"] + 1)
             if visible_count >= 1:
-                screen.blit(floppy_disk_dots.subsurface(pygame.Rect(0, 0, third, dh)), (x0, y0))
+                screen.blit(floppy_disk_dots.subsurface(pygame.Rect(0, 0, third, dh2)), (x0, y0))
             if visible_count >= 2:
-                screen.blit(floppy_disk_dots.subsurface(pygame.Rect(third, 0, third, dh)), (x0 + third, y0))
+                screen.blit(floppy_disk_dots.subsurface(pygame.Rect(third, 0, third, dh2)), (x0 + third, y0))
             if visible_count >= 3:
-                screen.blit(floppy_disk_dots.subsurface(pygame.Rect(third * 2, 0, third, dh)), (x0 + third * 2, y0))
+                screen.blit(floppy_disk_dots.subsurface(pygame.Rect(third * 2, 0, third, dh2)), (x0 + third * 2, y0))
         elif _upload_state["done"]:
             _draw_result_overlay(screen, _upload_state["ok"], _upload_pos, "upload")
 
         if _download_state["done"]:
             _draw_result_overlay(screen, _download_state["ok"], _download_pos, "download")
 
-        if _download_state["done"]:
-            _draw_result_overlay(screen, _download_state["ok"], _download_pos, "download")
-    
     elif _active_settings_tab == "spoons":
-        global _spoons_debt_rect, _spoons_debt_cons_rect
         sw, sh = screen.get_size()
         input_gap_x = 10
         font_color = (255, 255, 255)
         sub_color = (180, 180, 180)
 
-        # === DAILY WAKE-UP SPOONS ===
+        # DAILY WAKE-UP SPOONS
         title = font.render("Daily Wake-up Spoons", True, font_color)
         screen.blit(title, (text_x, start_y))
         sub = small_font.render("Set how many spoons you wake up with", True, sub_color)
         screen.blit(sub, (text_x, start_y + 28))
 
-        # Daily input boxes
         dy = start_y
         box_w, box_h = int(sw * 0.04), 30
+
         for i, day in enumerate(days):
             label = day_font.render(f"{day}:", True, font_color)
             lx = left_x + i * (box_w + input_gap_x)
             screen.blit(label, (lx, dy))
             input_rect = pygame.Rect(left_x + i * (box_w + input_gap_x), dy + 27, box_w, box_h)
-            value = str(daily_spoons.get(day, ""))
-            active = input_active == day
-            draw_input_box(screen, input_rect, active, value, LIGHT_GRAY, DARK_SLATE_GRAY, True, background_color, "light", 9, 0.045)  # type: ignore
+            box = spoons_input_boxes[day]
+            box.rect = input_rect
+            if not box.initialized:
+                box.text = str(daily_spoons.get(day, 0))
+                box.initialized = True
+            box.active = (input_active == day)
+            draw_input_box(screen, box, LIGHT_GRAY, DARK_SLATE_GRAY, background_color=background_color, infill="light")  # type: ignore
 
-        # === REST SPOONS SECTION ===
+        # REST SPOONS
         rest_y = dy + 65
         title = font.render("Rest Spoons", True, font_color)
         screen.blit(title, (text_x, rest_y))
@@ -328,33 +370,42 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
         screen.blit(sub, (text_x, rest_y + 28))
 
         rest_labels = ["Short Rest", "Half Rest", "Full Rest"]
+        rest_keys = ["short", "half", "full"]
         rest_y += 5
         rest_box_w = int(sw * 0.08)
         rest_gap = 40
-        # === REST SPOONS INPUTS ===
-        for i, key in enumerate(["short", "half", "full"]):
+
+        for i, key in enumerate(rest_keys):
             r_label = rest_labels[i]
             lx = left_x + i * (rest_box_w + rest_gap)
             label = day_font.render(r_label, True, font_color)
             screen.blit(label, (lx, rest_y))
             input_rect = pygame.Rect(lx, rest_y + 27, rest_box_w, box_h)
-            value = str(rest_spoons.get(key, 0))
-            active = input_active == key
-            draw_input_box(screen, input_rect, active, value, LIGHT_GRAY, DARK_SLATE_GRAY, True, background_color, "light", 9, 0.045)   # type: ignore
+            box = spoons_input_boxes[key]
+            box.rect = input_rect
+            if not box.initialized:
+                box.text = str(rest_spoons.get(key, 0))
+                box.initialized = True
+            box.active = (input_active == key)
+            draw_input_box(screen, box, LIGHT_GRAY, DARK_SLATE_GRAY, background_color=background_color, infill="light")  # type: ignore
 
-        # === TIME PER SPOON SECTION ===
+        # TIME PER SPOON
         tps_y = rest_y + 65
         label = font.render("Time per Spoon", True, font_color)
         sub = small_font.render("Spoon to minute ratio (used in timers)", True, sub_color)
         input_w = int(sw * 0.08)
         input_rect = pygame.Rect(left_x, tps_y + 20, input_w, box_h)
-        value = str(time_per_spoon)
-        active = input_active == "time_per_spoon"
-        draw_input_box(screen, input_rect, active, value, LIGHT_GRAY, DARK_SLATE_GRAY, True, background_color, "light", 9, 0.045)  # type: ignore
+        box = spoons_input_boxes["time_per_spoon"]
+        box.rect = input_rect
+        if not box.initialized:
+            box.text = str(time_per_spoon)
+            box.initialized = True
+        box.active = (input_active == "time_per_spoon")
+        draw_input_box(screen, box, LIGHT_GRAY, DARK_SLATE_GRAY, background_color=background_color, infill="light")  # type: ignore
         screen.blit(label, (text_x, tps_y))
         screen.blit(sub, (text_x, tps_y + 28))
 
-        # === ENABLE SPOONS DEBT ===
+        # ENABLE SPOONS DEBT
         debt_y = tps_y + gap_y
         debt_label = font.render("Enable Spoons Debt", True, font_color)
         sub = small_font.render("Allows your spoons to go negative", True, sub_color)
@@ -369,7 +420,7 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
             rx = pygame.transform.smoothscale(floppy_disk_redx, (box_size, box_size))
             screen.blit(rx, _spoons_debt_rect.topleft)
 
-        # === SPOONS DEBT CONSEQUENCES ===
+        # SPOONS DEBT CONSEQUENCES
         cons_y = debt_y + gap_y
         cons_label = font.render("Spoons Debt Consequences", True, font_color)
         sub = small_font.render("Negative spoons roll over to next day", True, sub_color)
@@ -386,12 +437,12 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
 
     elif _active_settings_tab == "extensions":
         global _social_rect, _forks_rect, _knives_rect
-        label = font.render("Social Features", True, WHITE) # type: ignore
-        sub = small_font.render("Enable leaderboards and friend stats", True, GRAY) # type: ignore
+        label = font.render("Social Features", True, WHITE)  # type: ignore
+        sub = small_font.render("Enable leaderboards and friend stats", True, GRAY)  # type: ignore
         screen.blit(label, (text_x, start_y))
         screen.blit(sub, (text_x, start_y + 28))
         _social_rect = pygame.Rect(left_x, start_y, box_size, box_size)
-        pygame.draw.rect(screen, (180,180,180), _social_rect, width=3, border_radius=6)
+        pygame.draw.rect(screen, (180, 180, 180), _social_rect, width=3, border_radius=6)
         if get_social_enabled_flag():
             chk = pygame.transform.smoothscale(floppy_disk_checkmark, (box_size, box_size))
             screen.blit(chk, _social_rect.topleft)
@@ -399,32 +450,29 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
             rx = pygame.transform.smoothscale(floppy_disk_redx, (box_size, box_size))
             screen.blit(rx, _social_rect.topleft)
 
-        # --- Forks toggle ---
         f_y = start_y + gap_y
-        label = font.render("Forks Extension", True, WHITE) # type: ignore
-        sub = small_font.render("Enable shopping list extension", True, GRAY) # type: ignore
+        label = font.render("Forks Extension", True, WHITE)  # type: ignore
+        sub = small_font.render("Enable shopping list extension", True, GRAY)  # type: ignore
         screen.blit(label, (text_x, f_y))
         screen.blit(sub, (text_x, f_y + 28))
         _forks_rect = pygame.Rect(left_x, f_y, box_size, box_size)
-        pygame.draw.rect(screen, (180,180,180), _forks_rect, width=3, border_radius=6)
+        pygame.draw.rect(screen, (180, 180, 180), _forks_rect, width=3, border_radius=6)
 
-        # --- Knives toggle ---
         k_y = f_y + gap_y
-        label = font.render("Knives Extension", True, WHITE) # type: ignore
-        sub = small_font.render("Enable workout tracker extension", True, GRAY) # type: ignore
+        label = font.render("Knives Extension", True, WHITE)  # type: ignore
+        sub = small_font.render("Enable workout tracker extension", True, GRAY)  # type: ignore
         screen.blit(label, (text_x, k_y))
         screen.blit(sub, (text_x, k_y + 28))
         _knives_rect = pygame.Rect(left_x, k_y, box_size, box_size)
-        pygame.draw.rect(screen, (180,180,180), _knives_rect, width=3, border_radius=6)
+        pygame.draw.rect(screen, (180, 180, 180), _knives_rect, width=3, border_radius=6)
 
     elif _active_settings_tab == "folders":
         sw, sh = screen.get_size()
         font_color = (255, 255, 255)
-        sub_color = (180, 180, 180)
         box_w, box_h = 180, 40
         gap_y_small = 55
-        days_box_size = 40  # square box width/height
-        days_box_gap = 120   # spacing between folder box and days box
+        days_box_size = 40
+        days_box_gap = 120
 
         labels = [
             ("Folder 1", folder_one),
@@ -435,42 +483,57 @@ def draw_settings(screen, font, daily_spoons, input_active, sound_toggle, spoons
             ("Folder 6", folder_six),
         ]
 
-        # FOLDER NAMES (editable)
         title = font.render("Folder Name      Summary Days Ahead", True, font_color)
         screen.blit(title, (text_x, start_y))
 
-        global folder_days_rects
         folder_days_rects = []
+
+        base_keys = ["folder_one", "folder_two", "folder_three", "folder_four", "folder_five", "folder_six"]
 
         for i, (label_text, folder_val) in enumerate(labels):
             y = start_y + 40 + i * gap_y_small
+            base_key = base_keys[i]
 
-            # Folder name input box
             folder_rect = pygame.Rect(text_x, y, box_w, box_h)
-            base_key = ["folder_one","folder_two","folder_three","folder_four","folder_five","folder_six"][i]
-            active = input_active == base_key
-            draw_input_box(screen, folder_rect, active, folder_val, LIGHT_GRAY, DARK_SLATE_GRAY, False, background_color, "light", 5) #type: ignore
+            name_box = folders_input_boxes[base_key]
+            name_box.rect = folder_rect
+            if not name_box.initialized:
+                name_box.text = str(folder_val)
+                name_box.initialized = True
+            name_box.active = (input_active == base_key)
+            draw_input_box(screen, name_box, LIGHT_GRAY, DARK_SLATE_GRAY, background_color=background_color, infill="light")  # type: ignore
 
-            # Days-ahead input box (square)
             days_rect = pygame.Rect(text_x + box_w + days_box_gap, y, days_box_size, days_box_size)
             folder_days_rects.append(days_rect)
-            # per-folder window comes from folder_days_ahead dict using "folder_one"... keys
-            base_key = ["folder_one","folder_two","folder_three","folder_four","folder_five","folder_six"][i]
-            days_value = str(folder_days_ahead.get(base_key, 7))
-            active_days = input_active == f"{base_key}_days"
+            days_key = f"{base_key}_days"
+            days_box = folders_input_boxes[days_key]
+            days_box.rect = days_rect
+            if not days_box.initialized:
+                days_box.text = str(folder_days_ahead.get(base_key, 7))
+                days_box.initialized = True
+            days_box.active = (input_active == f"{base_key}_days")
+            draw_input_box(screen, days_box, LIGHT_GRAY, DARK_SLATE_GRAY, background_color=background_color, infill="light")  # type: ignore
 
-            draw_input_box(screen, days_rect, active_days, days_value, LIGHT_GRAY, DARK_SLATE_GRAY, True, background_color, "light", 5) #type: ignore
-
-
-def logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, folder_days_ahead, *inventory_args):
-    """Handles tab switching and normal settings logic."""
+def logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, folder_days_ahead, manilla_folder_text_color, *inventory_args):
+    """Handles tab switching and settings logic, using InputBox registries for Spoons and Folders tabs."""
     global _active_settings_tab
-
+    global spoons_input_boxes, folders_input_boxes
     sh, sw = pygame.display.get_surface().get_size()
 
     updated = list(inventory_args)
 
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+        # let input boxes detect clicks for focusing/defocusing
+        if _active_settings_tab == "spoons":
+            for box in spoons_input_boxes.values():
+                logic_input_box(event, box, pygame.display.get_surface())
+                input_active = None
+
+        elif _active_settings_tab == "folders":
+            for box in folders_input_boxes.values():
+                logic_input_box(event, box, pygame.display.get_surface())
+                input_active = None
+
         # --- Tab clicks ---
         if _graphics_rect and _graphics_rect.collidepoint(event.pos):
             _active_settings_tab = "graphics"
@@ -483,50 +546,53 @@ def logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons
         if _extensions_rect and _extensions_rect.collidepoint(event.pos):
             _active_settings_tab = "extensions"
 
-                # --- Folders tab input focus (names + days-ahead) ---
+        # --- Folders tab input focus (names + days-ahead) ---
         if _active_settings_tab == "folders":
-            # geometry now matches the new draw_settings positions
             sw, sh = pygame.display.get_surface().get_size()
             text_x = 150
             start_y = int(sh * 0.18)
             box_w, box_h = 180, 40
             gap_y_small = 55
             days_box_size = 40
-            days_box_gap = 120  # matches draw_settings alignment
+            days_box_gap = 120
 
-            # Folder name input boxes (left side)
             name_rects = []
             for i in range(6):
                 y = start_y + 40 + i * gap_y_small
                 name_rects.append(pygame.Rect(text_x, y, box_w, box_h))
 
-
-            # Days inputs (use same rects list built in draw_settings)
-            # folder_days_rects is filled each frame in draw_settings; ensure it exists
             try:
                 _ = folder_days_rects
             except NameError:
-                # if not yet defined, construct quickly so we still can focus
-                folder_days_rects = [pygame.Rect(text_x + box_w + days_box_gap,
-                                                 start_y + 40 + i * gap_y_small,
-                                                 days_box_size, days_box_size) for i in range(6)]
+                # fallback if draw_settings hasn't filled them yet
+                folder_days_rects_local = []
+                for i in range(6):
+                    y = start_y + 40 + i * gap_y_small
+                    folder_days_rects_local.append(pygame.Rect(text_x + box_w + days_box_gap, y, days_box_size, days_box_size))
+                globals()["folder_days_rects"] = folder_days_rects_local
+            folder_keys = ["folder_one", "folder_two", "folder_three", "folder_four", "folder_five", "folder_six"]
 
-            # Name inputs
-            folder_keys = ["folder_one","folder_two","folder_three","folder_four","folder_five","folder_six"]
+            clicked_any = False
             for i, r in enumerate(name_rects):
                 if r.collidepoint(event.pos):
                     input_active = folder_keys[i]
-                    return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle,
-                            spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, folder_days_ahead, *updated)
+                    for k, box in folders_input_boxes.items():
+                        box.active = (k == input_active)
+                    clicked_any = True
+                    break
 
-            # Days inputs
-            for i, r in enumerate(folder_days_rects):
-                if r.collidepoint(event.pos):
-                    input_active = f"{folder_keys[i]}_days"
-                    return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, folder_days_ahead, *updated)
+            if not clicked_any:
+                for i, r in enumerate(folder_days_rects):
+                    if r.collidepoint(event.pos):
+                        input_active = f"{folder_keys[i]}_days"
+                        for k, box in folders_input_boxes.items():
+                            box.active = (k == input_active)
+                        clicked_any = True
+                        break
 
+            if clicked_any:
+                return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, folder_days_ahead, manilla_folder_text_color, *updated)
 
-        
         # --- Global Sound toggle ---
         if _sound_rect and _sound_rect.collidepoint(event.pos):
             sound_toggle = not sound_toggle
@@ -536,14 +602,14 @@ def logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons
         logged_in = username != "(not signed in)"
         if _active_settings_tab == "account":
             if not logged_in:
-                set_auto_download_flag(False)  # disable auto-download if not logged in
+                set_auto_download_flag(False)
             if _auto_rect and _auto_rect.collidepoint(event.pos) and logged_in:
                 new_val = not get_auto_download_flag()
                 set_auto_download_flag(new_val)
 
             if _logout_rect and _logout_rect.collidepoint(event.pos):
                 clear_credentials()
-                return ("login", daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, folder_days_ahead, *updated)
+                return ("login", daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, folder_days_ahead, manilla_folder_text_color, *updated)
 
             if _upload_rect and _upload_rect.collidepoint(event.pos) and not _upload_state["uploading"] and logged_in:
                 _upload_state["uploading"] = True
@@ -561,7 +627,7 @@ def logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons
                 _download_state["done_started_at"] = None
                 from copyparty_sync import download_data_json_if_present
                 download_data_json_if_present()
-                _download_state["trigger_download"] = True  # just a flag
+                _download_state["trigger_download"] = True
 
             if _git_rect and _git_rect.collidepoint(event.pos):
                 import webbrowser
@@ -570,57 +636,61 @@ def logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons
                 except Exception as e:
                     print(f"Could not open web browser: {e}")
 
-        # Always pass events to the inventory logic when the Graphics tab is active,
+        # Inventory logic on Graphics tab
         if _active_settings_tab == "graphics" and inventory_args:
-            input_active, *updated = logic_inventory(event, input_active, *inventory_args)
+            input_active, manilla_folder_text_color, *updated = logic_inventory(event, input_active, manilla_folder_text_color, *inventory_args)
 
-            
-        # --- Spoons tab toggles ---
+        # --- Spoons tab toggles + focus ---
         if _active_settings_tab == "spoons":
+            clicked_any = False
+            # toggles
             if _spoons_debt_rect and _spoons_debt_rect.collidepoint(event.pos):
                 spoons_debt_toggle = not spoons_debt_toggle
-
+                clicked_any = True
             if _spoons_debt_cons_rect and _spoons_debt_cons_rect.collidepoint(event.pos):
                 spoons_debt_consequences_toggle = not spoons_debt_consequences_toggle
+                clicked_any = True
 
-                    # --- Spoons tab daily input box logic ---
-        if _active_settings_tab == "spoons":
+            # daily / rest / time inputs (rects must match draw_settings)
             sw, sh = pygame.display.get_surface().get_size()
             text_x = 150
             left_x = 575
-            dy = int(sh * .21)
+            dy = int(sh * 0.18)
             box_w, box_h = int(sw * 0.04), 30
             input_gap_x = 10
-            font_color = (255, 255, 255)
-            sub_color = (180, 180, 180)
 
-            # --- Daily spoon input clicks (matches draw layout) ---
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                for i, day in enumerate(days):
-                    rect = pygame.Rect(left_x + i * (box_w + input_gap_x), dy + 27, box_w, box_h)
-                    if rect.collidepoint(event.pos):
-                        input_active = day
-                        return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, folder_days_ahead, *updated)
-                input_active = ""
+            # daily
+            for i, day in enumerate(days):
+                rect = pygame.Rect(left_x + i * (box_w + input_gap_x), dy + 27, box_w, box_h)
+                if rect.collidepoint(event.pos):
+                    input_active = day
+                    for k, box in spoons_input_boxes.items():
+                        box.active = (k == input_active)
+                    return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, folder_days_ahead, manilla_folder_text_color, *updated)
 
-                # --- Rest spoon input clicks (matches draw positions) ---
-                rest_y = dy + 65 + 5
-                rest_box_w = int(sw * 0.08)
-                rest_gap = 40
-                for i, key in enumerate(["short", "half", "full"]):
-                    lx = left_x + i * (rest_box_w + rest_gap)
-                    rect = pygame.Rect(lx, rest_y + 27, rest_box_w, box_h)
-                    if rect.collidepoint(event.pos):
-                        input_active = key
-                        return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, folder_days_ahead, *updated)
+            # rest
+            rest_y = dy + 65 + 5
+            rest_box_w = int(sw * 0.08)
+            rest_gap = 40
+            for i, key in enumerate(["short", "half", "full"]):
+                lx = left_x + i * (rest_box_w + rest_gap)
+                rect = pygame.Rect(lx, rest_y + 27, rest_box_w, box_h)
+                if rect.collidepoint(event.pos):
+                    input_active = key
+                    for k, box in spoons_input_boxes.items():
+                        box.active = (k == input_active)
+                    return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, folder_days_ahead, manilla_folder_text_color, *updated)
 
-                # --- Time per spoon input click (matches draw layout) ---
-                tps_y = rest_y + 65
-                input_w = int(sw * 0.08)
-                rect_tps = pygame.Rect(left_x, tps_y + 20, input_w, box_h)
-                if rect_tps.collidepoint(event.pos):
-                    input_active = "time_per_spoon"
-                    return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, folder_days_ahead, *updated)
+            # time per spoon
+            tps_y = rest_y + 65
+            input_w = int(sw * 0.08)
+            rect_tps = pygame.Rect(left_x, tps_y + 20, input_w, box_h)
+            if rect_tps.collidepoint(event.pos):
+                input_active = "time_per_spoon"
+                for k, box in spoons_input_boxes.items():
+                    box.active = (k == input_active)
+                return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, folder_days_ahead, manilla_folder_text_color, *updated)
+
         if _active_settings_tab == "extensions":
             if _social_rect and _social_rect.collidepoint(event.pos):
                 new_val = not get_social_enabled_flag()
@@ -630,60 +700,38 @@ def logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons
             if _knives_rect and _knives_rect.collidepoint(event.pos):
                 print("Knives toggle clicked (not implemented)")
 
-
-    # --- Handle all typing centrally ---
     elif event.type == pygame.KEYDOWN:
-        # 1) If editing a day input
-        if input_active in days:
-            current_val = str(daily_spoons.get(input_active, ""))
-            if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                input_active = ""
-            elif event.key == pygame.K_BACKSPACE:
-                current_val = current_val[:-1]
-            elif event.unicode.isdigit() and len(current_val) < 2:
-                current_val += event.unicode
-            daily_spoons[input_active] = int(current_val) if current_val else 0
-        
-        # 1.5) Editing Rest Spoon values
-        elif input_active in ("short", "half", "full"):
-            current_val = str(rest_spoons.get(input_active, ""))
-            if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                input_active = ""
-            elif event.key == pygame.K_BACKSPACE:
-                current_val = current_val[:-1]
-            elif event.unicode.isdigit() and len(current_val) < 3:
-                current_val += event.unicode
-            rest_spoons[input_active] = int(current_val) if current_val else 0
+        # Route typing into InputBoxes and then sync back to settings data
+        surf = pygame.display.get_surface()
 
-        # 1.6) Editing Time per Spoon (integer only, min enforced on confirm)
-        elif input_active == "time_per_spoon":
-            current_val = str(time_per_spoon)
+        if _active_settings_tab == "spoons":
+            # Let InputBoxes update their text
+            for box in spoons_input_boxes.values():
+                logic_input_box(event, box, surf)
 
-            if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                # finalize value when pressing Enter
-                if not current_val or int(current_val) < 1:
-                    time_per_spoon = 1
-                else:
-                    time_per_spoon = int(current_val)
-                input_active = ""
+            # Sync daily spoons
+            for day in days:
+                txt = (spoons_input_boxes[day].text or "").strip()
+                if txt.isdigit():
+                    daily_spoons[day] = int(txt)
+                elif txt == "":
+                    daily_spoons[day] = 0
 
-            elif event.key == pygame.K_BACKSPACE:
-                current_val = current_val[:-1]
-                time_per_spoon = int(current_val) if current_val.isdigit() else 0
+            # Sync rest spoons
+            for key in ("short", "half", "full"):
+                txt = (spoons_input_boxes[key].text or "").strip()
+                if txt.isdigit():
+                    rest_spoons[key] = int(txt)
 
-            elif event.unicode.isdigit() and len(current_val) < 3:
-                current_val += event.unicode
-                time_per_spoon = int(current_val)
+            # Sync time_per_spoon (min 1)
+            txt = (spoons_input_boxes["time_per_spoon"].text or "").strip()
+            if txt.isdigit():
+                val = int(txt)
+                time_per_spoon = max(1, val)
 
-            # prevent invalid input (non-digits)
-            elif event.unicode not in ("\r", "\n", ""):
-                pass
-
-                # 2) Typing inside Graphics or Folders tab
-        elif _active_settings_tab == "folders" and input_active in (
-            "spoon_name", "folder_one", "folder_two", "folder_three", "folder_four", "folder_five", "folder_six"
-        ):
-            _measure_font = pygame.font.Font("fonts/Stardew_Valley.ttf", 24)
+        elif _active_settings_tab == "folders":
+            for box in folders_input_boxes.values():
+                logic_input_box(event, box, surf)
 
             idx_map = {
                 "folder_one": 3,
@@ -693,56 +741,22 @@ def logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons
                 "folder_five": 7,
                 "folder_six": 8,
             }
-            idx = idx_map[input_active]
-            current_text = str(updated[idx])
+            for key, idx in idx_map.items():
+                updated[idx] = folders_input_boxes[key].text or ""
 
-            if event.key == pygame.K_BACKSPACE:
-                updated[idx] = current_text[:-1]
-            elif len(event.unicode) == 1 and event.unicode.isprintable():
-                candidate = current_text + event.unicode
-                updated[idx] = candidate
- 
-
-                # 2.5) Editing Folder Days-Ahead Inputs (inside Folders tab) -> writes to folder_days_ahead
-        elif _active_settings_tab == "folders" and input_active and input_active.endswith("_days"):
-            base_key = input_active[:-5]  # strip "_days"
-            current_val = str(folder_days_ahead.get(base_key, 7))
-
-            if event.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
-                # clamp to at least 0 (allow 0 to show only overdue/today)
-                try:
-                    v = int(current_val) if current_val else 7
-                except:
-                    v = 7
-                folder_days_ahead[base_key] = max(0, v)
-                input_active = ""
-            elif event.key == pygame.K_BACKSPACE:
-                current_val = current_val[:-1]
-                folder_days_ahead[base_key] = int(current_val) if current_val.isdigit() else 0
-            elif event.unicode.isdigit() and len(current_val) < 3:
-                current_val += event.unicode
-                folder_days_ahead[base_key] = int(current_val)
-
+            for base_key in ("folder_one", "folder_two", "folder_three", "folder_four", "folder_five", "folder_six"):
+                days_key = f"{base_key}_days"
+                txt = (folders_input_boxes[days_key].text or "").strip()
+                if txt.isdigit():
+                    folder_days_ahead[base_key] = max(0, int(txt))
 
     if _active_settings_tab == "folders":
-        # Ensure folder name updates are reflected in returned args
-        updated[3:9] = [
-            updated[3],
-            updated[4],
-            updated[5],
-            updated[6],
-            updated[7],
-            updated[8],]
-    
-    return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, folder_days_ahead, *updated)
+        updated[3:9] = [updated[3], updated[4], updated[5], updated[6], updated[7], updated[8]]
+
+    return (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, folder_days_ahead, manilla_folder_text_color, *updated)
 
 
 
-
-from drawing_functions.draw_rounded_button import draw_rounded_button
-from drawing_functions.draw_input_box import draw_input_box
-from themes import THEMES
-from switch_themes import switch_theme
 
 select_folder_font = pygame.font.Font("fonts/Stardew_Valley.ttf", int(screen_height * 0.055))
 
@@ -834,6 +848,8 @@ folder_surfaces = [
     [blueManillaFolder, 'blue'],
     [greenManillaFolder, 'green'],
     [pinkManillaFolder, 'pink'],
+    [lightBlueManillaFolder, 'light_blue'],
+    [paleGreenManillaFolder, 'pale_green'],
 ]
 
 def to_color(val):
@@ -1074,6 +1090,7 @@ def draw_inventory(
 
 def logic_inventory(event,
                     input_active,
+                    manilla_folder_text_color,
                     inventory_tab,
                     spoon_name_input,
                     icon_image,
@@ -1119,18 +1136,12 @@ def logic_inventory(event,
 
         # Folders tab
         if inventory_tab == "Folders":
-            # toggle dropdown
-            if folder_dropdown_rect.collidepoint(mx, my):
-                folders_dropdown_open = not folders_dropdown_open
-                clicked_any = True
-
-            # choose folder art only when dropdown is closed
-            if not folders_dropdown_open:
-                for outline, surface, name in inventory_folder_buttons:
-                    if outline.collidepoint(mx, my):
-                        manillaFolder, manillaFolder_name = set_image('manillaFolder', name)
-                        clicked_any = True
-                        break
+            for outline, surface, name in inventory_folder_buttons:
+                if outline.collidepoint(mx, my):
+                    manillaFolder, manillaFolder_name = set_image('manillaFolder', name)
+                    manilla_folder_text_color = get_image_brightness_color(manillaFolder["manilla_folder"])
+                    clicked_any = True
+                    break
 
             # when open, focus the appropriate input box
             if folders_dropdown_open:
@@ -1177,6 +1188,7 @@ def logic_inventory(event,
 
 
     return (input_active,
+            manilla_folder_text_color,
             inventory_tab,
             spoon_name_input,
             icon_image,

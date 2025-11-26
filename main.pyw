@@ -80,7 +80,7 @@ IS_LINUX   = platform.system() == "Linux"
 IS_MAC     = platform.system() == "Darwin"
 
 # Put your version v_number here
-reference_version = 1.49
+reference_version = 1.50
 
 if IS_WINDOWS:
     ctypes.windll.user32.SetProcessDpiAwarenessContext(ctypes.c_void_p(-4))
@@ -131,6 +131,28 @@ def get_scale_factor() -> float:
 scale_factor = get_scale_factor()
 
 ####################################################################################################################################
+def get_image_brightness_color(image_surface):
+    width = image_surface.get_width()
+    height = image_surface.get_height()
+
+    step = 10  # sample ~1% of pixels
+    total_lum = 0
+    count = 0
+
+    w_r = 0.2126
+    w_g = 0.7152
+    w_b = 0.0722
+
+    for x in range(0, width, step):
+        for y in range(0, height, step):
+            r, g, b, _ = image_surface.get_at((x, y))
+            total_lum += (w_r*r + w_g*g + w_b*b)
+            count += 1
+
+    avg = total_lum / count
+
+    return [BLACK,DARK_SLATE_GRAY] if avg > 60 else [WHITE,LIGHT_GRAY] #type: ignore
+
 def sync_and_reload(flag):
     global spoons, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list
     global exams_tasks_list, projects_tasks_list, daily_spoons, loaded_theme, icon_image
@@ -255,8 +277,8 @@ from drawing_functions.draw_logic_social import draw_social, logic_social
 from drawing_functions.logic_task_toggle import logic_task_toggle
 from drawing_functions.draw_logic_settings import draw_settings, logic_settings
 from drawing_functions.draw_border import draw_border
-from drawing_functions.draw_hotbar import draw_hotbar
-from drawing_functions.draw_logic_login import draw_login, logic_login
+from drawing_functions.draw_hotbar import draw_hotbar, logic_hotbar
+from drawing_functions.draw_logic_login import draw_login, logic_login, input_boxes_login
 
 # Miscellanous Functions
 from load_save import save_data, load_data
@@ -417,6 +439,8 @@ if verify_credentials_and_access():
 if get_stay_offline_flag():
     page = "input_spoons"
 
+manilla_folder_text_color = get_image_brightness_color(manillaFolder["manilla_folder"])
+
 # ----------------------------------------------------------------------------------------------------
 # Main loop
 # ----------------------------------------------------------------------------------------------------
@@ -502,7 +526,7 @@ while running:
                                   button_widths, hub_closing, delta_time, is_maximized, scale_factor)
     
     if page == "login":
-        login_mode, login_username, login_password, login_input_active = draw_login(screen, login_mode, login_username, login_password, login_input_active, background_color)
+        draw_login(screen, login_mode, input_boxes_login, login_input_active, background_color)
 
     elif page == "input_spoons":
         if not UI_elements_initialized:
@@ -516,50 +540,44 @@ while running:
                          folder, task_month, task_day, description_toggle_on, time_toggle_on, recurring_toggle_on,  start_time, end_time,
                          done_button_color, background_color, add_tasks_choose_folder_color, add_tasks_chosen_folder_color, icon_image, spoon_name_input,
                          task_how_often, task_how_long, task_repetitions_amount,
-                         folder_one, folder_two, folder_three, folder_four, folder_five, folder_six
-                         , homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list, manillaFolder)
+                         folder_one, folder_two, folder_three, folder_four, folder_five, folder_six,
+                        manillaFolder, manilla_folder_text_color)
         
     elif page == "manage_tasks":
         folder_rects = draw_manage_tasks_hub(screen, spoons,
                             homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list,exams_tasks_list, projects_tasks_list,
-                            complete_tasks_hub_folder_color, icon_image, spoon_name_input,
+                            manilla_folder_text_color, icon_image, spoon_name_input,
                             folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, manillaFolder, folder_days_ahead)
         
     elif page == "complete_homework_tasks":
         set_favorites_binding(label_favorites.get(slot_key_for_page(page), []))
-        scroll_offset, total_content_height = draw_complete_tasks(screen, "Homework", homework_tasks_list, task_buttons_homework, spoons,  scroll_offset,
-                            background_color, icon_image, 
-                            folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        scroll_offset, total_content_height, focus_exit_rect = draw_complete_tasks(screen, "Homework", homework_tasks_list, task_buttons_homework, spoons,  scroll_offset,
+                            background_color, icon_image, time_per_spoon)
         
     elif page == "complete_chores_tasks":
         set_favorites_binding(label_favorites.get(slot_key_for_page(page), []))
-        scroll_offset, total_content_height = draw_complete_tasks(screen, "Chores", chores_tasks_list, task_buttons_chores, spoons,  scroll_offset,
-                            background_color, icon_image, 
-                            folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        scroll_offset, total_content_height, focus_exit_rect = draw_complete_tasks(screen, "Chores", chores_tasks_list, task_buttons_chores, spoons,  scroll_offset,
+                            background_color, icon_image, time_per_spoon)
         
     elif page == "complete_work_tasks":
         set_favorites_binding(label_favorites.get(slot_key_for_page(page), []))
-        scroll_offset, total_content_height = draw_complete_tasks(screen, "Work", work_tasks_list, task_buttons_work, spoons,  scroll_offset,
-                            background_color, icon_image, 
-                            folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        scroll_offset, total_content_height, focus_exit_rect = draw_complete_tasks(screen, "Work", work_tasks_list, task_buttons_work, spoons,  scroll_offset,
+                            background_color, icon_image, time_per_spoon)
         
     elif page == "complete_misc_tasks":
         set_favorites_binding(label_favorites.get(slot_key_for_page(page), []))
-        scroll_offset, total_content_height = draw_complete_tasks(screen, "Misc", misc_tasks_list, task_buttons_misc, spoons,  scroll_offset,
-                            background_color, icon_image, 
-                            folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        scroll_offset, total_content_height, focus_exit_rect = draw_complete_tasks(screen, "Misc", misc_tasks_list, task_buttons_misc, spoons,  scroll_offset,
+                            background_color, icon_image, time_per_spoon)
 
     elif page == "complete_exams_tasks":
         set_favorites_binding(label_favorites.get(slot_key_for_page(page), []))
-        scroll_offset, total_content_height = draw_complete_tasks(screen, "Exams", exams_tasks_list, task_buttons_exams, spoons,  scroll_offset,
-                            background_color, icon_image, 
-                            folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        scroll_offset, total_content_height, focus_exit_rect = draw_complete_tasks(screen, "Exams", exams_tasks_list, task_buttons_exams, spoons,  scroll_offset,
+                            background_color, icon_image, time_per_spoon)
 
     elif page == "complete_projects_tasks":
         set_favorites_binding(label_favorites.get(slot_key_for_page(page), []))
-        scroll_offset, total_content_height = draw_complete_tasks(screen, "Projects", projects_tasks_list, task_buttons_projects, spoons,  scroll_offset,
-                            background_color, icon_image,
-                            folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
+        scroll_offset, total_content_height, focus_exit_rect = draw_complete_tasks(screen, "Projects", projects_tasks_list, task_buttons_projects, spoons,  scroll_offset,
+                            background_color, icon_image, time_per_spoon)
         
     elif page == "calendar":
         draw_calendar(screen, spoon_name_input, displayed_week_offset, day_range_index, 
@@ -581,7 +599,7 @@ while running:
                       folders_dropdown_open)
 
     if page not in ("calendar", "social", "settings"):
-        draw_hotbar(screen, spoons, icon_image, spoon_name_input, daily_spoons, spoons_needed_today, spoons_used_today)
+        draw_hotbar(screen, page, background_color, spoons, icon_image, spoon_name_input, daily_spoons, spoons_needed_today, spoons_used_today)
 
     draw_border(screen, (0, 0, screen_width, screen_height), page, background_color, border, is_maximized, scale_factor)
 
@@ -789,7 +807,7 @@ while running:
         scroll_offset = handle_task_scroll(event, scroll_offset, total_content_height, scroll_multiplier=17)
 
         if page == "login":
-            login_mode, login_username, login_password, login_input_active, page = logic_login(event, login_mode, login_username, login_password, login_input_active)
+            login_mode, input_boxes_login, login_input_active, page = logic_login(event, login_mode, input_boxes_login, login_input_active)
 
         elif page == "input_spoons" and UI_elements_initialized:
             spoons, daily_spoons, page, input_active, timer_toggle_on, rest_spoons = logic_input_spoons(event, daily_spoons, spoons, input_active, timer_toggle_on, rest_spoons)
@@ -799,61 +817,65 @@ while running:
         elif page == "manage_tasks":
             page = logic_manage_tasks_hub(event, page, folder_rects)
         elif page == "complete_homework_tasks":
-            result = logic_complete_tasks(homework_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, confetti_particles, level, spoons_used_today, page)
+            result = logic_complete_tasks(homework_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, confetti_particles, level, spoons_used_today, page, time_per_spoon)
             if isinstance(result[0], tuple):
                 (page, folder), spoons, confetti_particles, streak_dates, level, spoons_used_today = result
             else:
                 task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = result
 
         elif page == "complete_chores_tasks":
-            result = logic_complete_tasks(chores_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today, page)
+            result = logic_complete_tasks(chores_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today, page, time_per_spoon)
             if isinstance(result[0], tuple):
                 (page, folder), spoons, confetti_particles, streak_dates, level, spoons_used_today = result
             else:
                 task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = result
 
         elif page == "complete_work_tasks":
-            result = logic_complete_tasks(work_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today, page)
+            result = logic_complete_tasks(work_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today, page, time_per_spoon)
             if isinstance(result[0], tuple):
                 (page, folder), spoons, confetti_particles, streak_dates, level, spoons_used_today = result
             else:
                 task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = result
 
         elif page == "complete_misc_tasks":
-            result = logic_complete_tasks(misc_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today, page)
+            result = logic_complete_tasks(misc_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today, page, time_per_spoon)
             if isinstance(result[0], tuple):
                 (page, folder), spoons, confetti_particles, streak_dates, level, spoons_used_today = result
             else:
                 task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = result
 
         elif page == "complete_exams_tasks":
-            result = logic_complete_tasks(exams_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today, page)
+            result = logic_complete_tasks(exams_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today, page, time_per_spoon)
             if isinstance(result[0], tuple):
                 (page, folder), spoons, confetti_particles, streak_dates, level, spoons_used_today = result
             else:
                 task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = result
 
         elif page == "complete_projects_tasks":
-            result = logic_complete_tasks(projects_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today, page)
+            result = logic_complete_tasks(projects_tasks_list, spoons_debt_toggle, event, spoons, streak_dates, streak_task_completed, level, spoons_used_today, page, time_per_spoon)
             if isinstance(result[0], tuple):
                 (page, folder), spoons, confetti_particles, streak_dates, level, spoons_used_today = result
             else:
                 task_completed, spoons, confetti_particles, streak_dates, level, spoons_used_today = result
 
         elif page == "calendar": 
-            day_range_index, displayed_week_offset, displayed_month, displayed_year = logic_calendar(event, day_range_index, displayed_week_offset, displayed_month, displayed_year)
+            day_range_index, displayed_week_offset, displayed_month, displayed_year, page, task_month, task_day = logic_calendar(event, day_range_index, displayed_week_offset, displayed_month, displayed_year, page, task_month, task_day, homework_tasks_list, chores_tasks_list, work_tasks_list, misc_tasks_list, exams_tasks_list, projects_tasks_list)
         elif page == "social":
             tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six = logic_social(event, tool_tips, spoon_name_input, input_active, current_theme, icon_image, folder_one, folder_two, folder_three, folder_four, folder_five, folder_six)
         elif page == "settings":
-            (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, folder_days_ahead, inventory_tab, spoon_name_input, icon_image, 
+            (page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, rest_spoons, time_per_spoon, folder_days_ahead, manilla_folder_text_color, inventory_tab, spoon_name_input, icon_image, 
              folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open,
             border, border_name, manillaFolder, manillaFolder_name, current_theme) = logic_settings(event, page, daily_spoons, input_active, sound_toggle, spoons_debt_toggle, spoons_debt_consequences_toggle, 
-                                                                                                    rest_spoons, time_per_spoon, folder_days_ahead, inventory_tab, spoon_name_input, icon_image, 
+                                                                                                    rest_spoons, time_per_spoon, folder_days_ahead, manilla_folder_text_color, inventory_tab, spoon_name_input, icon_image, 
                                                                                                     folder_one, folder_two, folder_three, folder_four, folder_five, folder_six, folders_dropdown_open, 
                                                                                                     border, border_name, manillaFolder, manillaFolder_name, current_theme)
             switch_theme(current_theme, globals())
             if not spoons_debt_toggle and spoons < 0:
                 spoons = 0
+
+        if page not in ("calendar", "social", "settings"):
+            spoons = logic_hotbar(event, page, spoons)
+
     pygame.display.flip()
 
 pygame.quit()

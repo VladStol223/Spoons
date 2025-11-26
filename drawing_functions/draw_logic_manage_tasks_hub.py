@@ -11,7 +11,7 @@ def draw_manage_tasks_hub(
     misc_tasks_list,
     exams_tasks_list,
     projects_tasks_list,
-    complete_tasks_hub_folder_color,
+    manilla_folder_text_color,
     icon_image,
     spoon_name_input,
     folder_one,
@@ -131,19 +131,19 @@ def draw_manage_tasks_hub(
 
 
         # Folder title
-        title_s = big_font.render(name, True, BLACK) #type: ignore
+        title_s = big_font.render(name, True, manilla_folder_text_color[0]) #type: ignore
         screen.blit(title_s, (x + (folder_w - title_s.get_width())//2, y + 30))
 
         # Content
         if len(raw_list) == 0:
             msg = "No Tasks yet!"
-            surf = small_font.render(msg, True, BLACK) #type: ignore
+            surf = small_font.render(msg, True, manilla_folder_text_color[0]) #type: ignore
             screen.blit(surf, (x + (folder_w - surf.get_width())//2,
                                y + (folder_h - surf.get_height())//2 + 5))
 
         elif tasks_n == 0:
-            l1 = small_font.render("All Tasks", True, BLACK) #type: ignore
-            l2 = small_font.render("Completed!", True, BLACK) #type: ignore
+            l1 = small_font.render("All Tasks", True, manilla_folder_text_color[0]) #type: ignore
+            l2 = small_font.render("Completed!", True, manilla_folder_text_color[0]) #type: ignore
             total_h = l1.get_height() + l2.get_height()
             y1 = y + (folder_h - total_h)//2 + 10
             screen.blit(l1, (x + (folder_w - l1.get_width())//2, y1))
@@ -158,8 +158,8 @@ def draw_manage_tasks_hub(
                 text2 = f"{tasks_n} Task Left"
             else:
                 text2 = f"{tasks_n} Tasks Left"
-            surf1 = small_font.render(text1, True, BLACK) #type: ignore
-            surf2 = small_font.render(text2, True, BLACK) #type: ignore
+            surf1 = small_font.render(text1, True, manilla_folder_text_color[0]) #type: ignore
+            surf2 = small_font.render(text2, True, manilla_folder_text_color[0]) #type: ignore
             screen.blit(surf1, (x + (folder_w - surf1.get_width())//2, y + (folder_h - surf1.get_height())//2))
             screen.blit(surf2, (x + (folder_w - surf2.get_width())//2, y + surf1.get_height() + (folder_h - surf2.get_height())//2 - 5))
 
@@ -186,19 +186,5 @@ def logic_manage_tasks_hub(event, old_page, folder_rects):
         for idx, rect in folder_rects.items():
             if rect.collidepoint(event.pos):
                 return page_map[idx]
-
-    # Keyboard shortcuts (q w e / a s d)
-    if event.type == pygame.KEYDOWN:
-        key_to_folder = {
-            pygame.K_q: 1,
-            pygame.K_w: 2,
-            pygame.K_e: 3,
-            pygame.K_a: 4,
-            pygame.K_s: 5,
-            pygame.K_d: 6,
-        }
-        idx = key_to_folder.get(event.key)
-        if idx and idx in page_map:
-            return page_map[idx]
 
     return page
