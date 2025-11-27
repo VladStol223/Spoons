@@ -35,6 +35,6 @@ Contact vlad.stol223@gmail.com for questions, comments, concerns.
 ## quick install
 Spoons can be quickly installed on Linux and Mac systems using the bash installer via:
 
-curl https://raw.githubusercontent.com/VladStol223/Spoons/main/bash_installer.sh | sh
+> curl https://raw.githubusercontent.com/VladStol223/Spoons/main/bash_installer.sh | sh
 
 Warning for linux users: This isntaller uses the --break-system-packages arg to install pygame-ce system wide
