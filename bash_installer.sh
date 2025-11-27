@@ -1,23 +1,5 @@
 #!/bin/bash
 
-ask_yes_no() {
-    local prompt="$1"
-    while true; do
-        read -r -p "$prompt [y/n]: " response
-        case "$response" in
-            [yY]|[yY][eE][sS]) 
-                return 0
-                ;;
-            [nN]|[nN][oO])
-                return 1
-                ;;
-            *)
-                echo "Invalid input. Please enter 'y' for yes or 'n' for no."
-                ;;
-        esac
-    done
-}
-
 download_spoons_repo() {
     echo "Downloading Spoons repository..."
 
