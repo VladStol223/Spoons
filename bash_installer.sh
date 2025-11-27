@@ -68,10 +68,6 @@ install_python_linux() {
     sudo apt update && sudo apt install -y python3 python3-pip
     # Ask the user if they want to proceed with the installation
     echo "Warning: Global installs can break systems which rely on certain pacakges"
-    if ! ask_yes_no "Do you accpt the risk of installing pygame-ce globally?"; then
-        echo "Installation cancelled by user."
-        exit 1
-    fi
     sudo python3 -m pip install pygame-ce --break-system-packages
     sudo python3 -m pip install requests
 }
