@@ -37,4 +37,4 @@ Spoons can be quickly installed on Linux and Mac systems using the bash installe
 
 > curl https://raw.githubusercontent.com/VladStol223/Spoons/main/bash_installer.sh | sh
 
-Warning for linux users: This isntaller uses the --break-system-packages arg to install pygame-ce system wide
+Warning for Linux users: This isntaller uses the --break-system-packages arg to install pygame-ce system wide
