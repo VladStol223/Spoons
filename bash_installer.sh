@@ -51,7 +51,7 @@ install_python_linux() {
     # Ask the user if they want to proceed with the installation
     echo "Warning: Global installs can break systems which rely on certain pacakges"
     sudo python3 -m pip install pygame-ce --break-system-packages
-    sudo python3 -m pip install requests
+    sudo python3 -m pip install requests --break-system-packages
 }
 
 # Detect OS type
@@ -60,7 +60,6 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
     echo "Detected Linux system. Downloading Spoons repository..."
     download_spoons_repo
-    install_python_linux
     echo "Creating .desktop entry in /home/$SUDO_USER/.local/share/applications/" 
     sudo tee ./spoons.desktop >/dev/null <<-EOL
 [Desktop Entry]
@@ -73,8 +72,9 @@ Comment=Get your shit together
 Icon=/home/$SUDO_USER/Documents/Spoons-main/images/hubIcons/default/addSpoonsIcon.png
 EOL
 
-    sudo mv ./spoons.desktop /home/$SUDO_USER/.local/share/applications/
-    sudo chmod +x /home/$SUDO_USER/.local/share/applications/spoons.desktop
+    mv ./spoons.desktop $HOME/.local/share/applications/
+    chmod +x $HOME/.local/share/applications/spoons.desktop
+    install_python_linux
 fi
 
 # Verify Python path
