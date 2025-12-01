@@ -66,10 +66,10 @@ else
 Type=Application
 Terminal=false
 Exec=python3 main.pyw
-Path=/home/$SUDO_USER/Documents/Spoons-main/
+Path=$HOME/Documents/Spoons-main/
 Name=Spoons
 Comment=Get your shit together
-Icon=/home/$SUDO_USER/Documents/Spoons-main/images/hubIcons/default/addSpoonsIcon.png
+Icon=$HOME/Documents/Spoons-main/images/hubIcons/default/addSpoonsIcon.png
 EOL
 
     mv ./spoons.desktop $HOME/.local/share/applications/
