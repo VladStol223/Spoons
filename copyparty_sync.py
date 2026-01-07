@@ -371,7 +371,7 @@ def put_new_user_cred(file_stem: str, username: str, password: str) -> bool:
         return False
     cfg = _load_cfg()
     stem = _sanitize_stem(file_stem or username or "user")
-    url  = _dav_url("new_users", stem)
+    url = _dav_url("new_users", f"{stem}.txt") #hey by the way the .txt keeps this from fucking up. Server cant ingest a file with no extension or the new user watchdog will take it out back.
     body = f"{username}:{password}".encode("utf-8")
     hdr  = _auth_headers(); hdr["Content-Type"] = "text/plain; charset=utf-8"
     try:
